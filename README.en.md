@@ -6,7 +6,7 @@
 
 A readable inference engine, built step by step for learning and experimentation.
 
-[![Platform: Ascend 910C target](https://img.shields.io/badge/Target-Ascend%20910C-2563eb)](docs/ROADMAP.md) [![Status: Design phase](https://img.shields.io/badge/Status-Design%20phase-f59e0b)](docs/ROADMAP.md) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-16a34a)](LICENSE)
+[![Platform: Ascend 910C target](https://img.shields.io/badge/Target-Ascend%20910C-2563eb)](docs/ROADMAP.md) [![Status: Runnable skeleton](https://img.shields.io/badge/Status-Runnable%20skeleton-f59e0b)](docs/FIRST_REQUEST.md) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-16a34a)](LICENSE)
 
 [简体中文](README.md) · **English**
 
@@ -18,7 +18,33 @@ mini-DeepInfer is an educational inference engine under development for **Ascend
 
 Following the learning approach of [mini-sglang](https://github.com/sgl-project/mini-sglang), we aim to make the core execution path small enough to follow from request to output, then extend it one optimization at a time and measure the effect on latency, throughput, and memory.
 
-> **Status: design and documentation.** Architecture, roadmap, and validation plans are available now. Engine implementation and Ascend 910C hardware validation will follow the milestones.
+> **Status: runnable skeleton.** Synchronous FIFO execution, prefill/decode metadata, logical cache slots, and request lifecycles are implemented. The current runner uses integer arithmetic to illustrate control flow. Real models, tensor KV storage, and Ascend 910C hardware validation are next.
+
+## Run your first request
+
+Python 3.10+. The demo and tests use only the standard library; no weights to download:
+
+```bash
+git clone https://github.com/AkiYangDev/mini-deepinfer.git
+cd mini-deepinfer
+python -m minideepinfer
+python -m unittest discover -s tests -v
+```
+
+Watch two requests execute in FIFO order:
+
+```text
+req-0 prefill input=(10, 11) positions=(0, 1) write_slots=(0, 1)
+  -> token=12, cached_inputs=2, stop=-
+req-0 decode  input=(12,) positions=(2,) write_slots=(2,)
+  -> token=13, cached_inputs=3, stop=-
+req-0 decode  input=(13,) positions=(3,) write_slots=(3,)
+  -> token=14, cached_inputs=4, stop=length
+...
+Free slots: 8/8
+```
+
+Why is token `14` generated but absent from KV? Why can the next request reuse slot `0`? Follow [`demo.py`](minideepinfer/demo.py) → [`Engine.step()`](minideepinfer/engine.py) → [`SlotPool`](minideepinfer/kv_cache.py). The [first lesson](docs/FIRST_REQUEST.md) walks through the same trace in Chinese; code comments are in English.
 
 ## From a forward pass to an inference engine
 
@@ -83,7 +109,7 @@ If you know basic PyTorch and want to understand inference systems, start by fol
 | [Roadmap](docs/ROADMAP.md) | Deliverables from single-request generation to DeepSeek architectures |
 | [References](docs/REFERENCES.md) | Connections to DeepInfer and mini-sglang, including simplifications and attribution |
 
-Detailed design documents are currently in Chinese. The next deliverable is **Ascend 910C environment and basic operator validation**, followed by single-request generation and a minimal serving engine. Each milestone will include runnable examples, explanations, and validation records.
+Detailed design documents are currently in Chinese. The next deliverable is **single-request generation with real weights**: validate the Ascend 910C environment and basic operators, then connect an independent DeepSeek-R1-Distill-Qwen-1.5B forward pass and tensor KV cache to the existing runner interface. Each milestone will include runnable examples, explanations, and validation records.
 
 ## Build and learn with us
 

@@ -4,6 +4,17 @@
 
 欢迎把一个机制讲清楚、把一个实验跑扎实，或让一段代码更容易阅读。
 
+## 本地运行
+
+Python 3.10+，在仓库根目录执行，无需安装运行时依赖：
+
+```bash
+python -m minideepinfer
+python -m unittest discover -s tests -v
+```
+
+核心执行路径从 [Engine.step()](minideepinfer/engine.py) 开始。当前演示使用整数 Runner，真实模型和 Ascend 910C 路径的改动需要补充对应数值或硬件证据。
+
 ## 适合开始的工作
 
 - 完善架构与教学文档中的解释和图示。

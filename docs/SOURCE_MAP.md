@@ -51,9 +51,11 @@ mini-sglang 继续作为紧凑实现和教学组织的参考。mini-DeepInfer �
 
 mask/compact 对照通过，不能证明近似回放与完整重算严格等价。V4.1 的模型前提也不能直接套用到 V2-Lite。
 
-## 下一项交付：M0 验证包与最小执行设计
+## 当前进度与下一项交付
 
-下一项交付以开发可执行为目标，包含：
+最小同步骨架已落地：[`Engine.step()`](../minideepinfer/engine.py) 显式组织调度、输入元数据、Runner 和结果提交；[`SlotPool`](../minideepinfer/kv_cache.py) 演示逻辑槽位归属。它们是概念借鉴后的原创实现，尚无真实模型、设备计算或异步执行。阅读入口见[第一课](FIRST_REQUEST.md)。
+
+下一项交付为真实模型单请求生成，包含：
 
 1. **环境清单。** 记录设备枚举与物理卡映射、可用 HBM、驱动、CANN、PyTorch 和 `torch_npu`；公开版本去掉私人机器信息。
 2. **基础运算探测。** 用固定小输入检查 BF16 matmul、归一化、RoPE 基础运算、缓存索引写入和 attention 参考计算。

@@ -6,7 +6,7 @@
 
 Understand DeepSeek inference. Build it on Ascend 910C.
 
-[![Platform: Ascend 910C target](https://img.shields.io/badge/Target-Ascend%20910C-2563eb)](docs/ROADMAP.md) [![Status: Design phase](https://img.shields.io/badge/Status-Design%20phase-f59e0b)](docs/ROADMAP.md) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-16a34a)](LICENSE)
+[![Platform: Ascend 910C target](https://img.shields.io/badge/Target-Ascend%20910C-2563eb)](docs/ROADMAP.md) [![Status: Runnable skeleton](https://img.shields.io/badge/Status-Runnable%20skeleton-f59e0b)](docs/FIRST_REQUEST.md) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-16a34a)](LICENSE)
 
 **简体中文** · [English](README.en.md)
 
@@ -18,7 +18,33 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 
 我们参考 [mini-sglang](https://github.com/sgl-project/mini-sglang) 的教学思路，让读者能够沿着一次请求读完核心执行路径，再亲手加入一项优化，观察它怎样改变延迟、吞吐和显存占用。
 
-> **开发阶段：设计与文档。** 当前可阅读架构、路线和验证方案；引擎实现及 Ascend 910C 硬件验证将按里程碑推进。
+> **开发阶段：可运行骨架。** 已实现同步 FIFO 执行、prefill/decode 元数据、逻辑缓存槽位和请求生命周期。当前 Runner 用整数运算演示流程；真实模型、张量 KV Cache 与 Ascend 910C 硬件验证尚未接入。
+
+## 先跑一个请求
+
+Python 3.10+，演示与测试只使用标准库，无需下载权重：
+
+```bash
+git clone https://github.com/AkiYangDev/mini-deepinfer.git
+cd mini-deepinfer
+python -m minideepinfer
+python -m unittest discover -s tests -v
+```
+
+你会看到两个请求依次执行：
+
+```text
+req-0 prefill input=(10, 11) positions=(0, 1) write_slots=(0, 1)
+  -> token=12, cached_inputs=2, stop=-
+req-0 decode  input=(12,) positions=(2,) write_slots=(2,)
+  -> token=13, cached_inputs=3, stop=-
+req-0 decode  input=(13,) positions=(3,) write_slots=(3,)
+  -> token=14, cached_inputs=4, stop=length
+...
+Free slots: 8/8
+```
+
+为什么生成了 `14`，它却还没有写入 KV？下一轮请求为什么又能使用槽位 `0`？从[第一课：跟踪一个请求](docs/FIRST_REQUEST.md)开始，按 [`demo.py`](minideepinfer/demo.py) → [`Engine.step()`](minideepinfer/engine.py) → [`SlotPool`](minideepinfer/kv_cache.py) 的顺序读代码。
 
 ## 从一次 forward，到一个推理引擎
 
@@ -83,7 +109,7 @@ flowchart LR
 | [开发路线](docs/ROADMAP.md) | 从单请求生成到 DeepSeek 架构的阶段交付 |
 | [参考与来源](docs/REFERENCES.md) | 与 DeepInfer、mini-sglang 的对应关系及简化边界 |
 
-接下来的首个交付是 **Ascend 910C 环境与基础算子验证**，随后推进单请求生成和最小服务引擎。每个里程碑都将带来可运行示例、对应讲解与验证记录。
+下一项交付是 **真实模型的单请求生成**：补齐 Ascend 910C 环境与基础算子验证，将 DeepSeek-R1-Distill-Qwen-1.5B 的独立 forward 和张量 KV Cache 接到现有 Runner 接口。每个里程碑都将带来可运行示例、对应讲解与验证记录。
 
 ## 一起把推理讲明白
 

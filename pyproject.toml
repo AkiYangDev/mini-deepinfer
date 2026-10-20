@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mini-deepinfer"
+version = "0.0.1"
+description = "A small educational inference engine targeting Ascend 910C"
+readme = "README.en.md"
+requires-python = ">=3.10"
+license = {text = "Apache-2.0"}
+authors = [{name = "AkiYangDev"}]
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/AkiYangDev/mini-deepinfer"
+
+[tool.setuptools.packages.find]
+include = ["minideepinfer*"]
