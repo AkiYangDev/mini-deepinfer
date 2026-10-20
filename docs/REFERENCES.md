@@ -26,7 +26,7 @@
 - [sgl-project/mini-sglang](https://github.com/sgl-project/mini-sglang)：参考其精简模块、教学入口和 README 的信息组织。上游采用 MIT 许可证。
 - [sgl-project/sglang](https://github.com/sgl-project/sglang)：作为服务机制、实现和后续基准的参考。
 
-首页参考 mini-sglang 的“定位—方向—开始阅读—实验—贡献”结构，使用本项目自己的文案和实际进度。上游的性能、代码量与平台支持不作为本项目的宣传数据。
+首页参考 mini-sglang 对定位、学习价值、核心机制和使用入口的组织方式，使用本项目自己的文案和实际进度。上游的性能、代码量与平台支持不作为本项目的宣传数据。
 
 ## 模型与协议
 

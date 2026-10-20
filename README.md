@@ -1,99 +1,98 @@
+<div align="center">
+
 # mini-DeepInfer
 
-**读懂推理，跑在昇腾。**
+**在 Ascend 910C 上，从零读懂 DeepSeek 推理。**
 
-A readable inference engine for DeepSeek models on Ascend 910C.
+Understand DeepSeek inference. Build it on Ascend 910C.
 
-[English](README.en.md) · [实施路线](docs/ROADMAP.md) · [架构设计](docs/ARCHITECTURE.md) · [验证方法](docs/VALIDATION.md)
+[![Platform: Ascend 910C target](https://img.shields.io/badge/Target-Ascend%20910C-2563eb)](docs/ROADMAP.md) [![Status: Design phase](https://img.shields.io/badge/Status-Design%20phase-f59e0b)](docs/ROADMAP.md) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-16a34a)](LICENSE)
 
-mini-DeepInfer 面向学习者和推理系统开发者，目标是在 **Ascend 910C** 上，用清晰的 Python 实现串起大模型推理的完整过程：请求如何进入批次，KV Cache 如何分配，prefill 与 decode 如何执行，以及每一次优化为什么有效。
+**简体中文** · [English](README.en.md)
 
-项目借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的引擎设计，参考 [mini-sglang](https://github.com/sgl-project/mini-sglang) 的轻量实现与教学思路，将代码、原理和真实硬件实验放在一起。
+[架构设计](docs/ARCHITECTURE.md) · [开发路线](docs/ROADMAP.md) · [验证方法](docs/VALIDATION.md) · [参与贡献](CONTRIBUTING.md)
 
-> **当前阶段：项目设计与文档。** 推理引擎尚待实现；Ascend 910C 是目标平台，模型与算子支持以后续实测记录为准。
+</div>
 
-## 为什么做这个项目
+mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的设计，面向 **Ascend 910C** 逐步构建一个可读的教学推理引擎。从第一个生成 token，到 KV Cache、连续批处理、MLA 和 MoE，用实现、图解和实验把推理系统的工作过程讲清楚。
 
-模型决定能生成什么，推理系统决定这些结果怎样被高效地交付给用户。
+我们参考 [mini-sglang](https://github.com/sgl-project/mini-sglang) 的教学思路，让读者能够沿着一次请求读完核心执行路径，再亲手加入一项优化，观察它怎样改变延迟、吞吐和显存占用。
 
-从一次 `forward` 到持续接收请求的服务，中间还有调度、缓存、内存布局、异步执行与设备通信。mini-DeepInfer 希望让这些机制变得具体：找到对应代码，运行一个实验，观察结果，再亲手修改它。
+> **开发阶段：设计与文档。** 当前可阅读架构、路线和验证方案；引擎实现及 Ascend 910C 硬件验证将按里程碑推进。
 
-## 项目方向
+## 从一次 forward，到一个推理引擎
 
-以下是计划建设的能力，进度与验收条件见[实施路线](docs/ROADMAP.md)。
+调用模型生成文本只是起点。当不同长度的请求不断到来，推理引擎需要决定下一批计算什么、为哪些 token 保留缓存，以及何时把设备计算的结果交还给用户。
 
-| 方向 | 你将学到什么 |
+mini-DeepInfer 的目标，是把这些决定展开成能读懂的代码：
+
+- **沿着请求学系统。** 把调度、缓存、模型执行和结果提交串成一条清晰的路径。
+- **沿着 DeepSeek 学架构。** 从基础生成走向 MLA、MoE，再拆解 DeepInfer 的进阶机制。
+- **沿着 Ascend 学优化。** 理解 `torch_npu`、融合算子、stream/event 和图执行如何影响真实运行。
+
+每一步都按同样的顺序展开：**读懂计算 → 验证正确性 → 加入优化 → 测量变化。**
+
+## 计划覆盖的核心机制
+
+| 主题 | 从原理走到实现 |
 | --- | --- |
-| **Ascend 910C 适配** | `torch_npu`、设备内存、stream/event、融合算子与图执行如何组成执行后端 |
-| **完整生成链路** | 从权重加载、prefill、KV Cache 到逐 token decode 和采样 |
-| **服务与调度** | Continuous batching、分页 KV 管理、chunked prefill 和流式响应 |
-| **DeepSeek 架构** | 从小模型起步，进一步理解 MLA、压缩缓存、MoE 路由与专家计算 |
-| **DeepInfer 机制实验** | 将调度重叠、投机状态提交与回退、SWA bounded replay 拆成可验证的实验 |
-| **可复现性能分析** | 在统一负载下比较正确性、TTFT、TPOT、吞吐与显存占用 |
+| **自回归生成** | 权重加载、prefill、逐 token decode、采样与停止条件 |
+| **KV Cache** | 连续与分页存储、位置映射、分配回收，以及请求之间的隔离 |
+| **批处理与调度** | Continuous batching、chunked prefill、token 预算和请求生命周期 |
+| **DeepSeek 架构** | MLA 压缩缓存、MoE 路由、专家计算与结果合并 |
+| **执行与进阶优化** | 图执行、调度重叠、单机并行，以及投机解码和 bounded replay 的独立实验 |
 
-每一项能力都沿着同一条学习路径展开：**读懂参考实现 → 检查正确性 → 加入优化 → 测量代价与收益。**
+设计采用参考路径与优化路径并行保留的方式：既能看清数学计算，也能比较融合算子或执行策略带来的变化。具体范围与验收条件见[开发路线](docs/ROADMAP.md)。
 
-## 从小模型走向 DeepSeek
+## 一个请求，贯穿整个系统
 
-| 层级 | 计划使用的模型或实验 | 教学任务 |
-| --- | --- | --- |
-| 入门 | DeepSeek-R1-Distill-Qwen-1.5B | 跑通基于 Qwen 架构的真实权重加载与生成，理解基础执行循环 |
-| 主线 | DeepSeek-V2-Lite / V2-Lite-Chat | 学习 MLA 与 MoE；与对应模型参考实现逐级对齐 |
-| 进阶 | 来自固定版本 DeepInfer 的独立机制实验 | 理解异步调度、投机状态管理和模型相关缓存优化 |
-
-蒸馏模型采用 Qwen 架构；V2-Lite 与 V4.1 也有架构差异。各章会说明适用模型与简化边界。完整 V4.1 部署作为后续研究方向单独评估。
-
-## 一次推理步骤
+下面是教学引擎的目标执行结构。调度器决定本轮处理哪些 token，Runner 组织模型计算，结果提交后再推进下一轮。
 
 ```mermaid
 flowchart LR
-    A[请求与 Tokenizer] --> B[Engine]
-    B --> C[Scheduler]
-    C --> D[执行计划与元数据]
-    D --> E[Model Runner]
-    E --> F[Ascend 后端与模型]
-    F --> G[采样与状态提交]
-    G --> B
-    C <--> H[KV Cache 管理]
-    E <--> H
+    A[请求] --> B[调度器]
+    B --> C[Model Runner]
+    C --> D[采样与提交]
+    D --> E[流式输出]
+    D --> B
+    B <--> K[KV Cache]
+    C <--> K
+    C --> N[Ascend 后端]
 ```
 
-调度器决定本轮处理哪些 token，执行器负责计算，缓存管理器维护存储与映射。明确这些边界后，才逐步加入图执行和调度重叠。上图是目标设计，详细约定见[架构文档](docs/ARCHITECTURE.md)。
+从同步执行开始，再逐步加入分页缓存、动态批次和调度重叠。每增加一层复杂度，都保留能解释结果的对照。详细边界见[架构设计](docs/ARCHITECTURE.md)。
 
-## 开始阅读
+## 从小模型，走向 DeepSeek
 
-```bash
-git clone https://github.com/AkiYangDev/mini-deepinfer.git
-cd mini-deepinfer
-```
+学习路线分为三个层级，各自承担不同任务：
 
-建议按以下顺序阅读：
+1. **先生成第一个 token。** 使用 DeepSeek-R1-Distill-Qwen-1.5B，在 Qwen 架构上完成真实权重加载、KV Cache 与生成循环。
+2. **再深入 MLA 与 MoE。** 使用 DeepSeek-V2-Lite / V2-Lite-Chat，将压缩缓存、专家路由和模型数值逐项对齐。
+3. **进一步拆解 DeepInfer。** 对照固定版本源码，构造调度重叠、投机状态提交与回退、SWA bounded replay 的独立实验。
 
-1. [实施路线](docs/ROADMAP.md)：首版范围、阶段交付与完成条件。
-2. [架构设计](docs/ARCHITECTURE.md)：一次执行步骤，以及请求、缓存与计算的边界。
-3. [验证方法](docs/VALIDATION.md)：怎样判断输出正确、优化有效。
-4. [参考与来源](docs/REFERENCES.md)：与 DeepInfer、mini-sglang 的对应关系。
+各章会标明对应模型与架构；完整 V4.1 部署作为后续研究里程碑。模型选择与阶段安排见[开发路线](docs/ROADMAP.md)。
 
-安装、推理和服务命令将在对应实现通过验证后加入。
+## 从这里开始
 
-## 开发进度
+如果你会写基础 PyTorch，想进一步理解大模型推理系统，可以先从一次执行步骤开始读：
 
-| 里程碑 | 状态 |
+| 阅读入口 | 你会得到什么 |
 | --- | --- |
-| 项目定位、架构草案、实施与验证计划 | 已完成首稿 |
-| M0：Ascend 910C 环境与算子验证 | 待开始 |
-| M1：单请求真实生成 | 待开始 |
-| M2：最小服务引擎 | 待开始 |
-| M3：DeepSeek-V2-Lite 架构主线 | 待开始 |
-| M4：Ascend 执行优化与单机并行 | 待开始 |
-| M5：DeepInfer 进阶机制实验 | 待开始 |
+| [架构设计](docs/ARCHITECTURE.md) | 请求、调度器、Runner 和缓存如何协作 |
+| [验证方法](docs/VALIDATION.md) | 如何比较 logits、排查缓存错误，并测量 TTFT、TPOT 与吞吐 |
+| [开发路线](docs/ROADMAP.md) | 从单请求生成到 DeepSeek 架构的阶段交付 |
+| [参考与来源](docs/REFERENCES.md) | 与 DeepInfer、mini-sglang 的对应关系及简化边界 |
 
-## 参与贡献
+接下来的首个交付是 **Ascend 910C 环境与基础算子验证**，随后推进单请求生成和最小服务引擎。每个里程碑都将带来可运行示例、对应讲解与验证记录。
 
-欢迎贡献可复现的问题、算子验证、教学示例、代码和文档。每一项优化都应有明确的正确性检查和实验条件，详见[贡献指南](CONTRIBUTING.md)。
+## 一起把推理讲明白
+
+欢迎贡献一个清晰的图解、一段更容易读懂的实现，或一次能够复现的 Ascend 实验。设计讨论与文档改进也同样有价值，详见[贡献指南](CONTRIBUTING.md)。
+
+如果你也想沿着这条路线学习，欢迎 **Star 收藏，关注后续代码与教程**。
 
 ## 致谢与许可证
 
-感谢 [DeepInfer](https://github.com/deepseek-ai/DeepInfer)、[mini-sglang](https://github.com/sgl-project/mini-sglang) 和 [SGLang](https://github.com/sgl-project/sglang) 提供设计与学习参考。
+感谢 [DeepInfer](https://github.com/deepseek-ai/DeepInfer)、[mini-sglang](https://github.com/sgl-project/mini-sglang) 和 [SGLang](https://github.com/sgl-project/sglang) 的开源工作。
 
-本项目由社区独立开发，与 DeepSeek、SGLang 及华为无官方隶属关系。项目原创代码与文档采用 [Apache-2.0](LICENSE)；模型权重及未来引入的第三方组件遵循各自许可证，来源记录见[参考文档](docs/REFERENCES.md)。
+本项目为独立社区项目，与 DeepSeek、SGLang 及华为无官方隶属关系。原创代码与文档采用 [Apache-2.0](LICENSE)，模型与第三方组件遵循各自许可证。详细归属见[参考与来源](docs/REFERENCES.md)。
