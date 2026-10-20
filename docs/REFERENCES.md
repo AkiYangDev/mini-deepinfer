@@ -25,8 +25,15 @@
 
 - [sgl-project/mini-sglang](https://github.com/sgl-project/mini-sglang)：参考其精简模块、教学入口和 README 的信息组织。上游采用 MIT 许可证。
 - [sgl-project/sglang](https://github.com/sgl-project/sglang)：作为服务机制、实现和后续基准的参考。
+- [Ascend/sglang，release/2026930](https://github.com/Ascend/sglang/commits/release/2026930)：用户提供的昇腾实现参考分支。本轮锁定 [545ed1c6649321aa61b57a287032a7791690247e](https://github.com/Ascend/sglang/tree/545ed1c6649321aa61b57a287032a7791690247e)，重点核对 attention、MLA、MoE 和图执行接口；实际平台与算子兼容性仍需本项目验证。
 
 首页参考 mini-sglang 对定位、学习价值、核心机制和使用入口的组织方式，使用本项目自己的文案和实际进度。上游的性能、代码量与平台支持不作为本项目的宣传数据。
+
+## 官方部署报告
+
+[DeepSeek V4.1 Flash 大规模推理部署实践](https://zhuanlan.zhihu.com/p/2095560295930508953)，DeepSeek 已认证机构号，2026-10-20。本轮通过浏览器读取正文。
+
+报告补充了缓存存储、负载均衡和部署取舍的背景。其规模与性能数据不直接作为本项目的实验指标；尤其应区分 bounded replay 的近似恢复与 mask/compact 两种实现之间的等价性检查。来源到阶段交付的具体映射见[从设计参考到第一段实现](SOURCE_MAP.md)。
 
 ## 模型与协议
 
