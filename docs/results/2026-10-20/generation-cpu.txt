@@ -1,0 +1,5 @@
+Okay, so I need to figure out what 1 plus 1 is. Hmm, I remember learning this in school, but I'm not entirely sure. Let me think. I know that addition is combining two numbers. So if I have one object and I add another one, how many do I have in total? 
+
+Wait, maybe I should visualize it. If I have one apple and someone gives me another apple, how many apples do I have now? That would
+
+[length; 96 output tokens; free KV slots 512/512]

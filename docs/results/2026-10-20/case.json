@@ -3,7 +3,6 @@
   "revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
   "prompt": "The capital of France is",
   "prompt_ids": [
-    151646,
     785,
     6722,
     315,
@@ -23,5 +22,7 @@
     "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
     "minideepinfer/verify.py": "fede0d356142fe74ca7811ea620a134001ac09eb1a3e7541d3742dbfc032221f",
     "minideepinfer/generate.py": "1f293e47870ad7db7d76182347e9ca40dc5be91e73e957cc9b46caaac98c944c"
-  }
+  },
+  "tokenizer_transformers_version": "5.12.1",
+  "tokenizer_note": "IDs match the Transformers 5.12.1 tokenizer used by the recorded CPU run. Transformers 4.46.3 adds BOS (151646) by default for this checkpoint; that six-token local encoding was mistakenly recorded in the original manifest. The numerical report is unchanged."
 }
