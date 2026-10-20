@@ -8,7 +8,7 @@ class CountingBatchRunner:
         print("batch: " + ", ".join(f"{s.request_id}/{s.phase}" for s in steps))
         for step in steps:
             print(f"  {step.request_id}: inputs={step.input_ids}, slots={step.slot_mapping}")
-        return tuple(step.input_ids[-1] + 1 for step in steps)
+        return tuple(step.input_ids[-1] + 1 if step.is_last_prompt_chunk else None for step in steps)
 
     def release(self, request_id):
         pass

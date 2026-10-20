@@ -25,7 +25,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | 真实权重 CPU FP32 | 5 token prefill + 4 步固定 token decode；与 Transformers 缓存路径的 logits 最大绝对差为 **0** |
 | 缓存与重算 | 最大绝对差约 `7.56e-5`，参考模型自身也有相同差异；检查位置的 top-1 全部一致 |
 | 文本生成 | 生成 96 token，按长度停止后 **512/512** 个 KV 槽位全部回收 |
-| 自动检查 | 16 项测试通过；覆盖模型对照、因果遮罩、非连续槽位、复用和请求生命周期 |
+| 自动检查 | 36 项测试通过；覆盖模型对照、批次隔离、分块 prefill、槽位复用和请求生命周期 |
 
 以上是固定模型、输入和依赖版本下的结果，完整环境与原始 JSON 见[验证记录](docs/VALIDATION.md)。同步动态批处理也已实现，支持请求进入、退出和混合 prefill/decode，见[第三课](docs/BATCHING.md)；调度重叠尚未实现。
 

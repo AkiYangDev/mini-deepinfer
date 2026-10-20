@@ -25,7 +25,7 @@ The project can now run **DeepSeek-R1-Distill-Qwen-1.5B** using its own Qwen2 fo
 | Real weights, CPU FP32 | 5-token prefill + 4 fixed-token decode steps; maximum absolute logits difference from the Transformers cached path: **0** |
 | Cache vs. recomputation | Maximum absolute difference about `7.56e-5`, also present in the reference model's own cache/recompute comparison; top-1 agrees at every checked position |
 | Text generation | 96 generated tokens, length stop, then **512/512** KV slots reclaimed |
-| Automated checks | 16 tests pass, covering model comparisons, causal masking, noncontiguous slots, reuse, and request lifecycles |
+| Automated checks | 36 tests pass, covering model comparisons, batch isolation, chunked prefill, slot reuse, and request lifecycles |
 
 These results apply to the recorded model, inputs, and dependency versions. See the [validation record](docs/VALIDATION.md) for the environment and raw JSON. Synchronous dynamic batching now supports changing membership and mixed prefill/decode; see [lesson three](docs/BATCHING.md). Scheduling overlap is not implemented yet.
 

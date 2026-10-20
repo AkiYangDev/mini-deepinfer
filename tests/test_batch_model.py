@@ -1,8 +1,13 @@
 """Packed batches must agree with independent per-request Transformers calls."""
 
 from dataclasses import asdict
+import contextlib
 import importlib.util
+import io
+import json
+from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 AVAILABLE = all(importlib.util.find_spec(name) for name in ("torch", "transformers", "safetensors"))
 if AVAILABLE:
@@ -12,6 +17,7 @@ if AVAILABLE:
     from minideepinfer.model_runner import ModelRunner
     from minideepinfer.models.qwen2 import Qwen2Config, Qwen2ForCausalLM
     from minideepinfer.verify_batch import packed_reference_cache
+    from minideepinfer import verify
 
 
 @unittest.skipUnless(AVAILABLE, "install the model extra for numerical tests")
@@ -102,6 +108,61 @@ class BatchModelTests(unittest.TestCase):
         self.assertEqual(c.status, Status.CANCELLED)
         self.assertEqual(engine.cache.free_count, 32)
         self.assertEqual(runner._prefixes, {})
+
+    def test_chunked_prompt_matches_reference_and_rejects_premature_decode(self):
+        runner = self.runner()
+        partial = Step("a", "prefill", (2, 3), (0, 1), (7, 1), (7, 1), False)
+        self.assertEqual(runner.run_batch((partial,)), (None,))
+        with self.assertRaisesRegex(ValueError, "final prompt chunk"):
+            runner.run_batch((Step("a", "decode", (9,), (2,), (4,), (7, 1, 4)),))
+        continuation = Step("a", "prefill", (5, 6), (2, 3), (9, 4), (7, 1, 9, 4), True)
+        actual = runner.forward_batch((continuation,))[0]
+        torch.testing.assert_close(actual, self.reference_logits([2, 3, 5, 6])[-2:], atol=2e-6, rtol=2e-5)
+        with self.assertRaises(ValueError):
+            runner.forward_batch((Step("a", "prefill", (7,), (4,), (5,), (7, 1, 9, 4, 5)),))
+
+    def test_chunked_mixed_batch_greedy_matches_full_recompute_and_reclaims_state(self):
+        runner = self.runner()
+        engine = BatchEngine(runner, 32, 2, 3, chunked_prefill=True)
+        requests = [engine.submit([2], 4), engine.submit([3, 4, 5, 6, 7, 8, 9], 3)]
+        outputs = list(engine.run())
+        self.assertTrue(any(o.token_id is None for o in outputs))
+        for request in requests:
+            prefix = list(request.prompt_ids)
+            for token in request.output_ids:
+                self.assertEqual(token, int(self.reference_logits(prefix)[-1].argmax()))
+                prefix.append(token)
+        self.assertEqual(engine.cache.free_count, 32)
+        self.assertEqual(runner._prefixes, {})
+        partial = engine.submit([11, 12, 13, 14], 2)
+        engine.step()
+        self.assertFalse(runner._prefixes[partial.request_id].prompt_complete)
+        engine.cancel(partial.request_id)
+        self.assertEqual(runner._prefixes, {})
+        replacement = engine.submit([15, 16], 1)
+        list(engine.run())
+        self.assertEqual(replacement.output_ids, [int(self.reference_logits([15, 16])[-1].argmax())])
+        self.assertEqual(engine.cache.free_count, 32)
+
+    def test_verification_cli_checks_whole_and_chunked_prefill_against_reference(self):
+        tokenizer = SimpleNamespace(encode=lambda text, **kwargs:
+                                    [2, 3, 5, 7, 11] if text.startswith("The capital") else [13, 17, 19, 23])
+        for size in (None, 1, 2, 20):
+            arguments = ["verify", "--model", "unused", "--device", "cpu", "--dtype", "float32"]
+            if size is not None:
+                arguments += ["--prefill-chunk-size", str(size)]
+            output = io.StringIO()
+            with self.subTest(size=size), patch("sys.argv", arguments), contextlib.redirect_stdout(output), \
+                    patch("transformers.AutoTokenizer.from_pretrained", return_value=tokenizer), \
+                    patch("transformers.AutoModelForCausalLM.from_pretrained", return_value=self.reference), \
+                    patch.object(ModelRunner, "from_pretrained", return_value=self.runner()):
+                verify.main()
+            report = json.loads(output.getvalue())
+            self.assertTrue(report["passed"])
+            self.assertEqual(report["steps"][-1]["context_tokens"], 9)
+            prefill = [r for r in report["steps"] if r["phase"] == "prefill"]
+            self.assertEqual(sum(len(r["input_ids"]) for r in prefill), 5)
+            self.assertEqual(sum(r["is_last_prompt_chunk"] for r in prefill), 1)
 
     def test_aliases_unwritten_prefixes_and_live_restarts_are_rejected_before_execution(self):
         runner = self.runner()

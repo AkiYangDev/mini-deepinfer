@@ -21,7 +21,7 @@ class PrefixRunner:
             for token, slot in zip(step.input_ids, step.slot_mapping):
                 total += token
                 self.values[slot] = total
-            tokens.append(total % 17)
+            tokens.append(total % 17 if step.is_last_prompt_chunk else None)
         return tuple(tokens)
 
     def release(self, request_id):
@@ -81,6 +81,66 @@ class BatchEngineTests(unittest.TestCase):
             engine.submit([1] * 5, 1)
         self.assertEqual(engine.cache.free_count, 20)
 
+    def test_partial_prefill_commits_cache_progress_without_emitting_tokens(self):
+        runner = PrefixRunner()
+        engine = BatchEngine(runner, 16, max_num_seqs=2, max_num_batched_tokens=2,
+                             chunked_prefill=True)
+        request = engine.submit([1, 2, 3, 4, 5], 2)
+        for cached in (2, 4):
+            output = engine.step()[0]
+            self.assertIsNone(output.token_id)
+            self.assertEqual(request.output_ids, [])
+            self.assertEqual(request.num_cached_tokens, cached)
+            self.assertEqual(request.status, Status.RUNNING)
+        self.assertEqual(engine.step()[0].token_id, 15)
+        self.assertEqual(request.num_cached_tokens, 5)
+        list(engine.run())
+        self.assertEqual(request.output_ids, [15, 13])
+        self.assertEqual(engine.cache.free_count, 16)
+
+    def test_decode_budget_is_reserved_while_long_prompt_is_split(self):
+        runner = PrefixRunner()
+        engine = BatchEngine(runner, 20, 2, 3, chunked_prefill=True)
+        short = engine.submit([2], 4)
+        long = engine.submit([1, 2, 3, 4, 5, 6], 2)
+        engine.step()
+        self.assertEqual(long.num_cached_tokens, 2)
+        second = engine.step()
+        self.assertEqual([(o.request_id, o.phase, o.token_id) for o in second],
+                         [(short.request_id, "decode", 4), (long.request_id, "prefill", None)])
+        list(engine.run())
+        self.assertEqual(short.output_ids, [2, 4, 8, 16])
+        self.assertEqual(long.output_ids, [4, 8])
+        self.assertTrue(all(sum(len(p.input_ids) for p in b) <= 3 for b in runner.batches))
+        self.assertEqual(engine.cache.free_count, 20)
+
+    def test_cancel_partial_prompt_and_reuse_dirty_slots(self):
+        runner = PrefixRunner()
+        engine = BatchEngine(runner, 8, 2, 2, chunked_prefill=True)
+        cancelled = engine.submit([1, 2, 3, 4], 2)
+        engine.step()
+        engine.cancel(cancelled.request_id)
+        replacement = engine.submit([8, 9, 10], 1)
+        list(engine.run())
+        self.assertEqual(cancelled.output_ids, [])
+        self.assertEqual(cancelled.num_cached_tokens, 2)
+        self.assertEqual(replacement.output_ids, [10])
+        self.assertEqual(engine.cache.free_count, 8)
+
+    def test_partial_prefill_cannot_be_mistaken_for_a_sample(self):
+        class WrongPartial(PrefixRunner):
+            def run_batch(self, steps):
+                return tuple(3 for _ in steps)
+
+        engine = BatchEngine(WrongPartial(), 8, 2, 2, chunked_prefill=True)
+        request = engine.submit([1, 2, 3], 1)
+        with self.assertRaises(ValueError):
+            engine.step()
+        self.assertEqual(request.num_cached_tokens, 0)
+        self.assertEqual(request.output_ids, [])
+        self.assertEqual(request.status, Status.FAILED)
+        self.assertEqual(engine.cache.free_count, 8)
+
     def test_cancellation_and_eos_release_only_their_request(self):
         runner = PrefixRunner()
         engine = BatchEngine(runner, 10, max_num_seqs=2)
@@ -103,7 +163,7 @@ class BatchEngineTests(unittest.TestCase):
                     raise RuntimeError("after cache write")
                 return self.mode
 
-        for result in ("raise", (1,), (1, -1), (1, True)):
+        for result in ("raise", (1,), (1, -1), (1, True), (1, None)):
             with self.subTest(result=result):
                 runner = Broken()
                 runner.mode = result
@@ -125,11 +185,13 @@ class BatchEngineTests(unittest.TestCase):
         for seed in range(40):
             rng = random.Random(seed)
             runner = PrefixRunner()
-            engine = BatchEngine(runner, 16, max_num_seqs=3, max_num_batched_tokens=6)
+            chunked = bool(seed % 2)
+            engine = BatchEngine(runner, 16, max_num_seqs=3, max_num_batched_tokens=6,
+                                 chunked_prefill=chunked)
             requests = []
             for _ in range(60):
                 if rng.random() < 0.55:
-                    prompt = [rng.randrange(17) for _ in range(rng.randint(1, 4))]
+                    prompt = [rng.randrange(17) for _ in range(rng.randint(1, 9 if chunked else 4))]
                     requests.append(engine.submit(prompt, rng.randint(1, 5), rng.choice([None, 0, 8])))
                 if requests and rng.random() < 0.25:
                     engine.cancel(rng.choice(requests).request_id)

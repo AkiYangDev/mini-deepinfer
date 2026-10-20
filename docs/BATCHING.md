@@ -30,7 +30,7 @@ Free slots: 10/10
 
 每轮先为已有运行请求各保留一个 decode token 的计算预算，再按 FIFO 接纳新请求。`max_num_seqs` 限制运行请求数，`max_num_batched_tokens` 限制本轮输入 token 总数，后者必须至少等于前者。
 
-当前每个新请求一次性计算完整 prompt，并预留 `prompt长度 + max_new_tokens - 1` 个 KV 槽位。队头暂时放不下时，后面的新请求也等待，已有 decode 继续推进。单个 prompt 超过总 token 预算时直接拒绝，避免永远排队。这里没有 chunked prefill、抢占或共享前缀。
+默认每个新请求一次性计算完整 prompt，并预留 `prompt长度 + max_new_tokens - 1` 个 KV 槽位。队头暂时放不下时，后面的新请求也等待，已有 decode 继续推进。默认模式会拒绝超过总 token 预算的单个 prompt；开启下面的分块模式后，可以用剩余预算分轮完成。这里没有抢占或共享前缀。
 
 `_schedule()` 返回有序的 `tuple[Step, ...]`。每个 Step 的绝对位置从自己的请求计算，不能用拼接后 token 在大张量中的下标代替。
 
@@ -49,6 +49,25 @@ attention 同时遵守两条规则：query 只能看同一请求的 key，并且
 代码里的布尔 mask 用 `True` 表示屏蔽，与表中“允许”相反。decode 的 query 只有一个新 token，key 则包含该请求此前的全部上下文。
 
 这是短上下文的参考路径：分数矩阵大小为 `所有query数 × 所有key数`，包括随后被 mask 掉的跨请求项。它展示真正合并的模型计算，但不是高效 varlen 或 paged attention 实现，也没有由此获得提速的测量结论。
+
+## 长 prompt 分块执行
+
+`BatchEngine(..., chunked_prefill=True)` 开启按预算切分。每轮先给已有 decode 各分配一个 token，再用剩余预算推进未完成的 prompt；完整 prompt 仍需放得进总 KV 容量。
+
+例如 prompt 有 5 个 token、每轮预算为 2，prefill 分成 `[2, 2, 1]`。前两轮只写 K/V 并提交 `num_cached_tokens`，输出事件的 `token_id` 是 `None`，`output_ids` 保持空。最后一轮的 `is_last_prompt_chunk=True`，此时才选择首个输出 token。中间块不会提前触发 EOS 或消耗输出长度上限。
+
+Runner 记录前缀是否已完成 prompt，拒绝跳过中间块、重启已完成 prefill 或过早切换 decode。取消未完成的 prompt 会回收槽位和前缀记录，新请求可以复用。
+
+真实生成命令增加 `--chunked-prefill`，再通过 `--max-batched-tokens` 设置本轮预算。例如在下面的双请求命令中，把预算从 32 改成 2 并加上该开关，即可观察相同输出通过更多 prefill 轮完成。当前实现仍计算中间块的 logits，只是不采样；降低 LM head 的额外计算可以作为后续独立优化。
+
+数值对照复用已有脚本，加入块大小参数：
+
+```bash
+python -m minideepinfer.verify \
+  --model weights/DeepSeek-R1-Distill-Qwen-1.5B \
+  --device cpu --dtype float32 --prefill-chunk-size 2 \
+  --output outputs/chunked-cpu.json
+```
 
 ## 统一提交与回收
 
@@ -71,7 +90,7 @@ python -m minideepinfer.generate \
   --max-num-seqs 2 --max-batched-tokens 32
 ```
 
-只有一个 prompt 时仍使用第一课的 Engine，多个 prompt 使用 BatchEngine。文本在整轮执行结束后打印，不是流式服务。比较固定 token 的 logits：
+默认只有一个 prompt 时使用第一课的 Engine，多个 prompt 或开启分块时使用 BatchEngine。文本在整轮执行结束后打印，不是流式服务。比较固定 token 的 logits：
 
 ```bash
 python -m minideepinfer.verify_batch \

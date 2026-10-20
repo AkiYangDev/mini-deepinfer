@@ -69,4 +69,4 @@ python -m minideepinfer.verify \
 python -m unittest discover -s tests -v
 ```
 
-安装模型依赖后共执行 29 项测试；未安装时运行 15 项引擎测试，另外 14 项明确标为跳过。同步动态批处理见[第三课](BATCHING.md)，包含重复 `--prompt` 的真实运行命令；当前没有融合 attention、调度重叠或性能基准。真机记录与适用环境见[验证记录](VALIDATION.md)。
+安装模型依赖后共执行 36 项测试；未安装时运行 19 项引擎测试，另外 17 项明确标为跳过。同步动态批处理与分块 prefill 见[第三课](BATCHING.md)，包含重复 `--prompt` 的真实运行命令；当前没有融合 attention、调度重叠或性能基准。真机记录与适用环境见[验证记录](VALIDATION.md)。

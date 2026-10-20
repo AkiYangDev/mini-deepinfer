@@ -14,6 +14,7 @@ def main():
     parser.add_argument("--max-num-seqs", type=int, default=4, help="active requests in a batch")
     parser.add_argument("--max-batched-tokens", type=int, default=None, help="whole-prompt + decode budget")
     parser.add_argument("--raw", action="store_true", help="skip the checkpoint's chat template")
+    parser.add_argument("--chunked-prefill", action="store_true", help="split prompts by the batch token budget")
     args = parser.parse_args()
 
     import torch
@@ -26,8 +27,9 @@ def main():
     runner = ModelRunner.from_pretrained(
         args.model, args.device, getattr(torch, args.dtype), args.cache_capacity
     )
-    engine = (Engine(runner, args.cache_capacity) if len(prompts) == 1 else
-              BatchEngine(runner, args.cache_capacity, args.max_num_seqs, args.max_batched_tokens))
+    engine = (Engine(runner, args.cache_capacity) if len(prompts) == 1 and not args.chunked_prefill else
+              BatchEngine(runner, args.cache_capacity, args.max_num_seqs,
+                          args.max_batched_tokens, args.chunked_prefill))
     requests = []
     for prompt in prompts:
         tokens = (tokenizer.encode(prompt) if args.raw else tokenizer.apply_chat_template(

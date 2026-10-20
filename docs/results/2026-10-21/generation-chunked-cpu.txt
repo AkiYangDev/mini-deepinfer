@@ -1,0 +1,10 @@
+
+req-0: The capital of France is
+ Paris, and the capital of Germany is Berlin. So, the capital of France
+
+[length; 16 output tokens; free KV slots 128/128]
+
+req-1: A KV cache
+, the number of cache lines is 16, and the number of cache
+
+[length; 16 output tokens; free KV slots 128/128]

@@ -57,6 +57,7 @@ class Step:
     positions: tuple[int, ...]
     slot_mapping: tuple[int, ...]  # Write locations for this step's inputs.
     context_slots: tuple[int, ...]  # Past KV plus this step, in sequence order.
+    is_last_prompt_chunk: bool = True
 
 
 class Runner(Protocol):
@@ -73,7 +74,7 @@ class Runner(Protocol):
 class StepOutput:
     request_id: str
     phase: Literal["prefill", "decode"]
-    token_id: int
+    token_id: int | None  # None means an unfinished prompt chunk, not an output token.
     num_cached_tokens: int
     finish_reason: str | None
 

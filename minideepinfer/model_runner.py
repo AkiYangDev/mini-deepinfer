@@ -33,6 +33,12 @@ class ModelInput:
     attention_mask: torch.Tensor | None = None  # True blocks a query/key pair.
 
 
+@dataclass(frozen=True)
+class PrefixState:
+    slots: tuple[int, ...]
+    prompt_complete: bool
+
+
 class ModelRunner:
     def __init__(self, model, cache_capacity=512):
         self.model = model.eval()
@@ -41,7 +47,7 @@ class ModelRunner:
         self.cache = TensorKVCache(model.config, cache_capacity, self.device, weight.dtype)
         self._request_id = None
         self._cached_slots = ()
-        self._prefixes: dict[str, tuple[int, ...]] = {}
+        self._prefixes: dict[str, PrefixState] = {}
 
     @classmethod
     def from_pretrained(cls, directory, device="npu:0", dtype=torch.bfloat16, cache_capacity=512):
@@ -55,13 +61,15 @@ class ModelRunner:
         return ModelInput(*(torch.tensor(value, dtype=torch.long, device=self.device)
                             for value in (step.input_ids, step.positions, step.slot_mapping, step.context_slots)))
 
-    def _validate_step(self, step, prefix):
+    def _validate_step(self, step, prefix, allow_chunks=False):
         count = len(step.input_ids)
         if not count or len(step.positions) != count or len(step.slot_mapping) != count:
             raise ValueError("inputs, positions, and write slots must have the same nonzero length")
         if any(type(t) is not int or not 0 <= t < self.model.config.vocab_size for t in step.input_ids):
             raise ValueError("input token is outside the model vocabulary")
         start = step.positions[0]
+        if type(step.is_last_prompt_chunk) is not bool:
+            raise ValueError("is_last_prompt_chunk must be a boolean")
         if step.positions != tuple(range(start, start + count)) or start < 0:
             raise ValueError("positions must be contiguous and nonnegative")
         if start + count > self.model.config.max_position_embeddings:
@@ -72,10 +80,13 @@ class ModelRunner:
                 or any(type(s) is not int or not 0 <= s < self.cache.capacity for s in step.context_slots)):
             raise ValueError("context slots must be unique and within cache capacity")
         if step.phase == "prefill":
-            if start != 0:
-                raise ValueError("prefill must start at position zero")
+            if start and (not allow_chunks or prefix is None or step.context_slots[:start] != prefix):
+                raise ValueError("prefill chunk must extend this request's computed prefix")
+            if not allow_chunks and not step.is_last_prompt_chunk:
+                raise ValueError("partial prefill requires the batch execution path")
         elif step.phase == "decode":
-            if count != 1 or start == 0 or prefix is None or step.context_slots[:start] != prefix:
+            if (count != 1 or start == 0 or prefix is None or step.context_slots[:start] != prefix
+                    or not step.is_last_prompt_chunk):
                 raise ValueError("decode must extend the current request's computed prefix")
         else:
             raise ValueError("unknown execution phase")
@@ -85,11 +96,14 @@ class ModelRunner:
         if not steps or len(set(ids)) != len(ids):
             raise ValueError("batch must contain distinct requests")
         for step in steps:
-            self._validate_step(step, self._prefixes.get(step.request_id))
-            if step.phase == "prefill" and step.request_id in self._prefixes:
+            state = self._prefixes.get(step.request_id)
+            self._validate_step(step, state.slots if state else None, allow_chunks=True)
+            if state and step.phase == "prefill" and (state.prompt_complete or step.positions[0] == 0):
                 raise ValueError("release a live request before restarting its prefill")
+            if state and step.phase == "decode" and not state.prompt_complete:
+                raise ValueError("decode cannot precede the final prompt chunk")
         contexts = tuple(slot for step in steps for slot in step.context_slots)
-        other_slots = {s for rid, slots in self._prefixes.items() if rid not in ids for s in slots}
+        other_slots = {s for rid, state in self._prefixes.items() if rid not in ids for s in state.slots}
         if len(set(contexts)) != len(contexts) or other_slots.intersection(contexts):
             raise ValueError("batch requests must not alias another request's KV slots")
         values = (tuple(t for step in steps for t in step.input_ids),
@@ -136,15 +150,17 @@ class ModelRunner:
         inputs = self.prepare_batch(steps)
         logits = self.execute_main_model(inputs)  # One model call for the whole batch.
         for step in steps:
-            self._prefixes[step.request_id] = step.context_slots
+            self._prefixes[step.request_id] = PrefixState(step.context_slots, step.is_last_prompt_chunk)
         return logits.split([len(step.input_ids) for step in steps])
 
     @torch.inference_mode()
-    def run_batch(self, steps: tuple[Step, ...]) -> tuple[int, ...]:
+    def run_batch(self, steps: tuple[Step, ...]) -> tuple[int | None, ...]:
         try:
             logits = self.forward_batch(steps)
             # One host transfer; row order is the scheduler's request order.
-            return tuple(torch.stack([row[-1] for row in logits]).argmax(-1).tolist())
+            rows = [row[-1] for step, row in zip(steps, logits) if step.is_last_prompt_chunk]
+            tokens = iter(torch.stack(rows).argmax(-1).tolist() if rows else ())
+            return tuple(next(tokens) if step.is_last_prompt_chunk else None for step in steps)
         finally:
             self.synchronize()
 
