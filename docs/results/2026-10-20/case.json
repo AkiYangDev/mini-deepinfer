@@ -1,0 +1,27 @@
+{
+  "model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+  "revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+  "prompt": "The capital of France is",
+  "prompt_ids": [
+    151646,
+    785,
+    6722,
+    315,
+    9625,
+    374
+  ],
+  "forced_ids": [
+    12095,
+    13,
+    576,
+    4226
+  ],
+  "cpu_threads": 8,
+  "source_sha256": {
+    "minideepinfer/models/qwen2.py": "a15dcc0f296497cdb509da7fb74a42f0539954b26d1beeca20eb99fa7d6b0601",
+    "minideepinfer/model_runner.py": "4aac192bd793c9a08783a3188b180fa58fb7d8c482f240fea1e90a0145b8cb8f",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/verify.py": "fede0d356142fe74ca7811ea620a134001ac09eb1a3e7541d3742dbfc032221f",
+    "minideepinfer/generate.py": "1f293e47870ad7db7d76182347e9ca40dc5be91e73e957cc9b46caaac98c944c"
+  }
+}

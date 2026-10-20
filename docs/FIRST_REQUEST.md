@@ -66,4 +66,4 @@ python -m unittest discover -s tests -v
 
 [`tests/test_engine.py`](../tests/test_engine.py) 检查停止、取消、失败、容量与槽位复用。另一个测试 Runner 用槽位保存前缀和，逐步消费输入，再与每步完整重算对照。这样可以发现位置偏移、漏消费 token，以及旧槽位污染后续请求等问题。
 
-这只证明当前元数据和生命周期逻辑。下一课将接入 DeepSeek-R1-Distill-Qwen-1.5B 的真实 forward 与张量 KV，并对照参考模型检查 logits；Ascend 910C 环境和基础运算也在这一阶段验证。
+这些检查验证元数据和生命周期逻辑。[第二课](REAL_GENERATION.md)接入 DeepSeek-R1-Distill-Qwen-1.5B 的真实 forward 与张量 KV，并对照参考模型检查 logits。

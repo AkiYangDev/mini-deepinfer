@@ -20,7 +20,7 @@ Following the learning approach of [mini-sglang](https://github.com/sgl-project/
 
 **DeepInfer is the primary engine design reference.** Engine responsibilities, execution metadata, result handling, and future in-flight state mechanisms are studied against its source. mini-sglang informs the compact teaching format; Ascend SGLang informs NPU API and compatibility work. The [source map](docs/SOURCE_MAP.md#deepinfer-主线与当前骨架) distinguishes conceptual mappings, teaching simplifications, and mechanisms not yet implemented.
 
-> **Status: runnable skeleton.** Synchronous FIFO execution, prefill/decode metadata, logical cache slots, and request lifecycles are implemented. The current runner uses integer arithmetic to illustrate control flow. Real models, tensor KV storage, and Ascend 910C hardware validation are next.
+> **Status: single-request model implementation.** An independent DeepSeek-R1-Distill-Qwen-1.5B forward pass, tensor KV cache, and offline generation are implemented, with real-weight CPU numerical checks passing. Full-model validation on Ascend 910C is pending. The integer runner remains the first lesson; the [second lesson](docs/REAL_GENERATION.md) covers real weights.
 
 ## Run your first request
 
@@ -47,6 +47,21 @@ Free slots: 8/8
 ```
 
 Why is token `14` generated but absent from KV? Why can the next request reuse slot `0`? Follow [`demo.py`](minideepinfer/demo.py) → [`Engine.step()`](minideepinfer/engine.py) → [`SlotPool`](minideepinfer/kv_cache.py). The [first lesson](docs/FIRST_REQUEST.md) walks through the same trace in Chinese; code comments are in English.
+
+## Run a real model
+
+Install in an environment with matching PyTorch / `torch_npu` versions and prepare a local checkpoint:
+
+```bash
+python -m pip install -e ".[model]"
+python -m minideepinfer.generate \
+  --model /path/to/DeepSeek-R1-Distill-Qwen-1.5B \
+  --device npu:0 --dtype bfloat16 --max-new-tokens 32
+```
+
+[`qwen2.py`](minideepinfer/models/qwen2.py) implements RMSNorm, RoPE, GQA attention, and the MLP with basic operations. [`ModelRunner`](minideepinfer/model_runner.py) follows DeepInfer's preparation, forward, and sampling responsibilities; the engine commits results. Transformers provides the tokenizer and numerical reference.
+
+See the [second lesson](docs/REAL_GENERATION.md) for scope, dependencies, and logits checks. This is a short-context teaching implementation; dynamic batching and scheduling overlap are still planned.
 
 ## From a forward pass to an inference engine
 
@@ -111,7 +126,7 @@ If you know basic PyTorch and want to understand inference systems, start by fol
 | [Roadmap](docs/ROADMAP.md) | Deliverables from single-request generation to DeepSeek architectures |
 | [References](docs/REFERENCES.md) | Connections to DeepInfer and mini-sglang, including simplifications and attribution |
 
-Detailed design documents are currently in Chinese. The next deliverable is **single-request generation with real weights**: validate the Ascend 910C environment and basic operators, then connect an independent DeepSeek-R1-Distill-Qwen-1.5B forward pass and tensor KV cache to the existing runner interface. Each milestone will include runnable examples, explanations, and validation records.
+Detailed design documents are currently in Chinese. Next comes synchronous dynamic batching, including request admission, completion, and cache reuse, followed by a focused study of DeepInfer's in-flight states and scheduling overlap. Each stage retains a runnable example and numerical checks.
 
 ## Build and learn with us
 

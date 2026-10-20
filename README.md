@@ -20,7 +20,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 
 **技术主线是 DeepInfer 的教学化拆解。** 引擎职责、执行元数据、结果提交与后续在途状态机制对照 DeepInfer 源码演进；mini-sglang 提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。当前骨架与原版的对应、简化和未实现部分见[源码映射](docs/SOURCE_MAP.md#deepinfer-主线与当前骨架)。
 
-> **开发阶段：可运行骨架。** 已实现同步 FIFO 执行、prefill/decode 元数据、逻辑缓存槽位和请求生命周期。当前 Runner 用整数运算演示流程；真实模型、张量 KV Cache 与 Ascend 910C 硬件验证尚未接入。
+> **开发阶段：单请求模型实现。** 已接入 DeepSeek-R1-Distill-Qwen-1.5B 的独立 forward、张量 KV Cache 和离线生成，真实权重 CPU 数值对照通过。Ascend 910C 上的完整模型验证待补。整数 Runner 继续用于第一课，真实模型的运行方法见[第二课](docs/REAL_GENERATION.md)。
 
 ## 先跑一个请求
 
@@ -47,6 +47,21 @@ Free slots: 8/8
 ```
 
 为什么生成了 `14`，它却还没有写入 KV？下一轮请求为什么又能使用槽位 `0`？从[第一课：跟踪一个请求](docs/FIRST_REQUEST.md)开始，按 [`demo.py`](minideepinfer/demo.py) → [`Engine.step()`](minideepinfer/engine.py) → [`SlotPool`](minideepinfer/kv_cache.py) 的顺序读代码。
+
+## 运行真实模型
+
+在已有匹配的 PyTorch / `torch_npu` 环境中安装项目，准备好本地权重：
+
+```bash
+python -m pip install -e ".[model]"
+python -m minideepinfer.generate \
+  --model /path/to/DeepSeek-R1-Distill-Qwen-1.5B \
+  --device npu:0 --dtype bfloat16 --max-new-tokens 32
+```
+
+模型使用基础运算实现 RMSNorm、RoPE、GQA attention 和 MLP，计算路径见 [`qwen2.py`](minideepinfer/models/qwen2.py)。[`ModelRunner`](minideepinfer/model_runner.py) 对照 DeepInfer 划分输入准备、forward 和采样，Engine 负责提交结果。Transformers 用于 tokenizer 与数值对照。
+
+模型范围、依赖版本和 logits 验证命令见[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)。目前适合短上下文教学运行，尚未实现动态批处理或调度重叠。
 
 ## 从一次 forward，到一个推理引擎
 
@@ -111,7 +126,7 @@ flowchart LR
 | [开发路线](docs/ROADMAP.md) | 从单请求生成到 DeepSeek 架构的阶段交付 |
 | [参考与来源](docs/REFERENCES.md) | 与 DeepInfer、mini-sglang 的对应关系及简化边界 |
 
-下一项交付是 **真实模型的单请求生成**：补齐 Ascend 910C 环境与基础算子验证，将 DeepSeek-R1-Distill-Qwen-1.5B 的独立 forward 和张量 KV Cache 接到现有 Runner 接口。每个里程碑都将带来可运行示例、对应讲解与验证记录。
+接下来加入同步动态批处理，检查请求进入、结束和缓存复用时的行为，再做 DeepInfer 跨轮状态与调度重叠实验。各阶段都保留可运行示例和数值对照。
 
 ## 一起把推理讲明白
 

@@ -12,6 +12,9 @@ license = {text = "Apache-2.0"}
 authors = [{name = "AkiYangDev"}]
 dependencies = []
 
+[project.optional-dependencies]
+model = ["torch>=2.5,<2.11", "transformers>=4.46.3,<6", "safetensors>=0.5,<0.9"]
+
 [project.urls]
 Repository = "https://github.com/AkiYangDev/mini-deepinfer"
 

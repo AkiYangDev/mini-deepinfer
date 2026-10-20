@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [实施路线](ROADMAP.md)
 
-当前已实现同步 FIFO 骨架：一次运行一个请求，用整数 Runner 演示执行。本文先说明现有接口，再描述真实模型和优化的扩展方向。
+当前采用同步 FIFO，一次运行一个请求。第一课用整数 Runner 解释流程，真实模型路径使用独立的 Qwen2 forward 与张量 KV Cache。本文先说明现有接口，再描述扩展方向。
 
 ## 核心对象
 
@@ -11,10 +11,11 @@
 | Request | 维护请求生命周期与输出 | prompt、已输出 token、已计算输入数量、停止原因、错误 |
 | Step | 描述一次执行，不承载模型计算 | 输入 token、绝对位置、本轮写入槽位、有序上下文槽位 |
 | SlotPool | 管理逻辑槽位归属，不存储张量 | 空闲槽位、请求独占槽位 |
-| Runner | 消费 Step，返回一个已选择的 token | 当前 CountingRunner 只有整数运算；真实权重与张量缓存待接入 |
+| ModelRunner | 准备输入、执行 forward、选择 token | Qwen2 权重、设备输入、当前请求的已计算前缀 |
+| TensorKVCache | 存放真实 K/V 张量 | 按 layer / slot / KV head / head dimension 分配 |
 | Engine | FIFO 调度、准备元数据、提交结果与终止 | 等待队列、一个运行请求、该请求的预留槽位 |
 
-调度和 greedy 选择暂不拆成独立模块。出现批处理和真实 logits 后再按需要拆分。
+FIFO 调度仍在 Engine 内。真实 Runner 将输入准备、主模型与 greedy 选择写成独立方法，Engine 只接收最终 token 并提交请求状态。
 
 一个最小执行循环：
 
@@ -31,7 +32,7 @@ prefill 计算一段输入；decode 通常消费上一轮选出的 token 并预�
 
 当前准入规则：请求最多需要 `len(prompt) + max_new_tokens - 1` 个槽位；超过总容量时在提交阶段拒绝。运行前一次性预留最大需求，排队请求尚不占用槽位；前一个请求回收后，后一个请求进入运行。抢占、重计算及共享前缀的引用计数后续再加入。
 
-所有接口只在一个线程中顺序调用。Runner 必须在返回或抛错前完成本轮工作，Engine 才能立即释放槽位。`num_cached_tokens` 保留已成功提交的计算进度；请求终止后它是历史计数，槽位已经释放。当前没有异步执行、真实张量缓存或在途引用。
+Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回或抛错前完成本轮工作，Engine 才能立即释放槽位；NPU Runner 显式同步。`num_cached_tokens` 保留已成功提交的计算进度，请求终止后它是历史计数。当前没有异步执行或在途引用。
 
 当前与后续缓存实现需要满足以下条件，其中在途计算、投机与共享规则仅适用于相应能力加入后：
 
@@ -59,7 +60,7 @@ MLA 教学分为展开计算、压缩缓存和优化计算三个步骤。MoE 从
 
 ## 当前目录
 
-核心路径保持在三个文件内，直接从仓库根目录运行 `python -m minideepinfer`：
+第一课执行 `python -m minideepinfer`，真实生成执行 `python -m minideepinfer.generate`：
 
 ```text
 minideepinfer/
@@ -68,11 +69,17 @@ minideepinfer/
   engine.py       # Request / Step / Runner / Engine
   kv_cache.py     # 逻辑槽位分配与回收
   demo.py         # 整数 Runner 与可观察的执行轨迹
+  model_runner.py # 输入准备 / forward / greedy
+  tensor_cache.py # 真实 K/V 张量与槽位读写
+  models/qwen2.py # Qwen2 模型与 safetensors 加载
+  generate.py     # 离线真实生成入口
+  verify.py       # 真实权重 logits 对照
 tests/
   test_engine.py
+  test_model.py
 ```
 
-逐步阅读见[第一课](FIRST_REQUEST.md)。真实模型阶段再加入 `models/qwen2.py` 与 `backends/ascend/`；每个目录随可运行实现创建。
+逐步阅读见[第一课](FIRST_REQUEST.md)和[第二课](REAL_GENERATION.md)。目前通过基础 PyTorch/torch_npu 运算执行，融合算子后端在有具体需求时加入。
 
 ## 与 DeepInfer 的对应关系
 

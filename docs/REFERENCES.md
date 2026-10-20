@@ -2,7 +2,7 @@
 
 [返回首页](../README.md)
 
-更新时间：2026-10-20。本文记录设计参考；当前仓库包含原创文档与同步执行骨架，尚未直接引入或改写上游引擎源码。
+更新时间：2026-10-20。本文记录设计与代码来源。引擎为原创教学实现，未直接引入上游 DeepInfer 或 SGLang 引擎源码；Qwen2 数学实现的参考与改写另列如下。
 
 ## DeepInfer
 
@@ -36,6 +36,10 @@
 报告补充了缓存存储、负载均衡和部署取舍的背景。其规模与性能数据不直接作为本项目的实验指标；尤其应区分 bounded replay 的近似恢复与 mask/compact 两种实现之间的等价性检查。来源到阶段交付的具体映射见[从设计参考到第一段实现](SOURCE_MAP.md)。
 
 ## 模型与协议
+
+[`minideepinfer/models/qwen2.py`](../minideepinfer/models/qwen2.py) 对照 [Transformers v4.46.3 的 Qwen2 实现](https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/qwen2/modeling_qwen2.py) 实现数学计算和 checkpoint 参数映射，其中 RMSNorm 与旋转位置编码公式按上游简化改写。保留 Qwen / Alibaba / Hugging Face 的版权归属，适用 [Apache-2.0](https://github.com/huggingface/transformers/blob/v4.46.3/LICENSE)。本项目采用单序列、显式 attention 和外部槽位缓存，省去训练、分布式、动态 RoPE、滑窗与多模型兼容分支。
+
+入门权重固定到 [ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/tree/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562)。运行时的模型计算使用本项目实现；Transformers 用于 tokenizer 和测试参考。
 
 - [DeepSeek-R1-Distill-Qwen-1.5B](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B)：Qwen 架构入门模型。
 - [DeepSeek-V2-Lite](https://huggingface.co/deepseek-ai/DeepSeek-V2-Lite) / [V2-Lite-Chat](https://huggingface.co/deepseek-ai/DeepSeek-V2-Lite-Chat)：MLA 与 MoE 教学主线。

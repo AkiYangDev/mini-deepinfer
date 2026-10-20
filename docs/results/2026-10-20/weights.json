@@ -1,0 +1,8 @@
+{
+  "repo": "deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B",
+  "hf_revision": "ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562",
+  "weight_sha256": "58858233513d76b8703e72eed6ce16807b523328188e13329257fb9594462945",
+  "weight_bytes": 3554214621,
+  "transport": "ModelScope, identical SHA256 verified",
+  "mirror_revision": "24b8c5eceaed8fa7164bd0081e80e53f19c1a34e"
+}

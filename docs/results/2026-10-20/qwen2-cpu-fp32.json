@@ -1,0 +1,155 @@
+{
+  "passed": true,
+  "device": "cpu",
+  "dtype": "float32",
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "packages": {
+    "torch": "2.10.0+cpu",
+    "torch-npu": "2.10.0.post6",
+    "transformers": "5.12.1",
+    "safetensors": "0.8.0"
+  },
+  "steps": [
+    {
+      "phase": "prefill",
+      "context_tokens": 5,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 6,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 7,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 8,
+      "reference": {
+        "passed": true,
+        "max_abs": 7.05718994140625e-05,
+        "rms": 1.6186246284632944e-05,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 7.05718994140625e-05,
+        "rms": 1.6186246284632944e-05,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 7.05718994140625e-05,
+        "rms": 1.6186246284632944e-05,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 9,
+      "reference": {
+        "passed": true,
+        "max_abs": 7.557868957519531e-05,
+        "rms": 1.4916444342816249e-05,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 7.557868957519531e-05,
+        "rms": 1.4916444342816249e-05,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 7.557868957519531e-05,
+        "rms": 1.4916444342816249e-05,
+        "top1_agreement": 1.0
+      }
+    }
+  ]
+}

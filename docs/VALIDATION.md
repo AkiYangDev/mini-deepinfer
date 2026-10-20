@@ -2,7 +2,28 @@
 
 [返回首页](../README.md)
 
-本文规定实现阶段需要留下的证据。当前已验证 CPU 骨架的状态与逻辑槽位；尚无真实模型数值或 Ascend 910C 性能实测结果。
+本文记录当前结果，并说明后续实现需要留下的证据。目前已完成真实权重的 CPU 数值对照；完整模型的 Ascend 910C 验证尚未完成。
+
+## 2026-10-20：单请求模型验证
+
+模型固定为 DeepSeek-R1-Distill-Qwen-1.5B，revision 为 `ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562`。权重共 3,554,214,621 字节，完整 SHA256 与 Hugging Face LFS 元数据一致，见[权重记录](results/2026-10-20/weights.json)。
+
+| 检查 | 实际范围与结果 |
+| --- | --- |
+| CPU 单元测试 | 16 项通过；包含两层随机权重的模型对照、非连续槽位、因果遮罩、旧槽位复用和 checkpoint 加载 |
+| 真实权重 CPU FP32 | prefill 5 token，加 4 步固定 token decode；项目缓存路径与 Transformers 缓存路径的 logits 最大差为 0 |
+| 缓存与完整重算 | 最大绝对差为 `7.557868957519531e-5`；相同差异也出现在 Transformers 自身的缓存/重算对照中，所有检查位置 top-1 一致 |
+| CPU 离线生成 | 真实模型生成 96 token，按长度停止，512 个逻辑槽位全部回收；输出为尚未结束的思考片段，不计作回答质量验证 |
+| NPU 先行探针 | 单逻辑设备的 BF16 matmul、index_copy_ 和 index_select 通过；缩放顺序调整前的小尺寸随机权重模型也曾通过同设备参考对照 |
+| 真实权重 NPU | 加载阶段因设备被其他任务占用而 OOM，尚未进入模型数值检查；最终代码需在空闲设备重新验证 |
+
+真实权重 CPU 环境为 Python 3.12.13、PyTorch 2.10.0+cpu、Transformers 5.12.1、safetensors 0.8.0，使用 8 个计算线程。本地随机权重测试另在 Python 3.12.14、PyTorch 2.5.1+cpu、Transformers 4.46.3、safetensors 0.5.3 通过。
+
+原始[数值结果](results/2026-10-20/qwen2-cpu-fp32.json)与[输入及源码哈希](results/2026-10-20/case.json)一同保存。没有吞吐或延迟结论。
+
+初次真实权重 FP32 对照未通过 `atol=2e-5` 的设置。逐层检查发现第一层 attention 已有差异：参考实现将分数乘以预计算倒数，原实现除以平方根。改为相同计算顺序后，prefill 与前两步 decode 对齐；后两步的剩余差异与参考模型自身缓存/重算一致。当前本例采用 `atol=1e-4, rtol=2e-4`，报告仍保留实际误差，不能把该阈值推广到全部模型和输入。
+
+NPU 探针使用的环境为 Atlas 800I A3、设备名 `Ascend910_9362`、CANN 9.1.0、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6。真实权重加载前后的资源状态发生变化，新增服务占用全部逻辑设备。测试进程已退出，完整模型的结果待在空闲设备上补齐。
 
 ## 当前可运行检查
 
@@ -13,7 +34,7 @@ python -m unittest discover -s tests -v
 python -m minideepinfer
 ```
 
-`tests/test_engine.py` 包含 8 项测试，覆盖 prefill/decode 输入与位置、FIFO、EOS、长度上限、排队和运行中取消、容量拒绝、异常回收和槽位重用。其中前缀和 Runner 使用缓存状态执行，与每步完整重算对照，遍历 3 种输入长度和 3 种输出上限，并检查连续请求复用旧槽位。它只能验证元数据与状态逻辑，不能替代真实 attention/KV 的数值对齐。
+`tests/test_engine.py` 包含 8 项测试，覆盖 prefill/decode 输入与位置、FIFO、EOS、长度上限、排队和运行中取消、容量拒绝、异常回收和槽位重用。`tests/test_model.py` 另有 8 项模型测试，需要安装模型依赖；未安装时明确跳过。真实权重的数值对照命令见[第二课](REAL_GENERATION.md)。
 
 本轮本地检查环境为 Python 3.14.5；Python 3.10—3.13 与 3.14 的标准库检查由仓库 CI 配置覆盖，执行结果以对应 Actions 记录为准。
 

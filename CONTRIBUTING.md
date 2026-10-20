@@ -13,7 +13,7 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-核心执行路径从 [Engine.step()](minideepinfer/engine.py) 开始。当前演示使用整数 Runner，真实模型和 Ascend 910C 路径的改动需要补充对应数值或硬件证据。
+核心执行路径从 [Engine.step()](minideepinfer/engine.py) 开始。整数 Runner 演示控制流程，真实模型路径见[第二课](docs/REAL_GENERATION.md)。模型和 Ascend 910C 路径的改动需要补充对应数值或硬件证据。
 
 ## 适合开始的工作
 
