@@ -14,6 +14,22 @@
 
 mini-sglang 继续作为紧凑实现和教学组织的参考。mini-DeepInfer 自己实现请求循环、调度与缓存；后端接口可借鉴成熟项目，验证条件随代码一同记录。
 
+## DeepInfer 主线与当前骨架
+
+技术设计以固定版本 DeepInfer 为主要参考。下面是概念与职责映射，当前骨架为原创实现，不是对原版的逐行缩写，也尚未复现其特色优化。
+
+| DeepInfer 源码入口 | 当前教学版落点 | 保留与简化 |
+| --- | --- | --- |
+| [`LLMEngine.step()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L784) | [`Engine.step()`](../minideepinfer/engine.py) | 保留调度后执行的主循环；原版调用 C++ Scheduler 与 worker，当前只有 Python FIFO 和一个运行请求 |
+| [`ModelRunner._prepare_input_tensors()` / `execute_main_model()` / `execute_sample()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py#L110) | `Step` 与 `Runner.run()` | 显式传递输入、位置和缓存映射；当前把计算和 token 选择合在一个同步调用，真实模型阶段再分开准备、forward 和采样 |
+| [`LLMEngine._process_model_outputs()` / `post_process()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L624) | Runner 返回后的输出与请求状态提交 | 原版通过 scheduler 处理结果；当前直接提交一个 token，后续扩展批次和投机接受/回退时保留明确提交边界 |
+| [`BlockManager` 与 `CacheEngine`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/cache_engine.py) | [`SlotPool`](../minideepinfer/kv_cache.py) | 当前只演示逻辑归属和回收，不等同于原版的块管理、设备存储或模型状态布局 |
+| [`WorkerStepState` / `MetadataZOS`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py) 与 [`DeferredRelease`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L64) | 尚未实现 | 后续学习调度重叠时，显式表达前一步结果、批次重映射、事件同步和延迟释放；当前同步返回后立即回收的规则不能直接用于异步执行 |
+
+FIFO、prefill/decode 和槽位分配是推理框架的通用基础，单独实现它们还不足以展示 DeepInfer 的特点。后续每项教学实现都需要给出原版入口、保留的机制、简化理由和相应验证，逐步进入执行/采样分工、在途状态管理、投机提交/回退和 bounded replay。
+
+入门阶段的 Qwen 小模型用于验证真实 forward 与缓存循环，是本项目的教学选择；它不代表已经复现 DeepInfer 所支持模型的计算。MLA/MoE 与 V4.1 特定机制仍按各自模型前提讲解。
+
 ## Ascend SGLang 阅读入口
 
 本轮固定提交：`545ed1c6649321aa61b57a287032a7791690247e`。分支名会继续移动，后续实现不能仅依赖分支名复现。

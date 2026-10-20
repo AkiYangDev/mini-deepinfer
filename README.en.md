@@ -18,6 +18,8 @@ mini-DeepInfer is an educational inference engine under development for **Ascend
 
 Following the learning approach of [mini-sglang](https://github.com/sgl-project/mini-sglang), we aim to make the core execution path small enough to follow from request to output, then extend it one optimization at a time and measure the effect on latency, throughput, and memory.
 
+**DeepInfer is the primary engine design reference.** Engine responsibilities, execution metadata, result handling, and future in-flight state mechanisms are studied against its source. mini-sglang informs the compact teaching format; Ascend SGLang informs NPU API and compatibility work. The [source map](docs/SOURCE_MAP.md#deepinfer-主线与当前骨架) distinguishes conceptual mappings, teaching simplifications, and mechanisms not yet implemented.
+
 > **Status: runnable skeleton.** Synchronous FIFO execution, prefill/decode metadata, logical cache slots, and request lifecycles are implemented. The current runner uses integer arithmetic to illustrate control flow. Real models, tensor KV storage, and Ascend 910C hardware validation are next.
 
 ## Run your first request

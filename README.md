@@ -18,6 +18,8 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 
 我们参考 [mini-sglang](https://github.com/sgl-project/mini-sglang) 的教学思路，让读者能够沿着一次请求读完核心执行路径，再亲手加入一项优化，观察它怎样改变延迟、吞吐和显存占用。
 
+**技术主线是 DeepInfer 的教学化拆解。** 引擎职责、执行元数据、结果提交与后续在途状态机制对照 DeepInfer 源码演进；mini-sglang 提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。当前骨架与原版的对应、简化和未实现部分见[源码映射](docs/SOURCE_MAP.md#deepinfer-主线与当前骨架)。
+
 > **开发阶段：可运行骨架。** 已实现同步 FIFO 执行、prefill/decode 元数据、逻辑缓存槽位和请求生命周期。当前 Runner 用整数运算演示流程；真实模型、张量 KV Cache 与 Ascend 910C 硬件验证尚未接入。
 
 ## 先跑一个请求

@@ -1,6 +1,8 @@
 """Synchronous FIFO: schedule -> prepare -> run -> commit -> release.
 
 One request runs at a time. This module deliberately has no tensor dependency.
+Conceptual DeepInfer source mapping and simplifications: docs/SOURCE_MAP.md.
+FIFO and slot ownership are the baseline; ZOS/speculative state is not implemented.
 """
 
 from collections import deque
