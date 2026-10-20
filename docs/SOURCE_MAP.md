@@ -21,6 +21,7 @@ mini-sglang 继续作为紧凑实现和教学组织的参考。mini-DeepInfer �
 | DeepInfer 源码入口 | 当前教学版落点 | 保留与简化 |
 | --- | --- | --- |
 | [`LLMEngine.step()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L784) | [`Engine.step()`](../minideepinfer/engine.py) | 保留调度后执行的主循环；原版调用 C++ Scheduler 与 worker，当前只有 Python FIFO 和一个运行请求 |
+| 同一入口中的 `scheduler.schedule()`、有序的 sequence metadata 与 worker 调用 | [`BatchEngine._schedule()` / `step()`](../minideepinfer/batch_engine.py)、[`ModelRunner.prepare_batch()` / `run_batch()`](../minideepinfer/model_runner.py) | 第三课保留逐请求元数据与输出行对应，一轮合并成一次 forward；Python FIFO、全量预留、显式隔离 mask 和混合 prefill/decode 是教学选择，不复现原版完整调度策略 |
 | [`ModelRunner._prepare_input_tensors()` / `execute_main_model()` / `execute_sample()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py#L110) | [`ModelRunner.prepare_input()` / `execute_main_model()` / `execute_sample()`](../minideepinfer/model_runner.py) | 显式传递输入、位置和缓存映射，分开准备、forward 与 greedy；当前 `run()` 等待设备完成后才返回，尚无图执行或调度重叠 |
 | [`LLMEngine._process_model_outputs()` / `post_process()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L624) | Runner 返回后的输出与请求状态提交 | 原版通过 scheduler 处理结果；当前直接提交一个 token，后续扩展批次和投机接受/回退时保留明确提交边界 |
 | [`BlockManager` 与 `CacheEngine`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/cache_engine.py) | [`SlotPool`](../minideepinfer/kv_cache.py) | 当前只演示逻辑归属和回收，不等同于原版的块管理、设备存储或模型状态布局 |
@@ -69,7 +70,7 @@ mask/compact 对照通过，不能证明近似回放与完整重算严格等价�
 
 ## 当前进度与下一项交付
 
-同步执行与真实模型路径已落地：[`Engine.step()`](../minideepinfer/engine.py) 组织请求推进和结果提交；[`ModelRunner`](../minideepinfer/model_runner.py) 准备输入并执行模型；[`TensorKVCache`](../minideepinfer/tensor_cache.py) 读写真实 K/V。阅读入口见[第一课](FIRST_REQUEST.md)和[第二课](REAL_GENERATION.md)，验证范围见[实验记录](VALIDATION.md)。当前仍为同步单请求。
+同步执行与真实模型路径已落地：第一课保留 [`Engine.step()`](../minideepinfer/engine.py)，第三课增加 [`BatchEngine`](../minideepinfer/batch_engine.py) 与真正合并计算的多请求 Runner。阅读入口见[第一课](FIRST_REQUEST.md)、[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)，验证范围见[实验记录](VALIDATION.md)。当前没有调度重叠。
 
 单请求阶段需要保留以下证据，随后再推进同步动态批处理：
 

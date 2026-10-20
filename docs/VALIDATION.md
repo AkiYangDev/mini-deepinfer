@@ -2,7 +2,26 @@
 
 [返回首页](../README.md)
 
-本文记录当前结果，并说明后续实现需要留下的证据。目前已完成真实权重的 CPU 数值对照；完整模型的 Ascend 910C 验证尚未完成。
+本文记录当前结果，并说明后续实现需要留下的证据。目前已完成单请求和同步批次的真实权重 CPU 数值对照；完整模型的 Ascend 910C 验证尚未完成。
+
+## 2026-10-20：同步批次验证
+
+使用同一版本 DeepSeek-R1-Distill-Qwen-1.5B 权重，在 CPU FP32 上执行两个请求。输入分别为 `The capital of France is`（5 token）和 `A KV cache`（3 token），prefill 后各执行 4 步固定 token decode。每轮合并为一次模型调用，使用非连续、交错分配的槽位。
+
+| 检查 | 实际结果 |
+| --- | --- |
+| 与 Transformers 相同批次布局对照 | 10 个请求步骤的 logits 最大绝对差为 **0**，检查位置 top-1 全部一致 |
+| 批次与独立请求对照 | 最大绝对差 `1.4591217041015625e-4`；同布局 Transformers 批次与它自身独立请求也复现了相同差异 |
+| 双请求生成 | 各生成 16 token，均按长度停止，128/128 槽位回收；仅为生成流程演示 |
+| CPU 自动检查 | 本地与服务器均通过 29 项；包含 40 组固定 seed、共 2,400 次混合生命周期操作及排空后的历史/回收检查 |
+
+原始[最终数值报告](results/2026-10-20/qwen2-batch-cpu-fp32.json)包含实际 token IDs、依赖版本、源码 SHA 和全部逐步误差；[双请求输出](results/2026-10-20/generation-batch-cpu.txt)也一同保存。运行命令与批次布局见[第三课](BATCHING.md)。环境沿用下面单请求记录中的服务器 CPU 组合，计算线程为 8；没有 NPU 或性能结论。
+
+初次批次对照沿用单请求的 `atol=1e-4, rtol=2e-4`，有一步未通过，见[初次报告](results/2026-10-20/qwen2-batch-cpu-initial.json)。普通 padding 的参考批次只出现约 `9.60e-5` 差异，不能直接代替相同布局对照。随后保留 Transformers 的模型运算，独立构造 mask，并用缓存顺序适配器对齐 packed 布局，复现了相同的 `1.46e-4` 跨形状差异，同时与项目实现逐步对齐为 0。
+
+据此，本例跨批次形状的 FP32 对照使用 `atol=2e-4, rtol=2e-4`；相同布局的 `reference_packed` 仍使用 `atol=1e-4`。原单请求脚本的阈值不变。BF16 容差仍待真实 NPU 对照检验，不能由 FP32 结果推定。适配器仅服务验证，不参与引擎执行，已在 Transformers 4.46.3 与 5.12.1 测试。
+
+新增模型测试检查混合 prefill/decode、请求重排、邻居输入与未来 token 的隔离、非连续槽位复用、完整重算与 greedy 输出一致，以及模型在写入部分 K/V 后抛错时整批失败且不泄漏前缀记录。
 
 ## 2026-10-20：单请求模型验证
 
@@ -36,7 +55,7 @@ python -m unittest discover -s tests -v
 python -m minideepinfer
 ```
 
-`tests/test_engine.py` 包含 8 项测试，覆盖 prefill/decode 输入与位置、FIFO、EOS、长度上限、排队和运行中取消、容量拒绝、异常回收和槽位重用。`tests/test_model.py` 另有 8 项模型测试，需要安装模型依赖；未安装时明确跳过。真实权重的数值对照命令见[第二课](REAL_GENERATION.md)。
+当前共 29 项测试：`test_engine.py` 的 8 项与 `test_batch_engine.py` 的 7 项仅依赖标准库；`test_model.py` 的 8 项与 `test_batch_model.py` 的 6 项需要模型依赖，未安装时明确跳过。真实权重的单请求与批次数值对照命令见[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)。
 
 本轮本地检查环境为 Python 3.14.5；Python 3.10—3.13 与 3.14 的标准库检查由仓库 CI 配置覆盖，执行结果以对应 Actions 记录为准。
 

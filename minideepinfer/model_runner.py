@@ -30,6 +30,7 @@ class ModelInput:
     positions: torch.Tensor
     slot_mapping: torch.Tensor
     context_slots: torch.Tensor
+    attention_mask: torch.Tensor | None = None  # True blocks a query/key pair.
 
 
 class ModelRunner:
@@ -40,6 +41,7 @@ class ModelRunner:
         self.cache = TensorKVCache(model.config, cache_capacity, self.device, weight.dtype)
         self._request_id = None
         self._cached_slots = ()
+        self._prefixes: dict[str, tuple[int, ...]] = {}
 
     @classmethod
     def from_pretrained(cls, directory, device="npu:0", dtype=torch.bfloat16, cache_capacity=512):
@@ -48,6 +50,12 @@ class ModelRunner:
         return cls(model, cache_capacity)
 
     def prepare_input(self, step: Step) -> ModelInput:
+        prefix = self._cached_slots if step.request_id == self._request_id else None
+        self._validate_step(step, prefix)
+        return ModelInput(*(torch.tensor(value, dtype=torch.long, device=self.device)
+                            for value in (step.input_ids, step.positions, step.slot_mapping, step.context_slots)))
+
+    def _validate_step(self, step, prefix):
         count = len(step.input_ids)
         if not count or len(step.positions) != count or len(step.slot_mapping) != count:
             raise ValueError("inputs, positions, and write slots must have the same nonzero length")
@@ -67,13 +75,35 @@ class ModelRunner:
             if start != 0:
                 raise ValueError("prefill must start at position zero")
         elif step.phase == "decode":
-            if (count != 1 or step.request_id != self._request_id
-                    or step.context_slots[:start] != self._cached_slots):
+            if count != 1 or start == 0 or prefix is None or step.context_slots[:start] != prefix:
                 raise ValueError("decode must extend the current request's computed prefix")
         else:
             raise ValueError("unknown execution phase")
-        return ModelInput(*(torch.tensor(value, dtype=torch.long, device=self.device)
-                            for value in (step.input_ids, step.positions, step.slot_mapping, step.context_slots)))
+
+    def prepare_batch(self, steps: tuple[Step, ...]) -> ModelInput:
+        ids = [step.request_id for step in steps]
+        if not steps or len(set(ids)) != len(ids):
+            raise ValueError("batch must contain distinct requests")
+        for step in steps:
+            self._validate_step(step, self._prefixes.get(step.request_id))
+            if step.phase == "prefill" and step.request_id in self._prefixes:
+                raise ValueError("release a live request before restarting its prefill")
+        contexts = tuple(slot for step in steps for slot in step.context_slots)
+        other_slots = {s for rid, slots in self._prefixes.items() if rid not in ids for s in slots}
+        if len(set(contexts)) != len(contexts) or other_slots.intersection(contexts):
+            raise ValueError("batch requests must not alias another request's KV slots")
+        values = (tuple(t for step in steps for t in step.input_ids),
+                  tuple(p for step in steps for p in step.positions),
+                  tuple(s for step in steps for s in step.slot_mapping), contexts)
+        tensors = tuple(torch.tensor(v, dtype=torch.long, device=self.device) for v in values)
+        query_ids = torch.tensor([i for i, step in enumerate(steps) for _ in step.input_ids], device=self.device)
+        key_ids = torch.tensor([i for i, step in enumerate(steps) for _ in step.context_slots], device=self.device)
+        key_positions = torch.tensor([p for step in steps for p in range(len(step.context_slots))],
+                                     device=self.device)
+        # Packed reference attention: isolate sequences, then apply each one's causal mask.
+        mask = ((query_ids[:, None] != key_ids[None, :])
+                | (tensors[1][:, None] < key_positions[None, :]))
+        return ModelInput(*tensors, mask)
 
     def execute_main_model(self, inputs):
         return self.model(inputs, self.cache)
@@ -100,3 +130,23 @@ class ModelRunner:
         finally:
             # Engine may reclaim slots immediately, including after a model error.
             self.synchronize()
+
+    @torch.inference_mode()
+    def forward_batch(self, steps: tuple[Step, ...]):
+        inputs = self.prepare_batch(steps)
+        logits = self.execute_main_model(inputs)  # One model call for the whole batch.
+        for step in steps:
+            self._prefixes[step.request_id] = step.context_slots
+        return logits.split([len(step.input_ids) for step in steps])
+
+    @torch.inference_mode()
+    def run_batch(self, steps: tuple[Step, ...]) -> tuple[int, ...]:
+        try:
+            logits = self.forward_batch(steps)
+            # One host transfer; row order is the scheduler's request order.
+            return tuple(torch.stack([row[-1] for row in logits]).argmax(-1).tolist())
+        finally:
+            self.synchronize()
+
+    def release(self, request_id: str) -> None:
+        self._prefixes.pop(request_id, None)

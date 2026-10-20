@@ -2,7 +2,7 @@
 # Copyright 2024 The Qwen team, Alibaba Group and the HuggingFace Inc. team. All rights reserved.
 # Normalization/rotary equations adapted from their Apache-2.0 Qwen2 reference.
 # Source and simplifications are documented in docs/REFERENCES.md.
-"""Single-sequence Qwen2 forward, with explicit attention and external KV."""
+"""Qwen2 forward, with explicit attention, packed requests, and external KV."""
 
 from dataclasses import dataclass, fields
 import json
@@ -105,9 +105,11 @@ class Attention(nn.Module):
         v = v.repeat_interleave(groups, dim=1).transpose(0, 1)
         scores = (q.transpose(0, 1) @ k.transpose(1, 2)) * (c.head_dim ** -0.5)
         # Query positions are absolute: decode must see all preceding KV.
-        key_positions = torch.arange(k.shape[1], device=x.device)
-        future = key_positions.unsqueeze(0) > inputs.positions.unsqueeze(1)
-        scores = scores.masked_fill(future.unsqueeze(0), torch.finfo(scores.dtype).min)
+        blocked = inputs.attention_mask
+        if blocked is None:
+            key_positions = torch.arange(k.shape[1], device=x.device)
+            blocked = key_positions.unsqueeze(0) > inputs.positions.unsqueeze(1)
+        scores = scores.masked_fill(blocked.unsqueeze(0), torch.finfo(scores.dtype).min)
         probabilities = F.softmax(scores, dim=-1, dtype=torch.float32).to(x.dtype)
         output = (probabilities @ v).transpose(0, 1).reshape(-1, c.hidden_size)
         return self.o_proj(output)

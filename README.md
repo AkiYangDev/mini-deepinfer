@@ -27,7 +27,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | 文本生成 | 生成 96 token，按长度停止后 **512/512** 个 KV 槽位全部回收 |
 | 自动检查 | 16 项测试通过；覆盖模型对照、因果遮罩、非连续槽位、复用和请求生命周期 |
 
-以上是固定模型、输入和依赖版本下的结果，完整环境与原始 JSON 见[验证记录](docs/VALIDATION.md)。当前采用同步单请求执行，动态批处理与调度重叠尚未实现。
+以上是固定模型、输入和依赖版本下的结果，完整环境与原始 JSON 见[验证记录](docs/VALIDATION.md)。同步动态批处理也已实现，支持请求进入、退出和混合 prefill/decode，见[第三课](docs/BATCHING.md)；调度重叠尚未实现。
 
 一次真实的 CPU 运行输入是 `What is 1 plus 1? Answer in one short sentence.`，输出节选如下：
 
@@ -87,7 +87,7 @@ python -m unittest discover -s tests -v
 
 DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；后续再学习跨轮状态与调度重叠。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
-**当前 Qwen2 模型用于打通入门执行路径，不代表已经复现 DeepInfer 的进阶机制。** 下一步先完成 Ascend 910C 验证，再加入同步动态批处理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
+**当前 Qwen2 模型用于打通入门执行路径，不代表已经复现 DeepInfer 的进阶机制。** 单请求与同步批次保留对照，接下来补齐 Ascend 910C 验证。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 
 [mini-sglang](https://github.com/sgl-project/mini-sglang) 提供精简实现与教学组织的参考；Ascend SGLang 提供 NPU 接口与兼容性参考。详细设计见[架构说明](docs/ARCHITECTURE.md)，来源与许可证见[参考与归属](docs/REFERENCES.md)。
 

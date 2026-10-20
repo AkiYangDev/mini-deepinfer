@@ -27,7 +27,7 @@ The project can now run **DeepSeek-R1-Distill-Qwen-1.5B** using its own Qwen2 fo
 | Text generation | 96 generated tokens, length stop, then **512/512** KV slots reclaimed |
 | Automated checks | 16 tests pass, covering model comparisons, causal masking, noncontiguous slots, reuse, and request lifecycles |
 
-These results apply to the recorded model, inputs, and dependency versions. See the [validation record](docs/VALIDATION.md) for the environment and raw JSON. Execution is synchronous, with one active request; dynamic batching and scheduling overlap are not implemented yet.
+These results apply to the recorded model, inputs, and dependency versions. See the [validation record](docs/VALIDATION.md) for the environment and raw JSON. Synchronous dynamic batching now supports changing membership and mixed prefill/decode; see [lesson three](docs/BATCHING.md). Scheduling overlap is not implemented yet.
 
 A real CPU run with `What is 1 plus 1? Answer in one short sentence.` produced this excerpt:
 
@@ -87,7 +87,7 @@ Without model dependencies, 8 engine tests run and 8 model tests are explicitly 
 
 DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. Future lessons will study in-flight states and scheduling overlap. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
 
-**Qwen2 is the introductory model, not a reproduction of DeepInfer's advanced mechanisms.** Next comes full-model Ascend 910C validation, followed by synchronous dynamic batching. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
+**Qwen2 is the introductory model, not a reproduction of DeepInfer's advanced mechanisms.** Both single-request and synchronous batch paths remain available for comparison. Next comes full-model Ascend 910C validation. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 
 [mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format; Ascend SGLang informs NPU API and compatibility work. See the [architecture](docs/ARCHITECTURE.md) and [references](docs/REFERENCES.md) for further details.
 

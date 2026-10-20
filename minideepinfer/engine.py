@@ -34,6 +34,21 @@ class Request:
     error: str | None = None
 
 
+def validate_request(prompt_ids, max_new_tokens, eos_token_id, capacity):
+    prompt = tuple(prompt_ids)
+    if not prompt or any(type(token) is not int or token < 0 for token in prompt):
+        raise ValueError("prompt_ids must contain nonnegative integer token IDs")
+    if type(max_new_tokens) is not int or max_new_tokens < 1:
+        raise ValueError("max_new_tokens must be a positive integer")
+    if eos_token_id is not None and (type(eos_token_id) is not int or eos_token_id < 0):
+        raise ValueError("eos_token_id must be a nonnegative integer or None")
+    # The final predicted token is returned, but never consumed by decode.
+    required = len(prompt) + max_new_tokens - 1
+    if required > capacity:
+        raise ValueError(f"request needs {required} KV slots, capacity is {capacity}")
+    return prompt
+
+
 @dataclass(frozen=True)
 class Step:
     request_id: str
@@ -80,17 +95,7 @@ class Engine:
         max_new_tokens: int = 4,
         eos_token_id: int | None = None,
     ) -> Request:
-        prompt = tuple(prompt_ids)
-        if not prompt or any(type(token) is not int or token < 0 for token in prompt):
-            raise ValueError("prompt_ids must contain nonnegative integer token IDs")
-        if type(max_new_tokens) is not int or max_new_tokens < 1:
-            raise ValueError("max_new_tokens must be a positive integer")
-        if eos_token_id is not None and (type(eos_token_id) is not int or eos_token_id < 0):
-            raise ValueError("eos_token_id must be a nonnegative integer or None")
-        # The final predicted token is returned, but never consumed by decode.
-        required = len(prompt) + max_new_tokens - 1
-        if required > self.cache.capacity:
-            raise ValueError(f"request needs {required} KV slots, capacity is {self.cache.capacity}")
+        prompt = validate_request(prompt_ids, max_new_tokens, eos_token_id, self.cache.capacity)
         request = Request(f"req-{len(self._requests)}", prompt, max_new_tokens, eos_token_id)
         self._requests[request.request_id] = request
         self._waiting.append(request.request_id)

@@ -1,4 +1,4 @@
-name: CPU skeleton
+name: CPU checks
 
 on: [push, pull_request]
 
@@ -18,6 +18,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - run: python -m unittest discover -s tests -v
       - run: python -m minideepinfer
+      - run: python -m minideepinfer.batch_demo
 
   numerical:
     runs-on: ubuntu-24.04

@@ -24,5 +24,6 @@
     "minideepinfer/generate.py": "1f293e47870ad7db7d76182347e9ca40dc5be91e73e957cc9b46caaac98c944c"
   },
   "tokenizer_transformers_version": "5.12.1",
-  "tokenizer_note": "IDs match the Transformers 5.12.1 tokenizer used by the recorded CPU run. Transformers 4.46.3 adds BOS (151646) by default for this checkpoint; that six-token local encoding was mistakenly recorded in the original manifest. The numerical report is unchanged."
+  "tokenizer_note": "IDs match the Transformers 5.12.1 tokenizer used by the recorded CPU run. Transformers 4.46.3 adds BOS (151646) by default for this checkpoint; that six-token local encoding was mistakenly recorded in the original manifest. The numerical report is unchanged.",
+  "source_commit": "c995b313f948150ec2d312538f6118a522bba012"
 }

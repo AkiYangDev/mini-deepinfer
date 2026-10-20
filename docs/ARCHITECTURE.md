@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [实施路线](ROADMAP.md)
 
-当前采用同步 FIFO，一次运行一个请求。第一课用整数 Runner 解释流程，真实模型路径使用独立的 Qwen2 forward 与张量 KV Cache。本文先说明现有接口，再描述扩展方向。
+第一课保留同步 FIFO 单请求 Engine，第三课增加按轮调度的 BatchEngine。两者使用同一个 Qwen2 模型与张量 KV Cache；批次路径合并输入并通过 mask 隔开各请求，仍等待本轮计算结束再提交。
 
 ## 核心对象
 
@@ -14,8 +14,9 @@
 | ModelRunner | 准备输入、执行 forward、选择 token | Qwen2 权重、设备输入、当前请求的已计算前缀 |
 | TensorKVCache | 存放真实 K/V 张量 | 按 layer / slot / KV head / head dimension 分配 |
 | Engine | FIFO 调度、准备元数据、提交结果与终止 | 等待队列、一个运行请求、该请求的预留槽位 |
+| BatchEngine | 按轮准入与整批结果提交 | 等待队列、运行请求及各自槽位、请求数与 token 预算 |
 
-FIFO 调度仍在 Engine 内。真实 Runner 将输入准备、主模型与 greedy 选择写成独立方法，Engine 只接收最终 token 并提交请求状态。
+调度在 Engine / BatchEngine 内。Runner 将输入准备、主模型与 greedy 选择分开；批次计算后按照同样的请求顺序返回 token，Engine 才提交请求状态。批次版本维护每个请求独立的已计算前缀，并在请求结束后删除对应记录。
 
 一个最小执行循环：
 
@@ -30,7 +31,7 @@ prefill 计算一段输入；decode 通常消费上一轮选出的 token 并预�
 
 请求状态从 waiting 进入 running，再转为 finished、cancelled 或 failed。状态转换由 Engine 统一提交，模型层不直接修改请求队列。
 
-当前准入规则：请求最多需要 `len(prompt) + max_new_tokens - 1` 个槽位；超过总容量时在提交阶段拒绝。运行前一次性预留最大需求，排队请求尚不占用槽位；前一个请求回收后，后一个请求进入运行。抢占、重计算及共享前缀的引用计数后续再加入。
+当前准入规则：请求最多需要 `len(prompt) + max_new_tokens - 1` 个槽位；超过总容量时在提交阶段拒绝。运行前一次性预留最大需求，排队请求尚不占用槽位。第一课逐个运行，BatchEngine 在空闲槽位、请求数和本轮 token 预算允许时接纳多个请求，详见[第三课](BATCHING.md)。抢占、重计算及共享前缀的引用计数后续再加入。
 
 Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回或抛错前完成本轮工作，Engine 才能立即释放槽位；NPU Runner 显式同步。`num_cached_tokens` 保留已成功提交的计算进度，请求终止后它是历史计数。当前没有异步执行或在途引用。
 
@@ -67,16 +68,21 @@ minideepinfer/
   __init__.py
   __main__.py
   engine.py       # Request / Step / Runner / Engine
+  batch_engine.py # 按轮调度 / 预算 / 整批提交
   kv_cache.py     # 逻辑槽位分配与回收
   demo.py         # 整数 Runner 与可观察的执行轨迹
+  batch_demo.py   # 批次从 [A, B] 变成 [B, C]
   model_runner.py # 输入准备 / forward / greedy
   tensor_cache.py # 真实 K/V 张量与槽位读写
   models/qwen2.py # Qwen2 模型与 safetensors 加载
   generate.py     # 离线真实生成入口
   verify.py       # 真实权重 logits 对照
+  verify_batch.py # 批次与独立请求的数值对照
 tests/
   test_engine.py
   test_model.py
+  test_batch_engine.py
+  test_batch_model.py
 ```
 
 逐步阅读见[第一课](FIRST_REQUEST.md)和[第二课](REAL_GENERATION.md)。目前通过基础 PyTorch/torch_npu 运算执行，融合算子后端在有具体需求时加入。
