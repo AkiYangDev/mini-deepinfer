@@ -1,0 +1,11 @@
+{
+  "version": "0.1.0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/qwen35-2b-chunk-pipeline-npu-fp32.json",
+      "sha256": "bfc0d199c64d4e11ea615ba235800a21329c5e7b4d0cc1fc2b1f35fec8ae7457",
+      "scope": "Ascend 910C, Qwen3.5-2B, FP32: nine budgeted cross-round steps, fourteen full-logit comparisons against independent full-prompt execution, four partial rows without sampling, callback arrival, last-use release, host-error cleanup and runner reuse.",
+      "limits": "One logical device and short fixed prompts. Source hashes include related modules; they do not imply every branch in those modules ran on the device. BatchEngine shared-planner behavior also has independent CPU scheduling checks. No performance measurement. Earlier chapter reports retain their own historical source hashes."
+    }
+  ]
+}

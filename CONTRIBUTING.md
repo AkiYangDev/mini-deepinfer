@@ -16,6 +16,10 @@ python -m unittest discover -s tests -v
 
 核心执行路径从 [Engine.step()](minideepinfer/engine.py) 开始。真实模型见[第二课](docs/REAL_GENERATION.md)，同步多请求与批次隔离见[第三课](docs/BATCHING.md)。模型和 Ascend 910C 路径的改动需要补充对应数值或硬件证据。
 
+第一次安装可按[运行指南](docs/START_HERE.md)选择无依赖、CPU 小模型或 Ascend 路径。[完整学习索引](docs/LEARNING_PATH.md)保留各课入口。
+
+发布检查还需从构建的 wheel 安装，在仓库目录之外运行例子，避免源码目录遮住打包遗漏。`python scripts/check_evidence.py` 只核对当前源码与保存的实机报告；修改相关源码后，需要按影响补验证，不能只更新哈希让检查变绿。调度生成检查使用固定 seed，保留失败 seed 和轨迹以便复现。
+
 ## 适合开始的工作
 
 - 完善架构与教学文档中的解释和图示。

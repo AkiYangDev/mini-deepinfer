@@ -10,88 +10,38 @@ Built for learning, targeting Ascend 910C.
 
 [简体中文](README.md) · **English**
 
-[Read the code](#follow-a-request-through-the-code) · [Run a model](#run-a-real-model) · [Validation](docs/VALIDATION.md) · [Roadmap](docs/ROADMAP.md)
+[Setup](docs/START_HERE.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.1 notes](docs/RELEASE_v0.1.md) · [Validation](docs/VALIDATION.md)
 
 </div>
 
-mini-DeepInfer studies the design of [DeepInfer](https://github.com/deepseek-ai/DeepInfer) through a small teaching engine: how inputs become tokens, how prefill leads into decode, where the KV cache lives, and who releases it when a request ends.
+mini-DeepInfer studies the design of [DeepInfer](https://github.com/deepseek-ai/DeepInfer) through a small teaching engine: how prompts are split into chunks, how decode consumes the previous device token, who owns the KV and linear-attention state, and why a finished request cannot always release its cache immediately.
 
-The project now runs **text-only Qwen3.5-2B on Ascend 910C** using its own forward pass and cache management. Qwen3.5-0.8B is the smaller development model; DeepSeek-R1-Distill-Qwen-1.5B remains a regression baseline. Full attention stores token KV, while DeltaNet keeps convolution and recurrent state for each request.
+The project runs **text-only Qwen3.5-2B on Ascend 910C** using its own forward pass and cache management. Fourteen lessons follow the same request path, from dependency-free integer examples to tiny PyTorch models and real checkpoints. Qwen3.5-0.8B is the development model; DeepSeek-R1-Distill-Qwen-1.5B remains a regression baseline.
 
-The main example uses FP32. BF16 also passes fixed short trajectories against an independent recurrent reference with FP32 state storage; native chunk-path and cross-schedule generation differences are documented in the [reference notes](docs/BF16_REFERENCE.md). The engine supports dynamic batching, chunked prefill, cancellation, and cache reclamation. Execution is synchronous by default, with an optional path that separates launch from result commit.
+## Start small
 
-## What runs today
-
-| Check | Result |
-| --- | --- |
-| Qwen3.5-0.8B / Ascend 910C FP32 | Chunked prefill + 4 fixed-token decode steps; maximum absolute difference about `2.00e-5` |
-| Qwen3.5-2B / Ascend 910C FP32 | Single-request and two-request numerical checks pass; maximum absolute difference about `2.29e-5`, with top-1 agreement at every checked position |
-| Qwen3.5 BF16 recurrent checks | Fixed short trajectories for 0.8B, 2B, and a two-request 2B batch have maximum difference **0**, with zero tolerances and matched scan/state semantics |
-| 2B, two concurrent requests | Chinese explanation and English answer both stop at EOS; 512/512 logical slots reclaimed |
-| Ascend 910C event experiment | Cross-stream reads, host result copies, and deferred release pass on tiny tensors; [lesson six](docs/NPU_EVENTS.md) preserves the actual output |
-| 2B deferred-result experiment | Six real-weight FP32 batches match synchronous Runner logits with zero difference, covering chunks, cancellation, and host-error cleanup; see [lesson seven](docs/DEFERRED_RUNNER.md) |
-| Split-step BatchEngine | Six real 2B rounds and ten logit comparisons match the sync path with zero difference, covering in-flight cancellation, arrivals, slot reuse, and stopping; see [lesson eight](docs/DEFERRED_ENGINE.md) |
-| Prepare text while waiting | Both orders produce identical batches and tokens. Four short texts show no speedup; only one of three captured steps overlaps tokenization with device activity. See [lesson nine](docs/PREPARE_DURING_STEP.md) |
-| Prepare sampler indices earlier | Thirteen full-logit comparisons match exactly. Moving the index upload before forward allows tokenization overlap in all three captured steps; an overall speedup is not established. See [lesson ten](docs/SAMPLER_INPUTS.md) |
-| Cross-round arrivals, stops, and reuse | Existing requests use device tokens; new prompts wait for admission. EOS/cancellation releases cache after its final use. Eight real 2B logit comparisons pass at the existing tolerances. See [lesson thirteen](docs/ARRIVALS.md) |
-
-The latest [cross-round chunk check](docs/CHUNK_PIPELINE.md) passes nine real 2B rounds and fourteen logit comparisons, with maximum difference about `2.67e-5`. Four intermediate chunks produce no sample, and all 24/24 slots are reclaimed. Step construction is shared with BatchEngine; scheduling and in-flight results remain separate.
-
-The English answer from the real 2B run:
-
-```text
-1 plus 1 equals 2.
-
-[eos; 9 output tokens; free KV slots 512/512]
-```
-
-The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt), inputs, environment, errors, and failed BF16 checks are preserved in the [validation record](docs/VALIDATION.md). Model comparisons check short-context correctness. Lesson nine separately records timing for a small workload, without a general performance claim.
-
-## Start with a small example
-
-No dependencies, weights, or NPU are needed for this CPU simulation:
+With Python 3.10+, run an example that needs no model dependencies, weights, or NPU:
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
+python -m pip install -e .
 python -m minideepinfer.step_demo
 ```
 
-Follow requests A, B, and C: B changes batch rows but keeps its own result; A is cancelled but its slots stay protected until all users finish. [Lesson five](docs/STEP_STATE.md) explains the code in Chinese. The demo prints Chinese explanations and advances events by hand; it does not execute a model.
+Why are A's cache slots still held after cancellation? How does B find its previous result after changing batch rows? The demo prints state transitions and advances events by hand. It does not execute a model; its explanations are in Chinese.
 
-With an Ascend environment, [lesson six](docs/NPU_EVENTS.md) checks those boundaries using real NPU events and tiny tensors, without loading weights.
-
-[Lesson seven](docs/DEFERRED_RUNNER.md) applies the same ordering to model execution: launch computation, then commit progress after reading the result. It also includes a tiny PyTorch model requiring no weights. Only one batch may be in flight.
-
-[Lesson eight](docs/DEFERRED_ENGINE.md) brings that result into BatchEngine. An in-flight cancellation drops the output but retains cache slots until the batch is complete. With PyTorch installed, try it without downloading weights:
-
-```bash
-python -m minideepinfer.verify_deferred_engine --device cpu
-```
-
-[Lesson nine](docs/PREPARE_DURING_STEP.md) prepares the next text while waiting, then compares both orders and checks an actual device timeline. It explains why allowing overlap does not automatically make execution faster.
-
-[Lesson ten](docs/SAMPLER_INPUTS.md) follows that trace to a sampler-index copy: if the row numbers are already known, why prepare them after forward? It walks through the small change, numerical checks, and the resulting wait boundary.
-
-[Lesson eleven](docs/DECODE_PIPELINE.md) studies DeepInfer's cross-round order: keep sampled tokens on the device, submit the next forward, then process the previous output. [Lesson twelve](docs/STOPPING_PIPELINE.md) reuses that loop to handle EOS, cancellation, and departing requests.
-
-[Lesson thirteen](docs/ARRIVALS.md) adds arrivals and slot reuse. [Lesson fourteen](docs/CHUNK_PIPELINE.md) splits prompts across rounds: decode uses the budget first, then prompt chunks use what remains. Explicit issued progress plans the next chunk before the CPU commits the previous result. With PyTorch installed, run the tiny-model comparison:
+With PyTorch installed, run a tiny hybrid-attention model without downloading weights:
 
 ```bash
 python -m minideepinfer.verify_chunk_pipeline --device cpu
 ```
 
-Arrivals and cancellation currently use a single-threaded result callback. Performance has not been measured, and the default engine keeps its existing scheduling behavior.
+It mixes decode with prompt chunks, admits a later request, and compares the results against synchronous whole-prompt execution. The report contains batch plans, errors, and cache reclamation. See the [setup guide](docs/START_HERE.md) for dependency choices.
 
-## Run a real model
+## Run a real model on Ascend 910C
 
-Install the model dependencies from the repository directory:
-
-```bash
-python -m pip install -e ".[qwen35]"
-```
-
-Download the pinned checkpoints using [lesson four](docs/QWEN35.md). In an Ascend environment with compatible PyTorch, torch_npu, and CANN:
+Use an environment with matching PyTorch, torch_npu, and CANN. Install the Python dependencies and download the pinned Qwen3.5-2B checkpoint as described in [setup](docs/START_HERE.md). From the repository directory:
 
 ```bash
 python -m minideepinfer.generate \
@@ -102,51 +52,47 @@ python -m minideepinfer.generate \
   --max-num-seqs 2 --max-batched-tokens 16 --chunked-prefill
 ```
 
-Without an NPU, use `--device cpu --dtype float32` and start with 0.8B. This implementation targets short teaching examples; CPU execution still loads the full text model.
+The English answer from the real 2B run:
 
-Add `--deferred` to use lesson eight's split-step path. The offline loop still waits for each batch; it does not demonstrate scheduling overlap or a speedup.
+```text
+1 plus 1 equals 2.
 
-`--prepare-during-step` prepares new texts one at a time and enables split-step execution automatically. Default generation is unchanged; see [lesson nine](docs/PREPARE_DURING_STEP.md) for commands and measured limits.
+[eos; 9 output tokens; free KV slots 512/512]
+```
 
-## Follow a request through the code
+The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt) is preserved. The main path uses FP32, eager execution, and greedy sampling for short teaching examples. Without an NPU, use `--device cpu` and start with the 0.8B checkpoint; CPU execution still loads the full text model.
 
-If you know basic Python and PyTorch, follow these entry points. The project implements the model computation; Transformers supplies the tokenizer and numerical reference.
+## Follow the code
 
 | Question | Read |
 | --- | --- |
-| What does each prefill or decode step consume? | [`Engine.step()`](minideepinfer/engine.py) |
-| How do tokens, positions, and KV slots line up? | [`ModelRunner.prepare_input()`](minideepinfer/model_runner.py) |
-| How does attention write and read past K/V? | [`qwen2.py`](minideepinfer/models/qwen2.py) · [`TensorKVCache`](minideepinfer/tensor_cache.py) |
-| How does linear attention remember history without mixing requests? | [`qwen3_5.py`](minideepinfer/models/qwen3_5.py) · [`HybridCache`](minideepinfer/hybrid_cache.py) |
-| How do logits become the next token? | [`ModelRunner.execute_sample()`](minideepinfer/model_runner.py) |
-| Who releases slots on completion or cancellation? | [`Engine`](minideepinfer/engine.py) · [`SlotPool`](minideepinfer/kv_cache.py) |
-| When can an in-flight cancellation release slots and commit progress? | [`BatchEngine.launch_step()` / `finish_step()`](minideepinfer/batch_engine.py) · [lesson eight](docs/DEFERRED_ENGINE.md) |
-| How can the next round use a token before the CPU reads it? | [`FixedDecodePipeline`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
-| How does a stopped request drain its already submitted next round? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lesson twelve](docs/STOPPING_PIPELINE.md) |
-| How do fresh prompts and previous device tokens share a batch? | [`submit()` / `_schedule()`](minideepinfer/stopping_pipeline.py) · [lesson thirteen](docs/ARRIVALS.md) |
-| Where does the next chunk start before the CPU commits the previous round? | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [lesson fourteen](docs/CHUNK_PIPELINE.md) |
+| What does each prefill or decode step consume? | [`Engine.step()`](minideepinfer/engine.py) · [lesson one](docs/FIRST_REQUEST.md) |
+| How are requests batched while keeping positions and cache separate? | [`BatchEngine`](minideepinfer/batch_engine.py) · [lesson three](docs/BATCHING.md) |
+| Why does Qwen3.5 need two kinds of cache? | [`HybridCache`](minideepinfer/hybrid_cache.py) · [lesson four](docs/QWEN35.md) |
+| How is an in-flight cancellation drained? | [`DeferredRunner`](minideepinfer/deferred_runner.py) · [lessons seven and eight](docs/DEFERRED_ENGINE.md) |
+| How can the next forward use a token before the CPU reads it? | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
+| How do stops, arrivals, and chunks share one loop? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lessons twelve through fourteen](docs/CHUNK_PIPELINE.md) |
+| How do issued progress, CPU commits, and final device use differ? | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [lesson fourteen](docs/CHUNK_PIPELINE.md) |
 
-New to inference engines? [Lesson one](docs/FIRST_REQUEST.md) uses an integer runner so every input, position, and slot can be printed. It needs only Python 3.10+, without model dependencies or weights:
+Default BatchEngine supports synchronous dynamic batching, input budgets, prompt chunks, cancellation, and reclamation. `--deferred` separates launch from commit while keeping one batch in flight. Cross-round device-token handoff and callback arrivals remain a separate teaching experiment through `verify_chunk_pipeline`; they are not integrated into `generate`. Detailed lessons are currently in Chinese, with English code comments. The [learning path](docs/LEARNING_PATH.md) lists all fourteen.
 
-```bash
-python -m minideepinfer
-python -m unittest discover -s tests -v
-```
+## What is verified
 
-Without model dependencies, 54 engine, state, and interval tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+| Check | Evidence |
+| --- | --- |
+| Real 2B / Ascend 910C FP32 | Single-request and two-request comparisons against independent references pass, with top-1 agreement at checked positions |
+| Cross-round chunks, arrivals, and reuse | Nine rounds and fourteen full-logit comparisons pass at existing tolerances; maximum difference about `2.67e-5`. Four intermediate chunks produce no sample, and 24/24 slots are reclaimed |
+| Cancellation and host errors | Release waits for final device use, and the Runner can be reused. Failed-drain ownership is separately checked through CPU fault injection |
+| BF16 | Fixed short trajectories pass a matched recurrent reference with FP32 state. Native chunk-path and longer cross-schedule generation still differ; see the [notes](docs/BF16_REFERENCE.md) |
 
-## How this relates to DeepInfer
+These model checks cover short-context correctness. Existing small-workload timing and trace experiments do not establish a general speedup, and this project makes no production-throughput claim. The [validation record](docs/VALIDATION.md) preserves environments, raw results, and source hashes. Run `python scripts/check_evidence.py` to compare the v0.1 evidence with a clean checkout without launching an NPU workload.
 
-DeepInfer is the primary technical reference. The implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, models, and engine integration; lessons eleven through fourteen connect device tokens, departing requests, new arrivals, and prompt chunks across rounds. Full dynamic scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned revision, entry points, and teaching simplifications.
+## Why DeepInfer
 
-**Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
+DeepInfer is the engine design reference: input preparation, model execution, sampling, result handling, and the lifetime of cross-round state become runnable code. The [source map](docs/SOURCE_MAP.md) identifies pinned upstream files and teaching simplifications. Qwen supplies the model example; DeltaNet is not presented as a DeepInfer-specific mechanism.
 
-[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format; Ascend SGLang informs NPU API and compatibility work. See the [architecture](docs/ARCHITECTURE.md) and [references](docs/REFERENCES.md) for further details.
+[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, speculative decoding, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
 
-## Contribute
+[Open an issue](https://github.com/AkiYangDev/mini-deepinfer/issues) with a concrete question: a confusing step, a command that fails, or a cache behavior needing an example. Code and tutorial improvements are welcome through the [contribution guide](CONTRIBUTING.md). If this learning path is useful, star the project to follow its development.
 
-Bring a concrete question: a step that is hard to follow, a command that fails, or a cache behavior that needs an example. [Open an issue](https://github.com/AkiYangDev/mini-deepinfer/issues), or improve the code and lessons through the [contribution guide](CONTRIBUTING.md).
-
-If this learning path is useful to you, star the project to follow the next implementation and experiment.
-
-This is an independent community project, with no official affiliation with DeepSeek, SGLang, or Huawei. Original code and documentation use [Apache-2.0](LICENSE); models and third-party code retain their respective licenses.
+This is an independent community project with no official affiliation with DeepSeek, SGLang, or Huawei. Original code and documentation use [Apache-2.0](LICENSE); models and third-party code retain their respective licenses.

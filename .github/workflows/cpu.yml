@@ -17,6 +17,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - run: python -m unittest discover -s tests -v
+      - run: python scripts/check_evidence.py
       - run: python -m minideepinfer
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
@@ -53,3 +54,27 @@ jobs:
       - run: python -m minideepinfer.verify_arrivals --device cpu --output outputs/arrivals-cpu.json
       - run: python -m minideepinfer.verify_chunk_pipeline --device cpu --output outputs/chunk-pipeline-cpu.json
       - run: python -m minideepinfer.benchmark_prepare --device cpu --repeats 1 --output outputs/prepare-cpu.json
+      - run: python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/mini-dist" .
+      - run: python -m pip install --force-reinstall --no-deps "$RUNNER_TEMP"/mini-dist/*.whl
+      - run: python -I -m minideepinfer.verify_chunk_pipeline --device cpu --output installed-chunk.json
+        working-directory: ${{ runner.temp }}
+
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: "3.12"
+      - run: python -m pip wheel --no-deps --wheel-dir "$RUNNER_TEMP/mini-dist" .
+      - run: python -m venv "$RUNNER_TEMP/mini-install"
+      - run: '"$RUNNER_TEMP/mini-install/bin/python" -m pip install --no-deps "$RUNNER_TEMP"/mini-dist/*.whl'
+      - name: Run the installed package outside the checkout
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/mini-install/bin/python" -I -c "from importlib.metadata import version; assert version('mini-deepinfer') == '0.1.0'"
+          "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer
+          "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.batch_demo
+          "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.step_demo
+          "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.generate --help
+          "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.verify_chunk_pipeline --help
