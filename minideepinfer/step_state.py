@@ -16,6 +16,16 @@ class Completion(Protocol):
         ...
 
 
+class RetainedState(Protocol):
+    request_ids: tuple[str, ...]
+
+    @property
+    def closed(self) -> bool: ...
+
+    @property
+    def releasable(self) -> bool: ...
+
+
 def batch_remap(previous: tuple[str, ...], current: tuple[str, ...]) -> tuple[int, ...]:
     """For each current row, find its previous row; -1 means a new request."""
     for ids in (previous, current):
@@ -60,6 +70,10 @@ class StepState:
         self._closed = True
 
     @property
+    def closed(self) -> bool:
+        return self._closed
+
+    @property
     def releasable(self) -> bool:
         return self._closed and self.ready.query() and self.last_use.query()
 
@@ -74,12 +88,12 @@ class DeferredRelease:
     def __init__(self, pool: SlotPool, release: Callable[[str], None]):
         self.pool = pool
         self.release = release
-        self._states: list[StepState] = []
+        self._states: list[RetainedState] = []
         self._retired: set[str] = set()
         self._released: set[str] = set()
 
-    def retain(self, state: StepState) -> None:
-        if state._closed or any(item is state for item in self._states):
+    def retain(self, state: RetainedState) -> None:
+        if state.closed or any(item is state for item in self._states):
             raise ValueError("retain an open state exactly once before launching work")
         if (self._retired | self._released).intersection(state.request_ids):
             raise ValueError("cannot launch work for a retired request")

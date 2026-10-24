@@ -52,7 +52,7 @@ Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回�
 
 参考路径用基础运算表达数学含义；优化路径逐项替换归一化、attention、专家计算或缓存写入。每个算子记录输入形状、布局、dtype、版本和数值对照。
 
-当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。[第五课](STEP_STATE.md)先用独立 CPU 实验解释在途步骤状态、批次映射与延迟释放；NPU 事件、真实执行重叠和图执行分别验证后再接入。需要特别检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
+当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。[第五课](STEP_STATE.md)用独立 CPU 实验解释在途步骤状态、批次映射与延迟释放；[第六课](NPU_EVENTS.md)检查实际 NPU 事件、微型张量与主机缓冲区的生命周期。真实 Runner 重叠和图执行分别验证后再接入。需要特别检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
 
 ## 模型层
 
@@ -75,6 +75,8 @@ minideepinfer/
   batch_demo.py   # 批次从 [A, B] 变成 [B, C]
   step_state.py   # 独立实验：按请求映射结果 / 等使用者完成后释放
   step_demo.py    # 手动事件：提前读取与提前回收为什么不行
+  npu_events.py   # 未记录事件保护 / 等待结果拷贝 / 持有缓冲区
+  npu_step_demo.py # 微型张量的实际 NPU 跨流与回收实验
   model_runner.py # 输入准备 / forward / greedy
   tensor_cache.py # 真实 K/V 张量与槽位读写
   hybrid_cache.py # 完整注意力 KV 与请求独占的线性状态

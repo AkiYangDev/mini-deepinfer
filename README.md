@@ -28,6 +28,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | Qwen3.5-2B / Ascend 910C FP32 | 单请求与双请求数值对照通过；最大绝对误差约 `2.29e-5`，检查位置 top-1 全部一致 |
 | Qwen3.5 BF16 递推对照 | 0.8B、2B 与 2B 双请求的固定短轨迹，在同扫描方式与状态精度下最大差异 **0**，零容差通过 |
 | 2B 双请求生成 | 中文解释与英文问答均遇 EOS 结束，512/512 逻辑槽位回收 |
+| Ascend 910C 事件实验 | 微型张量的跨流读取、CPU 结果拷贝与延迟回收通过；[第六课](docs/NPU_EVENTS.md)保留实际输出 |
 
 真实 2B 运行中的英文回答：
 
@@ -50,6 +51,8 @@ python -m minideepinfer.step_demo
 ```
 
 它跟着 A、B、C 三个请求，展示 B 换了行怎样接上自己的结果，以及 A 取消后为什么还不能立刻归还缓存。讲解见[第五课：请求结束了，缓存为什么还不能还？](docs/STEP_STATE.md)。这是手动事件驱动的 CPU 实验，真实模型路径仍按下面的方法运行。
+
+有 Ascend 环境后，可以接着读[第六课：NPU 算完了，CPU 就能读吗？](docs/NPU_EVENTS.md)，用真实事件和小张量检查同样的顺序，无需加载权重。
 
 ## 运行真实模型
 
@@ -92,11 +95,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-未安装模型依赖时执行 25 项引擎与状态测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
+未安装模型依赖时执行 30 项引擎与状态测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；[第五课](docs/STEP_STATE.md)进一步用独立实验解释跨轮状态、批次映射与延迟释放，NPU 调度重叠随后验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
+DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；[第五课](docs/STEP_STATE.md)用独立实验解释跨轮状态、批次映射与延迟释放，[第六课](docs/NPU_EVENTS.md)换成 NPU 事件和微型张量。真实模型的调度重叠随后验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
 **Qwen 小模型承载教学实例，DeepInfer 继续作为引擎设计主线。** 单请求与同步批次保留对照，[第四课](docs/QWEN35.md)展开混合模型的状态管理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 

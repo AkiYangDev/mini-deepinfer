@@ -35,6 +35,10 @@
 
 报告补充了缓存存储、负载均衡和部署取舍的背景。其规模与性能数据不直接作为本项目的实验指标；尤其应区分 bounded replay 的近似恢复与 mask/compact 两种实现之间的等价性检查。来源到阶段交付的具体映射见[从设计参考到第一段实现](SOURCE_MAP.md)。
 
+## NPU 事件接口
+
+第六课的设备接口对照 [TorchNPU 26.0 / PyTorch 2.10.0 支持表](https://www.hiascend.com/document/detail/en/Pytorch/2600/apiref/PyTorchNativeapi/docs/en/native_apis/pytorch_2-10-0/torch-cuda.md)、[Ascend/pytorch v2.10.0 的 streams.py](https://github.com/Ascend/pytorch/blob/v2.10.0/torch_npu/npu/streams.py)与 [NPUEvent::query()](https://github.com/Ascend/pytorch/blob/v2.10.0/torch_npu/csrc/core/npu/NPUEvent.cpp#L77)。实际安装版本为 torch_npu 2.10.0.post6，按[执行记录](results/2026-10-24/npu-step-events.json)绑定源码 SHA；`RecordedEvent` / `PendingTokens` 为本项目的教学实现，未复制上游事件实现代码。微型张量实验不代表模型执行重叠已验证，细节见[第六课](NPU_EVENTS.md)。
+
 ## 模型与协议
 
 [`models/qwen3_5.py`](../minideepinfer/models/qwen3_5.py) 对照 [Transformers v5.12.1 的 Qwen3.5 实现](https://github.com/huggingface/transformers/blob/v5.12.1/src/transformers/models/qwen3_5/modeling_qwen3_5.py) 改写纯文本计算：保留零中心 RMSNorm、部分 RoPE、带 gate 的完整注意力、Gated DeltaNet 和 checkpoint 参数映射；将 DeltaNet 展开为逐请求、逐 token 的参考递推。保留 Qwen / Hugging Face 版权归属，适用 Apache-2.0。省去视觉、训练、MTP 和优化内核，缓存由引擎显式管理。

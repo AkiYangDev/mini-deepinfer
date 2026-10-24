@@ -20,6 +20,7 @@ jobs:
       - run: python -m minideepinfer
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
+      - run: python -m minideepinfer.npu_step_demo --help
 
   numerical:
     runs-on: ubuntu-24.04

@@ -28,6 +28,7 @@ The main example uses FP32. BF16 also passes fixed short trajectories against an
 | Qwen3.5-2B / Ascend 910C FP32 | Single-request and two-request numerical checks pass; maximum absolute difference about `2.29e-5`, with top-1 agreement at every checked position |
 | Qwen3.5 BF16 recurrent checks | Fixed short trajectories for 0.8B, 2B, and a two-request 2B batch have maximum difference **0**, with zero tolerances and matched scan/state semantics |
 | 2B, two concurrent requests | Chinese explanation and English answer both stop at EOS; 512/512 logical slots reclaimed |
+| Ascend 910C event experiment | Cross-stream reads, host result copies, and deferred release pass on tiny tensors; [lesson six](docs/NPU_EVENTS.md) preserves the actual output |
 
 The English answer from the real 2B run:
 
@@ -50,6 +51,8 @@ python -m minideepinfer.step_demo
 ```
 
 Follow requests A, B, and C: B changes batch rows but keeps its own result; A is cancelled but its slots stay protected until all users finish. [Lesson five](docs/STEP_STATE.md) explains the code in Chinese. The demo prints Chinese explanations and advances events by hand; the real-model engine remains synchronous.
+
+With an Ascend environment, [lesson six](docs/NPU_EVENTS.md) checks those boundaries using real NPU events and tiny tensors, without loading weights.
 
 ## Run a real model
 
@@ -92,11 +95,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-Without model dependencies, 25 engine and state tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+Without model dependencies, 30 engine and state tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
 
 ## How this relates to DeepInfer
 
-DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. [Lesson five](docs/STEP_STATE.md) adds an independent experiment for in-flight state, batch remapping, and deferred release; NPU scheduling overlap is the next step. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
+DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. [Lesson five](docs/STEP_STATE.md) adds an independent experiment for in-flight state, batch remapping, and deferred release; [lesson six](docs/NPU_EVENTS.md) uses real NPU events and tiny tensors. Scheduling overlap with a real model is the next step. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
 
 **Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 

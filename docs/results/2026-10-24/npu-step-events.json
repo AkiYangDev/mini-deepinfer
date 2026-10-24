@@ -1,0 +1,77 @@
+{
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "torch_npu": "2.10.0.post6",
+  "device": "npu:0",
+  "raw_unrecorded_query": true,
+  "guarded_unrecorded_query": false,
+  "remap": [
+    1,
+    -1
+  ],
+  "early_host_read_blocked": true,
+  "copy_query_before_wait": false,
+  "host_inputs": [
+    21,
+    30
+  ],
+  "release_before_last_use_record": [],
+  "free_before_last_use_record": 0,
+  "release_after_last_use": [
+    "A"
+  ],
+  "d_slots": [
+    0,
+    1
+  ],
+  "old_snapshot": [
+    10,
+    11,
+    20,
+    21,
+    30,
+    31
+  ],
+  "reused_storage": [
+    99,
+    99,
+    20,
+    21,
+    30,
+    31
+  ],
+  "next_tokens": [
+    22,
+    31
+  ],
+  "a_slots": [
+    0,
+    1
+  ],
+  "b_slots": [
+    2,
+    3
+  ],
+  "c_slots": [
+    4,
+    5
+  ],
+  "released": [
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "free_slots": 6,
+  "host_buffers_pinned": true,
+  "allocated_bytes": 5632,
+  "reserved_bytes": 6291456,
+  "passed": true,
+  "source_sha256": {
+    "minideepinfer/npu_step_demo.py": "d463847100cc92323c57ba7881df880edf0c5210990ba9ba1244497ff15a11d2",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5"
+  },
+  "installed_streams_sha256": "241741b356db5006797dbec119007afb33b73b0e1753bfb06ab27c989c5bfac4"
+}
