@@ -75,7 +75,7 @@ python -m minideepinfer.benchmark_first_result \
   --output outputs/first-result-npu.json
 ```
 
-`--repeats` 限定为 1–3。每次先落盘，再验输出、计划、工作量和回收。完整数据见[原始报告](results/2026-10-24/qwen35-2b-first-result.json)，报告 SHA 和十六份源码绑定见[索引](results/first-result/evidence.json)。无需设备即可核对当前相关源码：
+`--repeats` 限定为 1–3。每次先落盘，再验输出、计划、工作量和回收。完整数据见[原始报告](results/2026-10-24/qwen35-2b-first-result.json)，报告 SHA、十六份源码绑定与当时的固定 commit 见[索引](results/first-result/evidence.json)。无需设备即可在具备该历史对象的 Git 检出中核对原版源码：
 
 ```bash
 python scripts/check_evidence.py --index docs/results/first-result/evidence.json

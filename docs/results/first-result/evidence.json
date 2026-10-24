@@ -2,6 +2,7 @@
   "version": "main-after-v0.2.0-first-result",
   "reports": [
     {
+      "source_revision": "1302a3fabca380585d3acfdefa25209c96bea4a5",
       "path": "docs/results/2026-10-24/qwen35-2b-first-result.json",
       "sha256": "cd2a00fc902262ab38a6b19f481f7ce52affe5df6ae24fc58e8ac11c7b70cf08",
       "scope": "Qwen3.5-2B FP32 on one logical Ascend 910C device. Optional early round-zero collection versus delayed collection within the same source. Single and two fixed active requests, matching complete plans, outputs, work and clean caches. Two one-token checks plus four warmups and twelve alternating measurements; 130 forwards total.",

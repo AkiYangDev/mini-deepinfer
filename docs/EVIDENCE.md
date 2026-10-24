@@ -18,9 +18,10 @@
 python scripts/check_evidence.py
 python scripts/check_evidence.py --index docs/results/v0.2/evidence.json
 python scripts/check_evidence.py --index docs/results/pipeline-benchmark/evidence.json
+python scripts/check_evidence.py --index docs/results/first-result/evidence.json
 ```
 
-这三份索引分别绑定 v0.1.0、v0.2.0 和首次同步/跨轮基准的 commit。需要审查当前源码是否仍与旧报告完全相同时：
+这四份索引分别绑定 v0.1.0、v0.2.0、首次同步/跨轮基准和首轮收取实验的 commit。准入前收取的新报告另行核对当前相关源码。需要审查当前源码是否仍与旧报告完全相同时：
 
 ```bash
 python scripts/check_evidence.py --index docs/results/pipeline-benchmark/evidence.json --current

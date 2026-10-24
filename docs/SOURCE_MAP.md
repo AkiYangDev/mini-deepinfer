@@ -16,6 +16,8 @@ mini-sglang 继续作为紧凑实现和教学组织的参考。mini-DeepInfer �
 
 十四课后的[首轮提交实验](FIRST_RESULT.md)在同一个跨轮循环中比较第 0 轮的两种收取位置。它延续 Worker 执行顺序这一学习问题，用相同计划隔离交付时机；不改变下表所述的历史实现范围。
 
+后续[准入实验](PIPELINE_BENCHMARK.md#等待请求的后续对照)仍在这个循环里，比较已知长度结束的收取与等待请求准入顺序。长度上限触发条件、FIFO 和并发位置是本项目的教学选择，不代表 DeepInfer 上游采用相同策略。
+
 ## DeepInfer 主线与当前骨架
 
 Qwen3.5 继续使用下面相同的执行职责。新增 [`HybridCache`](../minideepinfer/hybrid_cache.py) 将完整注意力 KV 与线性层状态分开，状态由请求拥有并在同步执行完成后回收。[第四课](QWEN35.md) 对照 Qwen / Transformers 的模型计算，不把 DeltaNet 当成 DeepInfer 独有机制。

@@ -36,8 +36,8 @@ def run_trial(model, prompts, mode, *, count=8, capacity=128, limit=2, budget=8,
     from .model_runner import ModelRunner
     from .stopping_pipeline import StoppingDecodePipeline
 
-    if mode not in ('sync', 'pipeline'):
-        raise ValueError('choose sync or pipeline')
+    if mode not in ('sync', 'pipeline', 'collect_before_admit'):
+        raise ValueError('choose sync, pipeline, or collect_before_admit')
     allocation = perf_counter_ns()
     runner = ModelRunner(model, capacity)
     plans, commits = [], []
@@ -72,7 +72,8 @@ def run_trial(model, prompts, mode, *, count=8, capacity=128, limit=2, budget=8,
         else:
             requests = engine.run({f'req-{i}': p for i,p in enumerate(prompts)}, count,
                                   max_num_seqs=limit, max_num_batched_tokens=budget, chunked_prefill=True,
-                                  early_first_result=early_first_result)
+                                  early_first_result=early_first_result,
+                                  collect_before_admit=mode == 'collect_before_admit')
             pool = engine.pool
         runner.synchronize()
         end = perf_counter_ns()
@@ -99,9 +100,9 @@ def run_trial(model, prompts, mode, *, count=8, capacity=128, limit=2, budget=8,
                 clean=clean, passed=valid)
 
 
-def summarize(trials):
+def summarize(trials, modes=('sync', 'pipeline')):
     summary = {}
-    for mode in ('sync', 'pipeline'):
+    for mode in modes:
         group = [t for t in trials if t['mode']==mode]
         means = lambda field: [sum(r[field] for r in t['requests'].values())/len(t['requests']) for t in group]
         summary[mode] = dict(median_elapsed_ms=median(t['elapsed_ms'] for t in group),
@@ -124,9 +125,11 @@ def save_report(path, report):
         temporary.replace(path)
 
 
-def run(model_directory=None, device='cpu', repeats=3, output=None):
+def run(model_directory=None, device='cpu', repeats=3, output=None, *, compare_admission=False):
     if type(repeats) is not int or not 1 <= repeats <= 3:
         raise ValueError('repeats must be between 1 and 3')
+    if type(compare_admission) is not bool:
+        raise ValueError('compare_admission must be boolean')
     import torch
     from .model_runner import ModelRunner, select_device
     from .models.qwen3_5 import Qwen3_5Config, Qwen3_5ForCausalLM
@@ -153,13 +156,14 @@ def run(model_directory=None, device='cpu', repeats=3, output=None):
                'planning.py', 'model_runner.py', 'engine.py', 'step_state.py', 'npu_events.py',
                'deferred_runner.py', 'kv_cache.py', 'hybrid_cache.py', 'tensor_cache.py',
                'models/qwen3_5.py', 'models/qwen2.py']
+    modes = ('pipeline', 'collect_before_admit') if compare_admission else ('sync', 'pipeline')
     report = dict(model=name, device=device, dtype='float32', python=platform.python_version(),
                   torch=torch.__version__, setup_model_and_tokenization_ms=(perf_counter_ns()-load_start)/1e6,
                   raw_texts=list(TEXTS) if model_directory else None, repeats=repeats,
                   scope='offline pre-tokenized requests, common arrival, CPU commit including round cleanup',
                   elapsed_scope='submission through final drain; cache initialization and model loading excluded',
                   eos_disabled=True, output_length=8, capacity=128, max_num_seqs=2, token_budget=8,
-                  failure_count=0, status='running', passed=False, cases={},
+                  failure_count=0, status='running', passed=False, cases={}, comparison=list(modes),
                   source_sha256={'minideepinfer/'+p:hashlib.sha256((Path(__file__).parent/p).read_bytes()).hexdigest()
                                  for p in sources})
     if device.startswith('npu'):
@@ -175,7 +179,7 @@ def run(model_directory=None, device='cpu', repeats=3, output=None):
             report['cases'][case] = result
             reference = None
             for pair in range(-1, repeats):
-                for mode in (('sync','pipeline') if pair < 0 or pair%2==0 else ('pipeline','sync')):
+                for mode in (modes if pair < 0 or pair%2==0 else modes[::-1]):
                     trial = run_trial(model, inputs, mode)
                     trial['pair'] = pair
                     if reference is None:
@@ -186,7 +190,7 @@ def run(model_directory=None, device='cpu', repeats=3, output=None):
                     if not trial['passed'] or not trial['outputs_match']:
                         raise ValueError(f'{case}/{mode}: output, workload, or cleanup mismatch')
                     print(f"{case} pair={pair} {mode}: {trial['elapsed_ms']:.3f} ms", flush=True)
-            result['summary'] = summarize(result['trials'])
+            result['summary'] = summarize(result['trials'], modes)
             result['same_plans'] = all(t['plans']==result['warmups'][0]['plans']
                                        for t in result['warmups']+result['trials'])
         report.update(passed=True, status='complete')
@@ -205,9 +209,11 @@ def main():
     parser.add_argument('--model', help='existing local Qwen3.5 checkpoint; otherwise a tiny CPU/NPU model')
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--repeats', type=int, choices=(1, 2, 3), default=3)
+    parser.add_argument('--compare-admission', action='store_true',
+                        help='compare two pipeline modes, changing only collection before waiting admission')
     parser.add_argument('--output', type=Path, default=Path('outputs/pipeline-benchmark.json'))
     args = parser.parse_args()
-    report = run(args.model, args.device, args.repeats, args.output)
+    report = run(args.model, args.device, args.repeats, args.output, compare_admission=args.compare_admission)
     print(f"passed={report['passed']}; forwards={report['total_forward_calls']}")
 
 

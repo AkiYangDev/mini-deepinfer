@@ -1,0 +1,11 @@
+{
+  "version": "main-after-v0.2.0-admission",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/qwen35-2b-admission.json",
+      "sha256": "5b798fb336cfd409d69fa1dbdf585239ecffd8aff34940a2e618f2f1130b64cd",
+      "scope": "Paired Qwen3.5-2B FP32 pipeline comparison on one logical Ascend 910C device, changing only collection before waiting admission. Three workloads, one warmup per mode and three alternating measured pairs. Outputs, input-token work and clean final caches match. Two queued workloads use 17 rather than 18 forwards. 344 total forwards including warmups.",
+      "limits": "Short offline fixed-length generation, EOS disabled, early-first-result option disabled. Batch plans may change. Mixed-workload timing has a large temporal shift affecting both modes; all samples are retained and no stable throughput gain is established. No runtime trace, frequency or host-load series was collected; post-run health does not explain the slowdown. No new full-logit comparison. CPU tests cover ownership, capacity, EOS, option combinations and failure cleanup."
+    }
+  ]
+}

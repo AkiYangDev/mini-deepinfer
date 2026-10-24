@@ -100,6 +100,8 @@ python -m minideepinfer.generate \
 
 这些结果验证了短上下文下的数值和状态处理。v0.2.0 发布后，main 新增[同步与跨轮对照](docs/PIPELINE_BENCHMARK.md)：三类短负载的跨轮耗时都更长。后续[首轮提交实验](docs/FIRST_RESULT.md)在相同计划下更早交付首 token，整批耗时没有稳定改善；报告均保留每次结果。[验证记录](docs/VALIDATION.md)保存环境、输出和源码 SHA；旧报告按对应 commit 校验，方法见[历史证据说明](docs/EVIDENCE.md)。
 
+另一个[准入实验](docs/PIPELINE_BENCHMARK.md#等待请求的后续对照)先确认长度结束，再安排等待请求，在两个四请求负载里少调用一次 forward。计时波动较大，尚不能判断稳定加速；它保留为默认关闭的 Python 实验参数，测量复用现有入口。
+
 ## 为什么参考 DeepInfer
 
 读 DeepInfer 时，输入准备、设备计算和结果处理分散在不同组件里，还要考虑前后轮之间的依赖。本项目把这些步骤拆成小实验，便于单独运行和对照。[源码映射](docs/SOURCE_MAP.md)列出了参考的上游版本、对应入口，以及教学版省略或改写的部分。Qwen3.5 则用来观察真实模型计算和两种缓存的变化。

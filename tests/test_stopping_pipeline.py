@@ -109,6 +109,90 @@ class StoppingPipelineTests(unittest.TestCase):
         self.assertEqual(result['B'].output_ids,expected['B'])
         self.assert_clean(pipeline)
 
+    def test_waiting_admission_collects_length_end_without_exceeding_ownership_limit(self):
+        pipeline = self.pipeline()
+        prompts = {rid:(2,3,4,5,6) for rid in ('A','B','C','D')}
+        expected = self.baseline(pipeline,prompts,count=8)
+        runs = []
+        for enabled in (False,True):
+            plans = []
+            forward = pipeline.runner.execute_main_model
+            def capture(inputs):
+                self.assertLessEqual(len(pipeline._slots),2)
+                owned = [set(slots) for slots in pipeline._slots.values()]
+                if len(owned)==2:
+                    self.assertFalse(owned[0]&owned[1])
+                if 'C' in {s.request_id for s in inputs.steps}:
+                    self.assertNotIn('A',pipeline._slots)
+                    self.assertEqual(pipeline.requests['A'].finish_reason,'length')
+                plans.append(tuple(s.request_id for s in inputs.steps))
+                return forward(inputs)
+            with patch.object(pipeline.runner,'execute_main_model',capture):
+                result = pipeline.run(prompts,8,max_num_seqs=2,max_num_batched_tokens=8,
+                                      chunked_prefill=True,collect_before_admit=enabled)
+            self.assertEqual({rid:r.output_ids for rid,r in result.items()},expected)
+            runs.append(plans)
+            self.assert_clean(pipeline)
+        self.assertEqual([len(plans) for plans in runs],[18,17])
+        self.assertNotIn('C',runs[0][8])
+        self.assertIn('C',runs[1][8])
+
+    def test_admission_observer_error_drains_before_runner_reuse(self):
+        pipeline = self.pipeline()
+        seen = []
+        def fail(index,steps,tokens,logits):
+            seen.append(index)
+            if pipeline._issued['A'].sampled_tokens==2:
+                raise ValueError('admission observer')
+        with self.assertRaisesRegex(ValueError,'admission observer'):
+            pipeline.run({'A':(2,3),'B':(7,)},2,max_num_seqs=1,collect_before_admit=True,on_result=fail)
+        self.assertEqual(seen,[0])
+        self.assert_clean(pipeline)
+        result=pipeline.run({'A':(2,3)},1,collect_before_admit=True)
+        self.assertEqual(len(result['A'].output_ids),1)
+        self.assert_clean(pipeline)
+        with self.assertRaisesRegex(ValueError,'boolean'):
+            pipeline.run({'A':(2,3)},1,collect_before_admit=1)
+
+    def test_admission_failed_wait_and_drain_retain_owner_and_waiting_request(self):
+        from minideepinfer.npu_events import RecordedEvent
+        pipeline=self.pipeline()
+        class BrokenStream:
+            def synchronize(self):
+                raise RuntimeError('drain failed')
+        def fail_wait(event):
+            pipeline.is_npu,pipeline.stream=True,BrokenStream()
+            raise RuntimeError('event wait failed')
+        with patch.object(RecordedEvent,'synchronize',fail_wait):
+            with self.assertRaisesRegex(RuntimeError,'drain failed'):
+                pipeline.run({'A':(2,3),'B':(7,)},1,max_num_seqs=1,collect_before_admit=True)
+        self.assertTrue(pipeline._active)
+        self.assertEqual(set(pipeline._slots),{'A'})
+        self.assertEqual(pipeline.pool.free_count,30)
+        self.assertEqual(len(pipeline._states),1)
+        self.assertTrue(pipeline.runner._prefixes and pipeline.runner.cache.linear_states)
+        with self.assertRaisesRegex(RuntimeError,'idle'):
+            pipeline.run({'new':(2,)},1)
+        pipeline.is_npu=False
+        pipeline.close()
+        self.assert_clean(pipeline)
+
+    def test_admission_and_first_result_options_cover_eos_and_capacity_blocking(self):
+        pipeline=self.pipeline()
+        reference=BatchEngine(ModelRunner(pipeline.runner.model,32),32,3,32)
+        requests={rid:reference.submit(p,4) for rid,p in
+                  {'A':(2,3),'B':(7,),'C':tuple(range(2,24))}.items()}
+        list(reference.run())
+        expected={rid:r.output_ids for rid,r in requests.items()}
+        for first in (False,True):
+            result=pipeline.run({'A':(2,3),'B':(7,),'C':tuple(range(2,24))},4,
+                eos_token_ids={'A':expected['A'][0]},max_num_seqs=2,max_num_batched_tokens=4,
+                chunked_prefill=True,collect_before_admit=True,early_first_result=first)
+            self.assertEqual(result['A'].output_ids,expected['A'][:1])
+            self.assertEqual(result['B'].output_ids,expected['B'])
+            self.assertEqual(result['C'].output_ids,expected['C'])
+            self.assert_clean(pipeline)
+
     def test_eos_keeps_one_later_round_then_releases_and_survivor_matches_sync(self):
         pipeline = self.pipeline()
         prompts = {'A': (2, 3, 4), 'B': (7,)}

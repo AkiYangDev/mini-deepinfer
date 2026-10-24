@@ -48,6 +48,20 @@ class PipelineBenchmarkTests(unittest.TestCase):
                 self.assertTrue(all(r['output_tokens']==8 for r in trial['requests'].values()))
         self.assertTrue(report['cases']['single']['same_plans'])
 
+    def test_admission_comparison_reuses_benchmark_and_preserves_actual_work(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            report=run(repeats=1,compare_admission=True)
+        self.assertEqual(report['comparison'],['pipeline','collect_before_admit'])
+        self.assertTrue(report['passed'])
+        self.assertTrue(report['cases']['single']['same_plans'])
+        for name in ('equal_batch','mixed_batch'):
+            original,changed=report['cases'][name]['trials']
+            self.assertLessEqual(changed['forward_calls'],original['forward_calls'])
+            self.assertEqual(original['processed_input_tokens'],changed['processed_input_tokens'])
+            self.assertEqual(original['outputs'],changed['outputs'])
+        original,changed=report['cases']['equal_batch']['trials']
+        self.assertLess(changed['forward_calls'],original['forward_calls'])
+
     def test_first_bad_trial_is_preserved_and_stops_further_trials(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)/'partial.json'

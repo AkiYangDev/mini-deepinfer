@@ -27,7 +27,8 @@ class StoppingDecodePipeline(FixedDecodePipeline):
 
     @torch.inference_mode()
     def run(self, prompts, max_new_tokens, *, eos_token_ids=None, orders=None, on_result=None, max_num_seqs=None,
-            max_num_batched_tokens=None, chunked_prefill=False, early_first_result=False):
+            max_num_batched_tokens=None, chunked_prefill=False, early_first_result=False,
+            collect_before_admit=False):
         """Queue initial prompts; the result callback may submit or cancel requests.
 
         The callback has the fixed experiment's signature, with None for rows
@@ -37,6 +38,8 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         Returns request records, including committed tokens and stopping reasons.
         early_first_result collects round zero before launching round one. Later
         rounds keep the usual order; this also changes the first callback's timing.
+        collect_before_admit may collect before scheduling when a waiting request
+        is blocked by the sequence limit and a resident has issued its length limit.
         """
         if self._active or self.runner._prefixes or self.runner._request_id is not None:
             raise RuntimeError("pipeline requires an idle, exclusively owned runner")
@@ -45,6 +48,8 @@ class StoppingDecodePipeline(FixedDecodePipeline):
             raise ValueError("provide at least one initial request")
         if type(early_first_result) is not bool:
             raise ValueError("early_first_result must be boolean")
+        if type(collect_before_admit) is not bool:
+            raise ValueError("collect_before_admit must be boolean")
         limit = len(prompts) if max_num_seqs is None else max_num_seqs
         if type(limit) is not int or limit < 1:
             raise ValueError("max_num_seqs must be a positive integer")
@@ -78,6 +83,13 @@ class StoppingDecodePipeline(FixedDecodePipeline):
                 self.stream.wait_stream(torch.npu.current_stream(self.runner.device))
             with torch.npu.stream(self.stream) if self.is_npu else nullcontext():
                 while True:
+                    if (collect_before_admit and previous is not None and not previous_collected
+                            and self._waiting and len(self._slots) >= limit
+                            and any(self.requests[s.request_id].status == Status.RUNNING
+                                    and self._issued[s.request_id].sampled_tokens >=
+                                    self.requests[s.request_id].max_new_tokens for s in previous.steps)):
+                        self._finish(previous, None, on_result)
+                        previous_collected = True
                     steps = self._schedule(index, orders, limit)
                     if not steps:
                         if previous is None:
