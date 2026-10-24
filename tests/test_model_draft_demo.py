@@ -21,6 +21,25 @@ class CommitMetricsTests(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec('torch') is not None,'install torch for model draft demo')
 class ModelDraftDemoTests(unittest.TestCase):
+    def test_snapshot_comparison_keeps_model_work_and_swaps_order(self):
+        from minideepinfer.model_draft_demo import run
+        report=run(repeats=2,compare_draft_snapshots=True)
+        self.assertTrue(report['same_work_except_draft_snapshots'])
+        self.assertEqual([row['path'] for row in report['trials']],
+            ['always_snapshot','conditional_snapshot','conditional_snapshot','always_snapshot'])
+        self.assertEqual([row['width'] for row in report['checked_runs']],[1,1,3,3])
+        for row in report['trials']:
+            stats=row['draft_work']
+            if row['path']=='always_snapshot':
+                self.assertGreater(stats['snapshot_count'],0)
+                self.assertGreater(stats['snapshot_bytes_total'],0)
+            else:
+                self.assertEqual(stats['snapshot_count'],0)
+                self.assertEqual(stats['snapshot_bytes_total'],0)
+        before,after=report['checked_runs'][2:]
+        self.assertEqual(before['draft_work']['snapshot_count'],after['draft_work']['snapshot_count'])
+        with self.assertRaisesRegex(ValueError,'requires width 1'):run(width=3,compare_draft_snapshots=True)
+
     def test_checks_and_paired_trials_account_for_both_models(self):
         from minideepinfer.model_draft_demo import run
         report=run(repeats=1)
@@ -53,3 +72,23 @@ class ModelDraftDemoTests(unittest.TestCase):
             self.assertEqual(len(report['checks']),1)
             self.assertEqual(report['trials'],[])
             self.assertEqual(len(report['source_sha256']),11)
+
+    def test_different_model_work_stops_comparison_before_warmup(self):
+        from minideepinfer.model_draft import ModelDraft
+        from minideepinfer.model_draft_demo import run
+        stats=ModelDraft.stats
+        calls=[]
+        def changed(draft):
+            result=stats(draft);calls.append(result)
+            if len(calls)==2:result['input_tokens']+=1
+            return result
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'failed.json'
+            with patch.object(ModelDraft,'stats',changed):
+                with self.assertRaisesRegex(RuntimeError,'model work'):
+                    run(output,repeats=1,compare_draft_snapshots=True)
+            report=json.loads(output.read_text(encoding='utf-8'))
+            self.assertEqual(report['status'],'failed')
+            self.assertEqual(len(report['checked_runs']),2)
+            self.assertEqual(report['warmups'],[])
+            self.assertEqual(report['trials'],[])

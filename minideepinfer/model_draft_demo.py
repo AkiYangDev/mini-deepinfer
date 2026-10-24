@@ -20,11 +20,14 @@ def commit_metrics(stamps, started, ended):
                 output_tokens_per_second=len(stamps)*1000/whole)
 
 
-def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',width=1,repeats=0):
+def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',width=1,repeats=0,
+        compare_draft_snapshots=False):
     if bool(target_directory) != bool(draft_directory):
         raise ValueError('provide both local checkpoint directories, or neither')
     if type(width) is not int or not 1 <= width <= 3 or type(repeats) is not int or not 0 <= repeats <= 3:
         raise ValueError('width must be 1..3 and repeats must be 0..3')
+    if type(compare_draft_snapshots) is not bool or (compare_draft_snapshots and width != 1):
+        raise ValueError('draft snapshot comparison requires width 1')
     import torch
     from .engine import Engine
     from .model_runner import ModelRunner,select_device
@@ -39,6 +42,8 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
                 checks=[],checked_runs=[],warmups=[],trials=[],model_work={},source_sha256={},
                 scope='one request; eager greedy; separate draft cache; no MTP or probability sampling',
                 timing_scope='offline CPU commits; cache initialization and final cleanup included in whole; accepted groups share a commit timestamp; cold references excluded from timed trials')
+    if compare_draft_snapshots:
+        report['comparison']='always_snapshot versus conditional_snapshot; both use the same aligned-cache observer; only the former checkpoints the draft at width 1; target snapshots unchanged'
     def save():
         if output is not None:
             path=Path(output);path.parent.mkdir(parents=True,exist_ok=True)
@@ -112,10 +117,15 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
             return dict(path='baseline',output_ids=request.output_ids,free_slots=engine.cache.free_count,
                         forward_calls=count,input_tokens=len(prompt)+count-1,
                         metrics=commit_metrics(stamps,started,ended))
-        def dual(active_width,checking=False):
+        def dual(active_width,checking=False,snapshot_reference=False):
             stamps=[]
             started=perf_counter_ns()
-            draft=ModelDraft(small,capacity,on_cache=(lambda c:check_cache(c,'draft',active_width)) if checking else None)
+            def aligned(cache):
+                if checking:check_cache(cache,'draft',active_width)
+                # Reproduce the previous checkpoint location before argmax. Both timed
+                # policies call this observer; the execution and target are identical.
+                if snapshot_reference and active_width==1:cache.checkpoint()
+            draft=ModelDraft(small,capacity,on_cache=aligned)
             try:
                 result=generate(target,prompt,count,draft,width=active_width,
                                 on_cache=(lambda c:check_cache(c,'target',active_width)) if checking else None,
@@ -129,7 +139,8 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
                 draft_rounds=len(rows),committed_tokens_in_draft_rounds=sum(len(row['committed']) for row in rows),
                 mean_committed_per_draft_round=sum(len(row['committed']) for row in rows)/len(rows) if rows else None)
             if not checking:result['metrics']=commit_metrics(stamps,started,ended)
-            return dict(path='dual',width=active_width,**result)
+            name=('always_snapshot' if snapshot_reference else 'conditional_snapshot') if compare_draft_snapshots else 'dual'
+            return dict(path=name,width=active_width,**result)
         phase='check_baseline'
         baseline_result=baseline()
         baseline_result.pop('metrics')
@@ -138,26 +149,41 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
         def validate(result):
             if result['output_ids'] != report['baseline']['output_ids'] or result['free_slots'] != capacity:
                 raise RuntimeError('output or target cleanup differs from independent greedy')
-            if result['path']=='dual' and (not result['draft_work']['closed'] or result['draft_work']['free_slots'] != capacity
+            if result['path']!='baseline' and (not result['draft_work']['closed'] or result['draft_work']['free_slots'] != capacity
                     or result['draft_work']['linear_states_remaining'] or result['draft_work']['snapshot_retained']):
                 raise RuntimeError('draft cleanup did not return all slots')
+        def validate_pair(rows):
+            def signature(row):
+                return {key:({k:v for k,v in value.items() if k not in ('snapshot_count','snapshot_bytes_total','peak_snapshot_bytes')}
+                        if key=='draft_work' else value) for key,value in row.items() if key not in ('path','metrics','repeat')}
+            if signature(rows[0]) != signature(rows[1]):
+                raise RuntimeError('snapshot policies changed output, state or model work')
         for active_width in sorted({1,3,width}):
-            phase=f'check_width{active_width}'
-            result=dual(active_width,True)
-            report['checked_runs'].append(result);save();validate(result)
+            for reference in ((True,False) if compare_draft_snapshots else (False,)):
+                phase=f'check_width{active_width}'+('_always' if reference else '_conditional')
+                result=dual(active_width,True,reference)
+                report['checked_runs'].append(result);save();validate(result)
+            if compare_draft_snapshots:validate_pair(report['checked_runs'][-2:])
+        paths=('always_snapshot','conditional_snapshot') if compare_draft_snapshots else ('baseline','dual')
+        def execute(name):
+            return baseline() if name=='baseline' else dual(width,snapshot_reference=name=='always_snapshot')
         if repeats:
-            for name in ('baseline','dual'):
+            for name in paths:
                 phase='warm_'+name
-                result=baseline() if name=='baseline' else dual(width)
+                result=execute(name)
                 report['warmups'].append(result);save();validate(result)
+            if compare_draft_snapshots:validate_pair(report['warmups'])
             for repeat in range(repeats):
-                for name in (('baseline','dual') if repeat%2==0 else ('dual','baseline')):
+                for name in (paths if repeat%2==0 else paths[::-1]):
                     phase=f'timed_{repeat}_{name}'
-                    result=baseline() if name=='baseline' else dual(width)
+                    result=execute(name)
                     result['repeat']=repeat
                     report['trials'].append(result);save();validate(result)
+                if compare_draft_snapshots:validate_pair(report['trials'][-2:])
             report['median_metrics']={name:{key:median(row['metrics'][key] for row in report['trials'] if row['path']==name)
-                for key in ('ttft_ms','tpot_ms','e2e_ms','whole_ms','output_tokens_per_second')} for name in ('baseline','dual')}
+                for key in ('ttft_ms','tpot_ms','e2e_ms','whole_ms','output_tokens_per_second')} for name in paths}
+        if compare_draft_snapshots:
+            report['same_work_except_draft_snapshots']=True
         if tokenizer:report['output_text']=tokenizer.decode(report['baseline']['output_ids'])
         report['total_forward_calls']=sum(row['forward_calls'] for roles in report['model_work'].values() for row in roles.values())
         report.update(passed=True,status='passed');save()
@@ -175,13 +201,14 @@ def main():
     parser.add_argument('--device',default='cpu')
     parser.add_argument('--width',type=int,default=1)
     parser.add_argument('--repeats',type=int,default=0,help='0 checks only; 1..3 paired timings after one warmup per path')
+    parser.add_argument('--compare-draft-snapshots',action='store_true',help='width 1: compare the previous draft snapshot policy with conditional snapshots')
     parser.add_argument('--output',type=Path,default=Path('outputs/model-draft.json'))
     args=parser.parse_args()
     report=run(args.output,target_directory=args.target_model,draft_directory=args.draft_model,
-               device=args.device,width=args.width,repeats=args.repeats)
+               device=args.device,width=args.width,repeats=args.repeats,compare_draft_snapshots=args.compare_draft_snapshots)
     print('greedy outputs and both caches match:',report['passed'])
     for row in report['checked_runs']:
-        print(f"width={row['width']}: accepted/proposed={row['acceptance']['accepted']}/{row['acceptance']['proposed']}; "
+        print(f"{row['path']} width={row['width']}: accepted/proposed={row['acceptance']['accepted']}/{row['acceptance']['proposed']}; "
               f"target forward={row['target_forward_calls']}; draft forward={row['draft_work']['forward_calls']}")
     if report.get('median_metrics'):print(json.dumps(report['median_metrics'],ensure_ascii=False))
 

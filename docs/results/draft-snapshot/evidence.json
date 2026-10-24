@@ -1,0 +1,17 @@
+{
+  "version": "0.4.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/draft-snapshot-cpu.json",
+      "sha256": "3f9240b7057c27c8f8253669e193c9938190c154c8bab1d861da6837095e1718",
+      "scope": "CPU two random Qwen3.5 sizes; 28 cold checks and 78 model calls. Width 1 removes 4 draft snapshots with matching output, state and model work. No timing.",
+      "limits": "Single fixed short raw input, one request at a time, FP32 eager greedy. Width 1 only is a snapshot-policy timing comparison; width 3 uses the current policy in both checks. No retimed ordinary greedy, trace, measured peak device memory, probability sampling or general speedup claim. Accepted groups share CPU commit timestamps. Real draft truncation was not triggered; CPU tests cover it."
+    },
+    {
+      "path": "docs/results/2026-10-24/qwen35-draft-snapshot.json",
+      "sha256": "8b8449408bb9166049d72a70a6ff37fa269757dce81d0b97c778b25955ac3ed7",
+      "scope": "Ascend 910C Qwen3.5-0.8B to 2B, 32 cold checks and 186 model calls. Width 1 removes 5 draft snapshots / 101007360 cloned bytes per request, accepts 4/5 with AL 1.8. Three alternating-order timing pairs: median whole 502.466 ms with snapshots versus 499.026 ms without, 0 failed formal requests.",
+      "limits": "Single fixed short raw input, one request at a time, FP32 eager greedy. Width 1 only is a snapshot-policy timing comparison; width 3 uses the current policy in both checks. No retimed ordinary greedy, trace, measured peak device memory, probability sampling or general speedup claim. Accepted groups share CPU commit timestamps. Real draft truncation was not triggered; CPU tests cover it."
+    }
+  ]
+}

@@ -84,7 +84,9 @@ class ModelDraft:
         self.committed = prefix
         if self.on_cache is not None:
             self.on_cache(self.cache)  # State now represents exactly the committed prefix.
-        self.cache.checkpoint()
+        # One candidate only reads the committed endpoint; no tentative state is written.
+        if limit > 1:
+            self.cache.checkpoint()
         candidates = []
         for index in range(limit):
             candidates.append(int(self.cache.last_logits.argmax()))

@@ -20,7 +20,7 @@ The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass 
 
 v0.3 adds a [three-step walkthrough](docs/RELEASE_v0.3.md#english-release-notes): controlled greedy verification → Qwen3.5 state recovery → an independent lookup draft. CPU examples need no checkpoint, and real 2B output and cache checks passed on Ascend 910C. The lookup short example accepted 0/5 candidates and increased work; that result and its costs are preserved. This synchronous lesson is separate from the cross-round text frontend, with no speedup claim.
 
-The `0.4.0.dev0` main branch adds a [separate model draft](docs/MODEL_DRAFT.md#english-summary): Qwen3.5-0.8B proposes, and 2B verifies. The real short input accepted 4/5 candidates, yet median whole latency rose from 412.485 to 541.096 ms across three pairs. Output and state checks passed; all costs are preserved. This entry point is absent from v0.3.0 assets.
+The `0.4.0.dev0` main branch adds a [separate model draft](docs/MODEL_DRAFT.md#english-summary): Qwen3.5-0.8B proposes, and 2B verifies. The first real short input accepted 4/5 candidates but still ran slower than ordinary greedy. Current main removes unnecessary width-1 draft snapshots; a separate paired comparison measured only about 0.7% lower latency. Outputs, state checks and full costs are preserved. This entry point is absent from v0.3.0 assets.
 
 ## Start small
 

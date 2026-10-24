@@ -80,6 +80,47 @@ class ModelDraftTests(unittest.TestCase):
                         self.assertEqual(stats['input_tokens'],stats['sync_input_tokens']+stats['proposal_input_tokens']+stats['replayed_input_tokens'])
                         if same:self.assertEqual(result['accepted_draft_tokens'],result['proposed_draft_tokens'])
                         if count==1 or width==0:self.assertIsNone(draft.cache)
+                        if width<=1:
+                            self.assertEqual(stats['snapshot_count'],0)
+                            self.assertEqual(stats['snapshot_bytes_total'],0)
+                            self.assertEqual(stats['proposal_input_tokens'],0)
+
+    def test_single_candidate_acceptance_and_rejection_need_no_snapshot(self):
+        from minideepinfer.model_draft import ModelDraft
+        from minideepinfer.spec_demo import compare_cache
+        for hybrid in (False,True):
+            _,model=self.models(hybrid)
+            draft=ModelDraft(model,16,on_cache=compare_cache)
+            prefix=(2,3,4)
+            for accepted in (True,False,True,False):
+                candidate=draft(prefix,1)[0]
+                self.assertEqual(tuple(draft.cache.tokens),prefix)
+                self.assertIsNone(draft.cache._snapshot)
+                prefix+=(candidate if accepted else (candidate+1)%97,)
+            self.assertEqual(draft.stats()['recovered_branches'],0)
+            self.assertEqual(draft.stats()['snapshot_count'],0)
+            self.assertEqual(draft.stats()['replay_forward_calls'],0)
+            draft.close()
+
+    def test_width_changes_resolve_old_branch_before_skipping_snapshot(self):
+        from minideepinfer.model_draft import ModelDraft
+        from minideepinfer.spec_demo import compare_cache
+        for hybrid in (False,True):
+            _,model=self.models(hybrid)
+            draft=ModelDraft(model,24,on_cache=compare_cache)
+            prefix=(2,3,4)
+            for width,accepted in ((3,False),(1,False),(3,True),(1,True),(3,False)):
+                values=draft(prefix,width)
+                self.assertEqual(draft.cache._snapshot is not None,hybrid and width>1)
+                prefix+=values+(2,) if accepted else ((values[0]+1)%97,)
+            self.assertEqual(draft.stats()['snapshot_count'],3 if hybrid else 0)
+            work=draft.stats()['forward_calls']
+            self.assertEqual(draft(prefix,0),())
+            self.assertEqual(draft.stats()['forward_calls'],work)
+            draft.close()
+            self.assertEqual(draft.stats()['free_slots'],24)
+            self.assertEqual(draft.stats()['linear_states_remaining'],0)
+            self.assertFalse(draft.stats()['snapshot_retained'])
 
     def test_explicit_rejection_restores_draft_branch(self):
         from minideepinfer.model_draft import ModelDraft

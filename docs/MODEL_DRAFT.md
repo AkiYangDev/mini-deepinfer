@@ -41,13 +41,15 @@ target 继续使用 [`generate()`](../minideepinfer/speculative.py) 的验证与
 | target 接受 `B`，改正为 `X` | 回退并保留 `P A B` | 暂时还停在 `P A B C` |
 | 下一次请求候选 | `X` 仍待 target 消费 | 恢复到共同前缀 `P A B`，再计算实际提交的 `X` |
 
-draft 的快照保存在计算完上一份已提交前缀之后。若临时候选输入进入了错误分支，下一轮先恢复快照、重算保留的候选，再补算 target 实际提交的 token。完整注意力的错误 KV 退出有效范围，线性状态按同一套规则恢复。全部接受时，已有状态直接保留，再补算尚未作为 draft 输入的候选和 bonus。
+需要输入临时候选时，draft 在计算完已提交前缀后保存快照。若候选输入进入错误分支，下一轮先恢复快照、重算保留的候选，再补算 target 实际提交的 token。完整注意力的错误 KV 退出有效范围，线性状态按同一套规则恢复。全部接受时，已有状态直接保留，再补算尚未作为 draft 输入的候选和 bonus。只提一个候选时没有临时输入，当前实现跳过这份快照；下面保留首轮实验，并单独记录这项修改的对照。
 
 最终只剩一个 target 输出时，候选上限为零，draft 不再计算。结束后两边分别同步和清理；draft 的等待失败会继续持有自己的槽位。测试检查拒绝后的恢复、EOS 在候选中被接受、初始提交回调异常，以及关闭失败时不能提前归还资源。
 
 这套回调复用已有接受、提交和长度修正的分工，是对原[DeepInfer 来源映射](SPECULATIVE.md#这和-deepinfer-怎样对应)的延伸。双模型草稿器是本项目的简化实现，不是 DeepInfer 的 MTP，也没有实现概率接受、残差采样或 SWA Bounded Replay。
 
-## Ascend 910C 的一次固定实验
+## 首轮 Ascend 910C 固定实验
+
+本节对应提交 `7b27e8e`，当时 draft 每次提出候选都建立快照。原始报告继续绑定该提交，以下数字保留当时的执行行为。
 
 复用已有环境和本地权重，不需要重新下载。权重固定 revision 见[Qwen3.5 说明](QWEN35.md)。在 main 仓库目录：
 
@@ -98,7 +100,49 @@ ASCEND_RT_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 python -m minideepinfer.model_draf
 
 本次完整程序共 138 次模型 forward：包含数值检查、十六次冷参考、预热和正式样本。没有重新下载、重启服务、采集 trace 或追加输入找更高接受率。这是一个能正确接续状态的双模型教学路径，尚无成为默认加速路径的依据。
 
-## 原始报告与下一步
+## 一个候选为什么不用保存 draft 快照
+
+上面的状态表里，提出 `B C D` 需要先输入 `B C`，因此 draft 可能走进错误分支。但如果只提 `B`，计算完 `P A` 的 logits 就足够选出它，根本不用把 `B` 输入 draft。
+
+若 target 拒绝 `B`、改为 `X`，draft 仍停在 `P A`，下一轮直接计算 `X`。若接受 `B` 并输出 bonus `Y`，draft 下一轮计算 `B Y`。两种情况都只是沿实际提交的前缀往后算，没有需要撤销的 draft 状态。
+
+因此修改只有一个条件：候选上限大于一才建立 draft 快照。target 仍会把候选送入验证，拒绝后仍需恢复自己的线性状态，它的快照不动。测试另外检查 3→1→3 的宽度切换：先解决上一轮的临时分支，再决定当前轮是否需要快照。最终候选上限为零时不计算，关闭时仍清理之前的状态。
+
+### 单独比较这一次复制
+
+在同一环境重新加载现有的 0.8B 和 2B，各一次；模型、FP32/HF32 设置、五 token 原始输入和十 token 输出都与首轮一致。两种方式共用同一执行逻辑、模型实例和缓存观察回调，只让参考方式在宽度 1 的 draft 对齐后、argmax 前恢复旧快照。每个请求仍各建缓存，不共享前缀。
+
+```bash
+ASCEND_RT_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 python -m minideepinfer.model_draft_demo \
+  --draft-model weights/Qwen3.5-0.8B --target-model weights/Qwen3.5-2B \
+  --device npu:0 --width 1 --repeats 3 --compare-draft-snapshots \
+  --output outputs/qwen35-draft-snapshot.json
+```
+
+不提供模型路径和 `--device`，同一命令入口可检查随机 CPU 小模型。对照开关要求指定宽度 1。附带的宽度 3 检查在两次运行中都使用当前快照条件；它的最后一轮实际候选上限降为一，因此两次各保存两份快照，不能当作旧版宽度 3 的对照。
+
+实机两种方式的输出逐 token 相同，接受率都是 4/5、AL 都是 9/5 = 1.8。target 仍为七次 forward / 十六个输入 token，draft 仍为五次 / 十三个输入 token。两边各归还十四个槽位，线性状态和快照清空；三十二次冷缓存检查通过原 `atol=1e-4, rtol=2e-4`，最大 logits 绝对差仍约 `3.20e-5`。实际轨迹仍未触发 draft 截短恢复，该分支由 CPU 测试覆盖。
+
+宽度 1 每次请求的 draft 快照从五份降为零，少克隆 101,007,360 字节，约 96.3 MiB；target 的五份快照保留。这是张量复制计数，未测进程峰值显存。预热各一次后做三组成对测量，第二组交换顺序，正式六次请求全部成功。
+
+| draft 快照方式 | AL | 实测严格接受率 | TTFT ms | TPOT ms | E2E ms | whole ms | 输出 token/s | 失败数 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 宽度 1 仍保存 | 1.8 | 4/5 = 80% | 51.107 | 50.120 | 502.276 | 502.466 | 19.902 | 0 |
+| 仅输入临时候选时保存 | 1.8 | 4/5 = 80% | 51.178 | 49.745 | 498.879 | 499.026 | 20.039 | 0 |
+
+表中为三次中位数。每种方式的正式样本合计接受 12/15，AL 为 27/15；接受组共享 CPU 提交时间，零 ITL 继续按原定义保留。缓存初始化及最终同步清理计入 whole，模型加载、冷参考与预热不计入。
+
+| 组 | 执行顺序 | 仍保存 ms | 跳过 ms |
+| --- | --- | ---: | ---: |
+| 1 | 仍保存 → 跳过 | 502.466 | 498.156 |
+| 2 | 跳过 → 仍保存 | 502.000 | 499.026 |
+| 3 | 仍保存 → 跳过 | 502.555 | 499.434 |
+
+三组都略短，whole 中位数减少约 0.7%。复制确实省掉了，耗时差异很小，只能支持这个固定短负载上的局部改进。这次没有重新计时普通 greedy，不能把 499.026 ms 与首轮的 412.485 ms 拼成同场比较，也不能把两次实验间的总体差异归给这份改动。
+
+完整程序共 186 次 forward：独立 greedy 十次、四次正确性运行共四十八次、冷参考三十二次、预热二十四次、正式样本七十二次。加载与分词约 4.107 秒，预热合计约 1.006 秒，正式六次合计约 3.004 秒；没有下载、trace 或追加输入。这项修改保留为默认行为，因为宽度 1 没有需要回退的 draft 写入，代码也更贴合实际状态变化。
+
+## 原始报告与后续
 
 [CPU 报告](results/2026-10-24/model-draft-cpu.json)和[Ascend 910C 报告](results/2026-10-24/qwen35-08b-2b-model-draft.json)绑定十一份相关执行源码，报告 SHA 固定在[索引](results/model-draft/evidence.json)：
 
@@ -106,7 +150,13 @@ ASCEND_RT_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 python -m minideepinfer.model_draf
 python scripts/check_evidence.py --index docs/results/model-draft/evidence.json
 ```
 
-前一版 lookup 报告改按原 commit 校验，原始 JSON 和 SHA 不改。本轮不是新的 Transformers 或 BF16 对照；没有加入跨轮 pipeline、图执行或分布式。后续若优化，应先从这次可见的计算和复制成本选一个问题，而不是继续同时增加候选宽度、采样算法和更多模型。
+快照修改另有 [CPU 报告](results/2026-10-24/draft-snapshot-cpu.json)、[Ascend 910C 报告](results/2026-10-24/qwen35-draft-snapshot.json)和[源码索引](results/draft-snapshot/evidence.json)：
+
+```bash
+python scripts/check_evidence.py --index docs/results/draft-snapshot/evidence.json
+```
+
+lookup 与首轮双模型报告按原 commit 校验，原始 JSON 和 SHA 不改。这两轮都没有新增 Transformers 或 BF16 对照，也没有跨轮 pipeline、图执行或分布式。后续应优先收集这个教学入口的复现反馈；若继续分析性能，再从已有计算、同步路径选择一个明确问题。
 
 ## English summary
 
@@ -117,3 +167,7 @@ Real local Qwen3.5-0.8B and 2B checkpoints passed a strict tokenizer-file and sp
 Only width 1 was timed: one warmup per path, three alternating-order pairs, the same raw five-token input and ten-token output. Median whole latency increased from 412.485 ms to 541.096 ms; output throughput fell from 24.243 to 18.481 tokens/s. Every pair was slower. Median offline TTFT/TPOT/E2E were 55.596/39.648/412.467 ms for greedy and 54.891/53.986/540.907 ms for the dual-model path. Accepted tokens share a CPU commit timestamp; zero ITLs are not kernel latency. All samples are preserved, with no claim of a production speedup.
 
 Target calls fell from ten to seven, but the draft made five additional calls; each model also copied five 20,201,472-byte linear-state snapshots. The entire check, warmup and measurement program made 138 model calls, loading each existing checkpoint once. There were no downloads or traces. Run the tiny CPU mode without checkpoints using `python -m minideepinfer.model_draft_demo`; real paths and paired timing require the explicit arguments above.
+
+Those initial reports are pinned to `7b27e8e`. Current main skips draft snapshots when only one candidate is requested: argmax reads the committed endpoint without feeding that candidate back into the draft. Target snapshots remain necessary. A separate same-load comparison (`--compare-draft-snapshots --width 1 --repeats 3`) removed five draft snapshots, or 101,007,360 cloned bytes per request, while preserving outputs, acceptance, model work and cleanup. All 32 cold-cache checks passed. Width-3 checks use the current policy in both runs; they are not an old-policy comparison.
+
+Three alternating-order pairs had median whole latency of 502.466 ms with the old width-1 snapshots versus 499.026 ms without them, about 0.7% lower. Median TTFT/TPOT/E2E were 51.107/50.120/502.276 ms versus 51.178/49.745/498.879 ms; throughput was 19.902 versus 20.039 tokens/s. All six requests succeeded, each accepting 4/5 proposals with AL 1.8. This small fixed-workload change is not evidence of general speculative speedup. The new program made 186 forward calls and loaded each existing checkpoint once; ordinary greedy was checked for correctness but not retimed. Do not compare timings across the two experiments as a paired result.
