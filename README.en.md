@@ -111,7 +111,7 @@ A later admission experiment collects a known length completion before schedulin
 
 In DeepInfer, input preparation, device execution, and result handling span several components and depend on work from earlier rounds. This project turns those steps into small experiments you can run and compare. The [source map](docs/SOURCE_MAP.md) links to the pinned upstream files and explains what the teaching version changes or leaves out. Qwen3.5 supplies a real model for studying the computation and its two kinds of cache.
 
-[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, learned-draft execution, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
+[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, MTP, probability sampling, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
 
 [Open an issue](https://github.com/AkiYangDev/mini-deepinfer/issues) with a concrete question: a confusing step, a command that fails, or a cache behavior needing an example. Code and tutorial improvements are welcome through the [contribution guide](CONTRIBUTING.md). If this learning path is useful, star the project to follow its development.
 

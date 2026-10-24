@@ -18,7 +18,7 @@ python -m unittest discover -s tests -v
 
 第一次安装可按[运行指南](docs/START_HERE.md)选择无依赖、CPU 小模型或 Ascend 路径。[完整学习索引](docs/LEARNING_PATH.md)保留各课入口。
 
-发布检查还需从构建的 wheel 安装，在仓库目录之外运行例子，避免源码目录遮住打包遗漏。`python scripts/check_evidence.py` 只核对当前源码与保存的实机报告；修改相关源码后，需要按影响补验证，不能只更新哈希让检查变绿。调度生成检查使用固定 seed，保留失败 seed 和轨迹以便复现。
+发布检查还需从构建的 wheel 安装，在仓库目录之外运行例子，避免源码目录遮住打包遗漏。`python scripts/check_evidence.py` 按索引核对报告对应的固定 commit，未指定版本时才比较当前文件；历史通过只说明旧版本与原报告相符，详见[证据说明](docs/EVIDENCE.md)。修改相关源码后，需要按影响补验证，不能只更新哈希让检查变绿。调度生成检查使用固定 seed，保留失败 seed 和轨迹以便复现。
 
 ## 适合开始的工作
 

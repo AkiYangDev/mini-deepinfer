@@ -111,7 +111,7 @@ python -m minideepinfer.generate \
 
 读 DeepInfer 时，输入准备、设备计算和结果处理分散在不同组件里，还要考虑前后轮之间的依赖。本项目把这些步骤拆成小实验，便于单独运行和对照。[源码映射](docs/SOURCE_MAP.md)列出了参考的上游版本、对应入口，以及教学版省略或改写的部分。Qwen3.5 则用来观察真实模型计算和两种缓存的变化。
 
-[mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。MLA、MoE、模型驱动的投机、bounded replay、图执行和分布式留在[后续路线](docs/ROADMAP.md)。来源与许可证见[参考记录](docs/REFERENCES.md)。
+[mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。MLA、MoE、MTP、概率采样、bounded replay、图执行和分布式留在[后续路线](docs/ROADMAP.md)。来源与许可证见[参考记录](docs/REFERENCES.md)。
 
 欢迎带着一个具体问题[提交 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues)：哪一步看不懂，哪条命令没跑通，或哪项缓存行为需要补例子。也欢迎按[贡献指南](CONTRIBUTING.md)改进代码和教程。如果这条学习路线对你有用，欢迎 Star。
 

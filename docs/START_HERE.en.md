@@ -6,6 +6,8 @@ Start with the first section even if you have no NPU or checkpoint. The integer 
 
 Multiline commands use Bash. In PowerShell, put each command on one line. Install and run everything in the same Python environment.
 
+The steps below start at the fixed v0.3.0 tag. For the separate model draft, use the [main-branch steps](#main-let-a-small-model-propose) later in this guide; v0.3.0 assets do not contain that entry point.
+
 ## No weights or hardware
 
 The integer examples support Python 3.10+. Use Python 3.12 below if you also want to run the CPU model examples, matching the version used for those checks:
@@ -102,6 +104,38 @@ For `outputs/spec-lookup.json`, start with these fields:
 
 The total includes extra work used to verify the example. No time was measured, so `10/6` is not a speedup. This random model repeats one token at the fixed seed, making lookup matches easy. The real checkpoint accepted 0/5; see the [independent-draft results](LOOKUP_DRAFT.md#english-summary).
 
+## main: let a small model propose
+
+Use the CPU PyTorch environment from above. From the repository directory, switch back to main and reinstall the project so the package metadata follows the source:
+
+```bash
+git switch main
+python -m pip install -e . --no-deps
+python -c "from importlib.metadata import version; print(version('mini-deepinfer'))"
+python -m minideepinfer.model_draft_demo --output outputs/model-draft-cpu.json
+```
+
+The current version should be `0.4.0.dev0`. Two randomly initialized Qwen3.5 models propose and verify candidates without weights or downloads. The default run checks correctness without timing. Expect `greedy outputs and both caches match: True`, followed by results for widths 1 and 3.
+
+Start with the width-1 row in the generated JSON:
+
+| Field | Expected in the current CPU example |
+| --- | --- |
+| `passed` | `true`: output, cache and cleanup checks passed |
+| `checked_runs[0].target_forward_calls` | `6`: generation calls, counting replay when needed |
+| `checked_runs[0].draft_work.forward_calls` | `4`: draft computation also contributes to cost |
+| `checked_runs[0].draft_work.snapshot_count` | `0`: one candidate needs no tentative draft input to roll back |
+| `checked_runs[0].draft_work.closed` | `true`: the draft was closed and cleaned up |
+| `checked_runs[0].draft_work.free_slots` | `12`: all draft slots were returned |
+
+These random models repeat one token at the fixed seed; their acceptance does not predict real-model performance. See the [dual-model explanation](MODEL_DRAFT.md#english-summary) for state transitions and real 0.8B-to-2B costs. To compare the previous and current draft snapshot policies, run:
+
+```bash
+python -m minideepinfer.model_draft_demo --compare-draft-snapshots --output outputs/draft-snapshot-cpu.json
+```
+
+This writes a separate report, also without timing. The comparison must preserve model work in each stage before the checks can pass.
+
 ## Real Qwen3.5-2B on Ascend 910C
 
 Start with an existing environment that has matching PyTorch, torch_npu, CANN, and drivers. The tested combination is Python 3.12.13, PyTorch 2.10.0+cpu, torch_npu 2.10.0.post6, and CANN 9.1.0 on aarch64. The `+cpu` suffix is the actual version string in this NPU environment; torch_npu registers the NPU backend. Keep these device dependencies in place.
@@ -165,6 +199,7 @@ The index selects either a recorded immutable Git revision or current files. A h
 | Symptom | Check |
 | --- | --- |
 | Missing torch | Install model dependencies in a CPU environment, or use your configured NPU environment |
+| Missing `minideepinfer.model_draft_demo` | Use the main-branch steps above, reinstall, and check the package version printed by the same Python |
 | torch_npu import failure / NPU unavailable | Check matching device dependencies, drivers, and container device mappings |
 | Whole prompt exceeds budget | Enable `--chunked-prefill`; each request must still fit in cache |
 | Request exceeds capacity | Check prompt length plus output limit; logical slots are not device MiB |

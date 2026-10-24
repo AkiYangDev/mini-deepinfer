@@ -6,6 +6,8 @@
 
 以下多行命令使用 Bash；在 Windows PowerShell 中，请将一条命令写成一行。安装和运行都使用同一个 Python 环境。
 
+下面先使用固定的 v0.3.0，便于按同一版本跟读。想运行双模型 draft 时，再按后面的 [main 接续步骤](#main让小模型提出候选)切换；v0.3.0 安装包没有这个入口。
+
 ## 先看请求怎样执行
 
 整数例子支持 Python 3.10+。如果还要继续跑 CPU 小模型，下面用 Python 3.12 创建环境，与本项目的 CPU 检查版本一致。
@@ -102,6 +104,38 @@ python -m minideepinfer.spec_demo --draft lookup --hybrid --output outputs/spec-
 
 `target_forward_calls` 统计生成路径，`total_forward_calls` 还包含验证例子是否正确的额外计算。这里没有测量耗时，不能把 `10/6` 当作加速倍数。随机小模型在这个 seed 下连续输出相同 token，容易被 lookup 命中；真实权重的 0/5 接受结果另见[独立候选说明](LOOKUP_DRAFT.md#ascend-910c-的真实权重结果)。
 
+## main：让小模型提出候选
+
+这一节需要前面装好的 CPU PyTorch。先在仓库目录切回 main，并重新安装项目，让当前环境的包信息也跟上源码：
+
+```bash
+git switch main
+python -m pip install -e . --no-deps
+python -c "from importlib.metadata import version; print(version('mini-deepinfer'))"
+python -m minideepinfer.model_draft_demo --output outputs/model-draft-cpu.json
+```
+
+当前版本号应为 `0.4.0.dev0`。这个例子随机初始化两个 Qwen3.5 小模型，让其中一个提出候选，另一个验证；不读取权重，也不下载文件。默认只检查正确性，不计时。最后应看到 `greedy outputs and both caches match: True`，并分别打印宽度 1 和 3 的结果。
+
+打开生成的 JSON，先看宽度 1 的这一组：
+
+| 字段 | 当前 CPU 例子应看到什么 |
+| --- | --- |
+| `passed` | `true`，输出、缓存和清理检查通过 |
+| `checked_runs[0].target_forward_calls` | `6`，生成路径的实际调用数；发生重算时也计入 |
+| `checked_runs[0].draft_work.forward_calls` | `4`，draft 的计算也要计入成本 |
+| `checked_runs[0].draft_work.snapshot_count` | `0`，只提一个候选，没有临时输入需要回退 |
+| `checked_runs[0].draft_work.closed` | `true`，draft 已结束并清理 |
+| `checked_runs[0].draft_work.free_slots` | `12`，draft 自己的槽位全部归还 |
+
+随机模型这次会重复输出相同 token，不能用它的接受率推断真实模型性能。两个模型怎样接续状态、真实 0.8B→2B 的成本见[双模型说明](MODEL_DRAFT.md)。如果只想观察多余快照被省掉的前后差别，另行运行：
+
+```bash
+python -m minideepinfer.model_draft_demo --compare-draft-snapshots --output outputs/draft-snapshot-cpu.json
+```
+
+两份输出保存在不同文件里。第二份报告比较旧、新快照方式，仍不计时；各阶段的模型工作量必须相同，才能通过检查。
+
 ## Ascend 910C：真实权重
 
 这一节从已有的 Ascend 环境开始。本项目实际使用的软件组合如下，安装时先保留配套的 PyTorch、torch_npu 和 CANN：
@@ -177,6 +211,7 @@ python scripts/check_evidence.py
 | 现象 | 先检查什么 |
 | --- | --- |
 | `No module named torch` | 当前环境只装了基础包；按 CPU 路径安装模型依赖，或切回已有 NPU 环境 |
+| `No module named minideepinfer.model_draft_demo` | 双模型入口只在 main；按上面的接续步骤切换并重新安装，核对当前 Python 打印的包版本 |
 | NPU 不可用或导入 torch_npu 失败 | PyTorch、torch_npu、CANN 和驱动是否来自匹配环境，设备是否映射进当前容器 |
 | whole prompt 超过预算 | 开启 `--chunked-prefill`；每请求最大占用仍需不超过缓存容量 |
 | 长 prompt 提示容量不足 | `--cache-capacity` 约束逻辑槽位，不等于设备剩余 MiB；同时核对最大输出长度 |
