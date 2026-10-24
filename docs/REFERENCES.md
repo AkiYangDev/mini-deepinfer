@@ -67,3 +67,5 @@ Qwen3.5 权重固定到 [0.8B / 2fc06364](https://huggingface.co/Qwen/Qwen3.5-0.
 仅借鉴概念时，也在教学章节说明来源、与原版的对应关系和简化条件。当前项目的 Apache-2.0 许可不改变模型及第三方组件的许可。
 
 第十四课的[跨轮分块与进度划分](CHUNK_PIPELINE.md)继续参考同一固定 DeepInfer 版本的 Worker 顺序、在途状态与 prompt 采样边界。共用 Step 规划函数、IssuedProgress、输入预算和每请求最后使用事件为本项目的教学实现，未引入新的上游代码或许可证。
+
+v0.3 的[可控 greedy 投机实验](SPECULATIVE.md)重新核对同一 commit 的 `deepinfer/model_executor/layers/sampler.py` 中 `_verification()`、`deepinfer/engine/llm_engine.py` 的 `_process_model_outputs()` 和 Worker 的 `_correct_seqlens_qk()`。保留验证、接受前缀与最终输出、后续有效长度三个学习问题；教学代码为原创实现，不复制上游 sampler、MTP、C++ 调度或概率接受算法。纯注意力有效 KV 回退不代表上游采用同一种存储操作。

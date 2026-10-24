@@ -20,6 +20,8 @@ The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass 
 
 v0.2 connects cross-round execution to text generation and adds a complete scheduling walkthrough without a checkpoint. See the [release notes](docs/RELEASE_v0.2.md) for the new entry points and validation scope.
 
+The v0.3 development version on main adds a [controlled greedy speculation lesson](docs/SPECULATIVE.md#english-summary): accept or correct proposed tokens, then roll back the rejected KV prefix. It runs a tiny random full-attention model on CPU, independently of the existing Ascend 910C text frontend.
+
 ## Start small
 
 With Python 3.10+, run an example that needs no model dependencies, weights, or NPU:
@@ -85,6 +87,7 @@ The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu
 | How can the next forward use a token before the CPU reads it? | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
 | How do stops, arrivals, and chunks share one loop? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lessons twelve through fourteen](docs/CHUNK_PIPELINE.md) |
 | How do issued progress, CPU commits, and final device use differ? | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [lesson fourteen](docs/CHUNK_PIPELINE.md) |
+| What can be committed when a draft token is wrong? | [`verify_greedy()` / `CachedTarget`](minideepinfer/speculative.py) · [speculation lesson](docs/SPECULATIVE.md#english-summary) |
 
 Default BatchEngine supports synchronous dynamic batching, input budgets, prompt chunks, cancellation, and reclamation. `--deferred` separates launch from commit while keeping one batch in flight. You can now choose cross-round execution with `--pipeline`, then add `--stagger-prompts --trace-rounds` to observe arrivals and cache ownership; see [setup](docs/START_HERE.en.md). Detailed lessons are currently in Chinese, with English code comments. The [learning path](docs/LEARNING_PATH.md) lists all fourteen.
 
@@ -106,7 +109,7 @@ A later admission experiment collects a known length completion before schedulin
 
 In DeepInfer, input preparation, device execution, and result handling span several components and depend on work from earlier rounds. This project turns those steps into small experiments you can run and compare. The [source map](docs/SOURCE_MAP.md) links to the pinned upstream files and explains what the teaching version changes or leaves out. Qwen3.5 supplies a real model for studying the computation and its two kinds of cache.
 
-[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, speculative decoding, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
+[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, learned-draft execution and hybrid-state rollback, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
 
 [Open an issue](https://github.com/AkiYangDev/mini-deepinfer/issues) with a concrete question: a confusing step, a command that fails, or a cache behavior needing an example. Code and tutorial improvements are welcome through the [contribution guide](CONTRIBUTING.md). If this learning path is useful, star the project to follow its development.
 

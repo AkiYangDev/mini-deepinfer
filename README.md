@@ -20,6 +20,8 @@ mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 
 
 v0.2 把跨轮执行接到文本生成入口，并提供一个无需权重的完整调度演示。[版本说明](docs/RELEASE_v0.2.md)列出新增入口和验证范围。
 
+main 的 v0.3 开发版新增[可控 greedy 投机实验](docs/SPECULATIVE.md)：在 CPU 上看候选怎样被接受或改正，以及拒绝分支的 KV 怎样退出可读前缀。它使用随机纯注意力小模型，独立于现有 Ascend 910C 文本入口。
+
 ## 先跑起来
 
 Python 3.10+，先看一个无需模型依赖、权重或 NPU 的例子：
@@ -85,6 +87,7 @@ python -m minideepinfer.generate \
 | CPU 没读到 token，下一轮怎样接着算？ | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [第十一课](docs/DECODE_PIPELINE.md) |
 | EOS、新请求、分块 prompt 怎样进入同一个循环？ | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十二至十四课](docs/CHUNK_PIPELINE.md) |
 | 已发出、已提交和设备已用完，有什么区别？ | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [第十四课](docs/CHUNK_PIPELINE.md) |
+| draft 猜错后，哪些输出和缓存能保留？ | [`verify_greedy()` / `CachedTarget`](minideepinfer/speculative.py) · [投机实验](docs/SPECULATIVE.md) |
 
 默认 BatchEngine 支持同步动态批处理、输入预算、分块 prefill、取消和回收；`--deferred` 把发起与结果提交拆开，仍只允许一批在途。现在也可以用 `--pipeline` 选择跨轮执行，配合 `--stagger-prompts --trace-rounds` 观察文本到达和缓存回收，见[自己的文本怎样进入跨轮循环](docs/PIPELINE_TEXT.md)。各章节入口见[学习路线](docs/LEARNING_PATH.md)。
 
@@ -106,7 +109,7 @@ python -m minideepinfer.generate \
 
 读 DeepInfer 时，输入准备、设备计算和结果处理分散在不同组件里，还要考虑前后轮之间的依赖。本项目把这些步骤拆成小实验，便于单独运行和对照。[源码映射](docs/SOURCE_MAP.md)列出了参考的上游版本、对应入口，以及教学版省略或改写的部分。Qwen3.5 则用来观察真实模型计算和两种缓存的变化。
 
-[mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。MLA、MoE、投机解码、bounded replay、图执行和分布式留在[后续路线](docs/ROADMAP.md)。来源与许可证见[参考记录](docs/REFERENCES.md)。
+[mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。MLA、MoE、模型驱动的投机与混合状态回退、bounded replay、图执行和分布式留在[后续路线](docs/ROADMAP.md)。来源与许可证见[参考记录](docs/REFERENCES.md)。
 
 欢迎带着一个具体问题[提交 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues)：哪一步看不懂，哪条命令没跑通，或哪项缓存行为需要补例子。也欢迎按[贡献指南](CONTRIBUTING.md)改进代码和教程。如果这条学习路线对你有用，欢迎 Star。
 

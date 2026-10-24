@@ -1,4 +1,4 @@
-"""Check NPU reports against their recorded source revision or this checkout."""
+"""Check preserved reports against their recorded revision or this checkout."""
 
 import argparse
 import hashlib
@@ -31,7 +31,7 @@ def verify(root, entry, *, current=False):
                                  'use a Git checkout with this commit fetched')
             content = result.stdout
         if hashlib.sha256(content).hexdigest() != expected:
-            raise ValueError(f"source differs from hardware run: {source}")
+            raise ValueError(f"source differs from recorded run: {source}")
     return len(report['source_sha256'])
 
 

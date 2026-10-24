@@ -1,0 +1,11 @@
+{
+  "version": "0.3.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/spec-demo-cpu.json",
+      "sha256": "c07661232bd7b193cee5be7fcf743aee12743ee320a133683c3ca2268327caf9",
+      "scope": "CPU FP32 tiny random full-attention Qwen2. Controlled first rejection, middle rejection and all-accepted drafts produce the same ten outputs as an independent Engine greedy reference; all twelve reserved slots are returned. Separate oracle preparation, target input work, accepted/proposed counts, correction, bonus and direct target tokens are recorded. Seven related source hashes.",
+      "limits": "Candidates come from a precomputed greedy answer and intentionally modified IDs, not a trained draft. No timing, real checkpoint, NPU execution, MTP or DSpark. Hybrid-state rollback is unsupported. Full-logit cold-reference and poisoned-storage checks are CPU unit tests, not included as numeric measurements in this demo report."
+    }
+  ]
+}

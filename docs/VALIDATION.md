@@ -4,6 +4,12 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+## 2026-10-24：可控 greedy 投机的 CPU 参考
+
+main 进入 0.3.0.dev0，新增独立 CPU 纯注意力实验。八项测试覆盖验证决定、96 条小模型轨迹与独立 Engine greedy 输出、EOS/长度边界、错误清理、混合状态拒绝、完整 logits 冷缓存重算及 NaN 失效槽位检查。小模型 FP32 的分块 logits 在 `atol=1e-5, rtol=1e-4` 内匹配。
+
+公开演示的三种候选模式产生相同十个输出、各自归还 12 个槽位；target forward 分别 10/6/4 次，实际输入 33/19/12 token。另有准备 greedy 答案的 10 次 forward，单独记录为 oracle。未加载真实权重、运行 NPU 或计时，不能据此称为真实投机加速。方法、来源和原始结果见[投机实验](SPECULATIVE.md)。CPU 报告绑定七份相关源码，新增索引 `docs/results/speculative/evidence.json`；已有 NPU 报告继续按各自范围保存。
+
 ## 2026-10-24：等待准入前收取
 
 复用原基准，比较同一份新版源码中的原跨轮与 `collect_before_admit`。Ascend 910C / Qwen3.5-2B FP32 / HF32 关闭，单请求控制项均 8 次 forward，同长和混合四请求均从 18 次变成 17 次；输入工作量、greedy 输出与最终缓存状态一致。正式 54 次请求执行、0 失败，含预热共 344 forward，一次现有权重加载，无 trace 或新的完整 logits 对照。

@@ -14,6 +14,8 @@
 
 mini-sglang 继续作为紧凑实现和教学组织的参考。mini-DeepInfer 自己实现请求循环、调度与缓存；后端接口可借鉴成熟项目，验证条件随代码一同记录。
 
+v0.3 开发中的[可控 greedy 投机参考](SPECULATIVE.md)独立实现单请求 CPU 的验证、提交和有效 KV 前缀回退。对应固定版本的 `Sampler._verification()`、引擎结果处理和 Worker 长度修正；具体保留与省略见该章源码表。主生成路径尚未接入模型驱动投机或 Qwen3.5 状态回退。
+
 十四课后的[首轮提交实验](FIRST_RESULT.md)在同一个跨轮循环中比较第 0 轮的两种收取位置。它延续 Worker 执行顺序这一学习问题，用相同计划隔离交付时机；不改变下表所述的历史实现范围。
 
 后续[准入实验](PIPELINE_BENCHMARK.md#等待请求的后续对照)仍在这个循环里，比较已知长度结束的收取与等待请求准入顺序。长度上限触发条件、FIFO 和并发位置是本项目的教学选择，不代表 DeepInfer 上游采用相同策略。
@@ -26,11 +28,11 @@ Qwen3.5 继续使用下面相同的执行职责。新增 [`HybridCache`](../mini
 
 | DeepInfer 源码入口 | 当前教学版落点 | 保留与简化 |
 | --- | --- | --- |
-| [`LLMEngine.step()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L784) | [`Engine.step()`](../minideepinfer/engine.py) | 保留调度后执行的主循环；原版调用 C++ Scheduler 与 worker，当前只有 Python FIFO 和一个运行请求 |
+| [`LLMEngine.step()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L860) | [`Engine.step()`](../minideepinfer/engine.py) | 保留调度后执行的主循环；原版调用 C++ Scheduler 与 worker，当前只有 Python FIFO 和一个运行请求 |
 | 同一入口中的 `scheduler.schedule()`、有序的 sequence metadata 与 worker 调用 | [`BatchEngine._schedule()` / `step()`](../minideepinfer/batch_engine.py)、[`ModelRunner.prepare_batch()` / `run_batch()`](../minideepinfer/model_runner.py) | 第三课保留逐请求元数据与输出行对应，一轮合并成一次 forward；Python FIFO、全量预留、显式隔离 mask 和混合 prefill/decode 是教学选择，不复现原版完整调度策略 |
-| `LLMEngine.step()` 中的 `is_last_prompt_chunk`，以及 [`ModelRunner.prepare_sampler_inputs()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py#L213) | `Step.is_last_prompt_chunk`、Runner 中间块不采样、BatchEngine 分开提交缓存进度与输出 token | 保留 prompt 完成与采样的边界；decode 优先和剩余预算切块为本项目的简单调度策略，不复现上游完整 C++ 实现 |
-| [`ModelRunner._prepare_input_tensors()` / `execute_main_model()` / `execute_sample()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py#L110) | [`ModelRunner.prepare_input()` / `execute_main_model()` / `execute_sample()`](../minideepinfer/model_runner.py) | 显式传递输入、位置和缓存映射，分开准备、forward 与 greedy；当前 `run()` 等待设备完成后才返回，尚无图执行或调度重叠 |
-| [`LLMEngine._process_model_outputs()` / `post_process()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L624) | [`BatchEngine.finish_step()`](../minideepinfer/batch_engine.py) 与 [`DeferredRunner._commit()`](../minideepinfer/deferred_runner.py) | 原版通过 scheduler 处理结果；教学版区分设备缓存写入、主机前缀提交和请求输出；保留同步对照，尚无投机接受/回退 |
+| `LLMEngine.step()` 中的 `is_last_prompt_chunk`，以及 [`ModelRunner.prepare_sampler_inputs()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py#L233) | `Step.is_last_prompt_chunk`、Runner 中间块不采样、BatchEngine 分开提交缓存进度与输出 token | 保留 prompt 完成与采样的边界；decode 优先和剩余预算切块为本项目的简单调度策略，不复现上游完整 C++ 实现 |
+| [`ModelRunner._prepare_input_tensors()` / `execute_main_model()` / `execute_sample()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py#L120) | [`ModelRunner.prepare_input()` / `execute_main_model()` / `execute_sample()`](../minideepinfer/model_runner.py) | 显式传递输入、位置和缓存映射，分开准备、forward 与 greedy；当前 `run()` 等待设备完成后才返回，尚无图执行或调度重叠 |
+| [`LLMEngine._process_model_outputs()` / `post_process()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L687) | [`BatchEngine.finish_step()`](../minideepinfer/batch_engine.py) 与 [`DeferredRunner._commit()`](../minideepinfer/deferred_runner.py) | 原版通过 scheduler 处理结果；教学版区分设备缓存写入、主机前缀提交和请求输出；保留同步对照，尚无投机接受/回退 |
 | [`BlockManager` 与 `CacheEngine`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/cache_engine.py) | [`SlotPool`](../minideepinfer/kv_cache.py) | 当前只演示逻辑归属和回收，不等同于原版的块管理、设备存储或模型状态布局 |
 | [`WorkerStepState` / `MetadataZOS`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py) 与 [`DeferredRelease`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L64) | [`step_state.py`](../minideepinfer/step_state.py)、[`npu_events.py`](../minideepinfer/npu_events.py)、[`PendingBatch`](../minideepinfer/deferred_runner.py) 与 BatchEngine 的在途句柄，第五至八课 | 从整数映射走到真实 NPU、模型与引擎，保存本批张量、事件和取消信息，读取后提交；取消或失败先确认设备完成再清理，仍只允许一批在途，未复现 ZOS/上游资源池 |
 | [`Worker.execute_model_step()` / `_correct_seqlens_qk()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/worker.py) | [`FixedDecodePipeline`](../minideepinfer/decode_pipeline.py)，[第十一课](DECODE_PIPELINE.md) | 保留设备 token 按请求重映射，以及本轮 forward、上一轮处理、本轮采样的顺序；固定成员和长度、关闭 EOS，整批排空才回收。首轮 prefill 也延后收取，与原版不同；不包含动态调度、投机长度修正或完整 ZOS |

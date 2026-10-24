@@ -1,0 +1,643 @@
+{
+  "passed": true,
+  "model": "tiny-random-Qwen2",
+  "device": "cpu",
+  "dtype": "float32",
+  "seed": 2026,
+  "torch": "2.5.1+cpu",
+  "prompt_ids": [
+    2,
+    3,
+    4
+  ],
+  "output_length": 10,
+  "draft_width": 3,
+  "scope": "controlled candidates from a precomputed greedy oracle; no timing or speedup claim",
+  "oracle": {
+    "output_ids": [
+      41,
+      66,
+      63,
+      27,
+      60,
+      39,
+      54,
+      72,
+      57,
+      15
+    ],
+    "forward_calls": 10,
+    "input_tokens": 12,
+    "free_slots": 12
+  },
+  "cases": {
+    "first_reject": {
+      "output_ids": [
+        41,
+        66,
+        63,
+        27,
+        60,
+        39,
+        54,
+        72,
+        57,
+        15
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            41,
+            67,
+            63,
+            27
+          ],
+          "draft": [
+            67,
+            63,
+            27
+          ],
+          "target": [
+            66,
+            47,
+            27,
+            60
+          ],
+          "committed": [
+            66
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 3,
+          "tentative_cached": 7,
+          "retained_cached": 4,
+          "invalidated_slots": [
+            4,
+            5,
+            6
+          ],
+          "pending_token": 66,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            66,
+            64,
+            27,
+            60
+          ],
+          "draft": [
+            64,
+            27,
+            60
+          ],
+          "target": [
+            63,
+            29,
+            60,
+            39
+          ],
+          "committed": [
+            63
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 4,
+          "tentative_cached": 8,
+          "retained_cached": 5,
+          "invalidated_slots": [
+            5,
+            6,
+            7
+          ],
+          "pending_token": 63,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            63,
+            28,
+            60,
+            39
+          ],
+          "draft": [
+            28,
+            60,
+            39
+          ],
+          "target": [
+            27,
+            41,
+            39,
+            54
+          ],
+          "committed": [
+            27
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 5,
+          "tentative_cached": 9,
+          "retained_cached": 6,
+          "invalidated_slots": [
+            6,
+            7,
+            8
+          ],
+          "pending_token": 27,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            27,
+            61,
+            39,
+            54
+          ],
+          "draft": [
+            61,
+            39,
+            54
+          ],
+          "target": [
+            60,
+            31,
+            54,
+            72
+          ],
+          "committed": [
+            60
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 6,
+          "tentative_cached": 10,
+          "retained_cached": 7,
+          "invalidated_slots": [
+            7,
+            8,
+            9
+          ],
+          "pending_token": 60,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            60,
+            40,
+            54,
+            72
+          ],
+          "draft": [
+            40,
+            54,
+            72
+          ],
+          "target": [
+            39,
+            34,
+            89,
+            57
+          ],
+          "committed": [
+            39
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 7,
+          "tentative_cached": 11,
+          "retained_cached": 8,
+          "invalidated_slots": [
+            8,
+            9,
+            10
+          ],
+          "pending_token": 39,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            39,
+            55,
+            72,
+            57
+          ],
+          "draft": [
+            55,
+            72,
+            57
+          ],
+          "target": [
+            54,
+            38,
+            57,
+            15
+          ],
+          "committed": [
+            54
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 8,
+          "tentative_cached": 12,
+          "retained_cached": 9,
+          "invalidated_slots": [
+            9,
+            10,
+            11
+          ],
+          "pending_token": 54,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            54,
+            73,
+            57
+          ],
+          "draft": [
+            73,
+            57
+          ],
+          "target": [
+            72,
+            69,
+            15
+          ],
+          "committed": [
+            72
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 9,
+          "tentative_cached": 12,
+          "retained_cached": 10,
+          "invalidated_slots": [
+            10,
+            11
+          ],
+          "pending_token": 72,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            72,
+            58
+          ],
+          "draft": [
+            58
+          ],
+          "target": [
+            57,
+            54
+          ],
+          "committed": [
+            57
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 10,
+          "tentative_cached": 12,
+          "retained_cached": 11,
+          "invalidated_slots": [
+            11
+          ],
+          "pending_token": 57,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            57
+          ],
+          "draft": [],
+          "target": [
+            15
+          ],
+          "committed": [
+            15
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 15,
+          "finish_reason": "length"
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 21,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 8,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 10,
+      "target_input_tokens": 33,
+      "free_slots": 12,
+      "matches_greedy": true
+    },
+    "middle_reject": {
+      "output_ids": [
+        41,
+        66,
+        63,
+        27,
+        60,
+        39,
+        54,
+        72,
+        57,
+        15
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            41,
+            66,
+            64,
+            27
+          ],
+          "draft": [
+            66,
+            64,
+            27
+          ],
+          "target": [
+            66,
+            63,
+            29,
+            60
+          ],
+          "committed": [
+            66,
+            63
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 3,
+          "tentative_cached": 7,
+          "retained_cached": 5,
+          "invalidated_slots": [
+            5,
+            6
+          ],
+          "pending_token": 63,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            63,
+            27,
+            61,
+            39
+          ],
+          "draft": [
+            27,
+            61,
+            39
+          ],
+          "target": [
+            27,
+            60,
+            31,
+            54
+          ],
+          "committed": [
+            27,
+            60
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 5,
+          "tentative_cached": 9,
+          "retained_cached": 7,
+          "invalidated_slots": [
+            7,
+            8
+          ],
+          "pending_token": 60,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            60,
+            39,
+            55,
+            72
+          ],
+          "draft": [
+            39,
+            55,
+            72
+          ],
+          "target": [
+            39,
+            54,
+            38,
+            57
+          ],
+          "committed": [
+            39,
+            54
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 7,
+          "tentative_cached": 11,
+          "retained_cached": 9,
+          "invalidated_slots": [
+            9,
+            10
+          ],
+          "pending_token": 54,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            54,
+            72,
+            58
+          ],
+          "draft": [
+            72,
+            58
+          ],
+          "target": [
+            72,
+            57,
+            54
+          ],
+          "committed": [
+            72,
+            57
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 9,
+          "tentative_cached": 12,
+          "retained_cached": 11,
+          "invalidated_slots": [
+            11
+          ],
+          "pending_token": 57,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            57
+          ],
+          "draft": [],
+          "target": [
+            15
+          ],
+          "committed": [
+            15
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 15,
+          "finish_reason": "length"
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 11,
+      "accepted_draft_tokens": 4,
+      "correction_tokens": 4,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 6,
+      "target_input_tokens": 19,
+      "free_slots": 12,
+      "matches_greedy": true
+    },
+    "all_accept": {
+      "output_ids": [
+        41,
+        66,
+        63,
+        27,
+        60,
+        39,
+        54,
+        72,
+        57,
+        15
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            41,
+            66,
+            63,
+            27
+          ],
+          "draft": [
+            66,
+            63,
+            27
+          ],
+          "target": [
+            66,
+            63,
+            27,
+            60
+          ],
+          "committed": [
+            66,
+            63,
+            27,
+            60
+          ],
+          "accepted_draft": 3,
+          "final_role": "bonus",
+          "cached_before": 3,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 60,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            60,
+            39,
+            54,
+            72
+          ],
+          "draft": [
+            39,
+            54,
+            72
+          ],
+          "target": [
+            39,
+            54,
+            72,
+            57
+          ],
+          "committed": [
+            39,
+            54,
+            72,
+            57
+          ],
+          "accepted_draft": 3,
+          "final_role": "bonus",
+          "cached_before": 7,
+          "tentative_cached": 11,
+          "retained_cached": 11,
+          "invalidated_slots": [],
+          "pending_token": 57,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            57
+          ],
+          "draft": [],
+          "target": [
+            15
+          ],
+          "committed": [
+            15
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 15,
+          "finish_reason": "length"
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 6,
+      "accepted_draft_tokens": 6,
+      "correction_tokens": 0,
+      "bonus_tokens": 2,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 4,
+      "target_input_tokens": 12,
+      "free_slots": 12,
+      "matches_greedy": true
+    }
+  },
+  "source_sha256": {
+    "minideepinfer/speculative.py": "0ccaa21d9f2c8d929caabd1aff481db053ece9963a3ba32a0687ba8bd403e2b4",
+    "minideepinfer/spec_demo.py": "2c3248fe4d746d802df44baf4af41492d0d0e2f960bf32bea5f1c064aa17d114",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5"
+  }
+}
