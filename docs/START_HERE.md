@@ -2,9 +2,11 @@
 
 [返回首页](../README.md) · [English setup](START_HERE.en.md) · [学习路线](LEARNING_PATH.md)
 
-先选一条适合手头环境的路径。基础包没有运行时依赖；只有执行模型时才需要 PyTorch。以下多行命令使用 Bash，Windows PowerShell 可将它们写成一行；文中的 `python` 始终指你选定环境的解释器。
+没有 NPU 或权重，也可以从第一节开始。基础包不依赖 PyTorch，整数例子装好就能运行；后面两节再分别准备 CPU 小模型和 Ascend 真权重环境。
 
-## 只读引擎：无需权重和设备
+以下多行命令使用 Bash；在 Windows PowerShell 中，请将一条命令写成一行。安装和运行都使用同一个 Python 环境。
+
+## 先看请求怎样执行
 
 Python 3.10+。建议在新虚拟环境里安装，避免影响已有推理环境：
 
@@ -35,7 +37,7 @@ python -m minideepinfer.batch_demo
 python -m minideepinfer.step_demo
 ```
 
-前两个例子用整数展示请求循环与批次；第三个手动推进事件，解释行号映射和取消后的缓存保护。它们不会执行模型，也不用下载任何文件。读代码从[第一课](FIRST_REQUEST.md)开始。
+前两个例子用整数代替模型输出，展示单请求循环和批次调度。第三个例子手动推进完成事件，观察请求换行和取消后，缓存为什么还要保留。接着可以从[第一课](FIRST_REQUEST.md)跟读代码。
 
 ## CPU 小模型：无需下载权重
 
@@ -49,11 +51,11 @@ python -m minideepinfer.verify_chunk_pipeline --device cpu \
 
 这个入口只需要 PyTorch；上面的 extra 同时准备后续真实模型使用的 tokenizer 和 safetensors。已有兼容 PyTorch 时，只安装基础包也能运行随机模型检查。
 
-程序使用一个很小的随机 Qwen3.5 结构，包含线性注意力和完整注意力。它比较整段 prompt 与跨轮分块结果，检查新请求、取消异常和槽位复用。报告应为 `passed: true`，最后 `free_slots: 24`，前缀与线性状态都为 0；不同设备和软件组合的浮点误差不要求逐位相同。
+程序随机初始化一个小型 Qwen3.5 模型，保留线性注意力和完整注意力。它先计算整段 prompt 作为参考，再运行分块、到达、取消和复用的轨迹。完成后应看到 `passed: true`、`free_slots: 24`，剩余前缀和线性状态均为 0。浮点误差会随设备和软件版本略有变化，以报告中的容差检查为准。
 
 ## Ascend 910C：真实权重
 
-使用已经匹配的 PyTorch、torch_npu 和 CANN 环境。实测组合如下，这是已验证的组合，不代表其他组合均不支持：
+这一节从已有的 Ascend 环境开始。本项目实际使用的软件组合如下，安装时先保留配套的 PyTorch、torch_npu 和 CANN：
 
 | 组件 | 本项目实测版本 |
 | --- | --- |
@@ -63,7 +65,7 @@ python -m minideepinfer.verify_chunk_pipeline --device cpu \
 | CANN | 9.1.0，aarch64 |
 | 模型接口 | Transformers 5.12.1，safetensors 0.8.0 |
 
-PyTorch 版本字符串里的 `+cpu` 是这套 NPU 环境的实际值；torch_npu 注册 NPU 后端。不要为匹配字面名称替换现有 PyTorch。
+这里的 PyTorch 版本确实带有 `+cpu` 后缀，NPU 后端由 torch_npu 注册。按整套环境核对版本即可，不需要因为这个后缀更换 PyTorch。
 
 在这套环境中，先保留设备依赖，再安装 Python 模型接口与项目：
 
@@ -81,7 +83,7 @@ hf download Qwen/Qwen3.5-2B \
   --local-dir weights/Qwen3.5-2B
 ```
 
-实际执行前确认所选逻辑设备可用，并为 FP32 权重、缓存和工作区保留空间。检查环境不会预约或隔离设备；设备编号按自己的映射选择。
+运行前确认所选逻辑设备可用，并为 FP32 权重、缓存和工作区留出空间。下面使用 `npu:0`，请按当前容器或机器的设备映射选择编号。
 
 先运行真实生成：
 
@@ -110,7 +112,7 @@ python -m minideepinfer.verify_chunk_pipeline \
 python scripts/check_evidence.py
 ```
 
-检查对象是当前检出的文件，统一 CRLF/LF 后与保存的实机源码 SHA 比较。自己改过这些源码时会报告不一致；这意味着旧实测不能直接证明新源码，不代表模型测试刚刚失败。更早章节的报告保留历史 SHA，适用范围见[验证记录](VALIDATION.md)。
+脚本比较当前文件与实机运行时保存的源码 SHA，并处理 Windows 换行符的差别。如果你改过相关源码，它会指出不一致的文件；此时需要针对改动补验证。各课原始结果对应的版本见[验证记录](VALIDATION.md)。
 
 ## 常见卡点
 

@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [运行指南](START_HERE.md) · [学习路线](LEARNING_PATH.md)
 
-这是第一个整理完整学习入口的教学版本。它用 Qwen3.5-2B 在 Ascend 910C 上运行真实文本推理，再通过可对照的小实验，解释 DeepInfer 的执行职责、设备 token 接续和跨轮状态有效期。
+v0.1 可以在 Ascend 910C 上运行 Qwen3.5-2B 文本生成。模型的前向计算、批次调度和缓存管理都在项目代码里，便于跟读和修改。十四课从单请求开始，逐步解释 DeepInfer 的执行思路：下一轮怎样使用设备上的 token，请求结束后，还有哪些工作必须等设备完成。
 
 ## 这个版本包含什么
 
@@ -15,38 +15,38 @@
 | 模型与缓存 | Qwen3.5 纯文本 forward、完整注意力 KV、按请求独占的 DeltaNet 状态 | 2B 主例，0.8B 开发；Qwen2 保留回归 |
 | 教学材料 | 十四课、整数模拟、随机小模型、真实权重数值报告和有限计时记录 | [学习路线](LEARNING_PATH.md) |
 
-`plan_step()` 共用同步与跨轮 Step 构造，`_launch()` / `_sample()` 共用固定与动态实验的设备输入与采样。同步提交和设备已发出进度各有明确的状态，v0.1 保留不同的调度生命周期，没有为减少表面行数合并它们。
+同步与跨轮执行使用同一个 `plan_step()` 构造 Step，固定与动态实验也共用 `_launch()` / `_sample()`。调度循环仍各自保留：同步引擎按已提交的位置规划，跨轮循环还要记住发出但未提交的工作，以及每条请求最后一次使用缓存的事件。
 
-## 发布前补了哪些检查
+## 运行和测试
 
-新检查使用固定 seed，在 32 组跨轮轨迹中改变 prompt 长度、预算、并发、到达和取消时机，并加入受控 EOS；另有 16 组同步轨迹和 5 种单请求预算。对照路径是原始 Engine 的整段 prompt 执行，不经过共用规划函数。检查输出前缀、连续位置、总输入预算、槽位独占、停止进度和最终清理；刚好占满缓存、只输出一个 token、连续复用 Runner 也覆盖。
+发布前增加了 32 组跨轮轨迹，改变 prompt 长度、预算、并发、到达和取消时机，并加入受控 EOS。另有 16 组同步轨迹和 5 种单请求预算，覆盖刚好占满缓存、只输出一个 token 和连续复用 Runner。所有结果都与原始 Engine 的整段 prompt 执行比较；参考路径不调用共用规划函数。
 
-这些检查没有发现需要修改设备执行核心的缺陷，因此本次发布整理保留现有执行源码。当前完整测试为 140 项：Transformers 5.12.1 环境全部通过；4.46.3 环境 128 通过、12 项独立参考跳过；无模型依赖时 57 通过、83 跳过。跳过的模型检查不计为通过。
+检查同时核对输出、连续位置、输入预算、槽位归属和结束后的清理。完整测试共 140 项：Transformers 5.12.1 环境全部通过；4.46.3 环境通过 128 项、跳过 12 项独立参考检查；未装模型依赖时通过 57 项、跳过 83 项。
 
-安装验证从构建的 wheel 开始，在新虚拟环境、仓库目录之外运行无依赖示例；带 PyTorch 的安装后入口另跑随机模型对照。源码目录能运行和安装包能运行分别检查。基础包无运行时依赖，模型依赖按需安装；未发布到 PyPI。
+安装包也单独检查过：将 wheel 装进新虚拟环境后，离开仓库目录运行基础例子；已有 PyTorch 的环境则再跑随机模型对照，确认程序确实从安装包加载。基础包没有运行时依赖，模型依赖按需安装，步骤见[运行指南](START_HERE.md)。目前通过源码或发布附件安装，尚未上传 PyPI。
 
-## Ascend 910C 证据
+## Ascend 910C 实测
 
-v0.1 复用已完成的 Qwen3.5-2B FP32 实机检查。环境为 Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6、CANN 9.1.0，关闭 HF32，使用一个逻辑设备。
+实测使用 Qwen3.5-2B、FP32 和一个逻辑设备，关闭 HF32。软件为 Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6、CANN 9.1.0。
 
 最新跨轮轨迹包含九轮、十四组完整 logits 对照：最大绝对差 `2.6702880859375e-5`，在原 `atol=1e-4, rtol=2e-4` 内；四个中间 prompt 块不采样，输出与整段参考一致。新请求复用已结束请求的槽位，旧前缀和线性状态清除；分块期间取消、主机异常后的排空清理与再次复用通过，最终归还 24/24 槽位。
 
-[证据索引](results/v0.1/evidence.json)固定原始报告的 SHA，报告保留十五份相关源码 SHA。运行 `python scripts/check_evidence.py` 可核对当前检出文件。索引检查通过表示保存的实测与对应源码一致，不等于重新执行了 NPU 测试，也不意味着每个相关模块的所有分支都做过硬件验证。更早章节保留各自的历史源码与结果，详细条件见[验证记录](VALIDATION.md)。
+[原始报告与源码索引](results/v0.1/evidence.json)记录了这次运行及十五份相关源码的 SHA。运行 `python scripts/check_evidence.py` 可以核对当前文件。脚本只比较文件，不执行模型；各模块实际覆盖哪些路径，以报告中的输入和轨迹为准。更早章节对应的版本和条件见[验证记录](VALIDATION.md)。
 
-本次发布整理没有再次下载权重、加载 2B 或采集 trace。原跨轮程序一次加载权重、共 18 次 forward，包括独立参考、主轨迹、异常和复用，没有性能计时。
+发布整理保留了这份已验证的执行源码，因此直接沿用上述结果。原程序一次加载权重，共执行 18 次 forward，包括参考、主轨迹、异常清理和复用检查，没有做性能计时。
 
 ## 使用边界
 
-主例使用单设备、eager、greedy、FP32 和短上下文。完整注意力采用便于阅读的显式 mask，DeltaNet 用逐 token 递推。它适合跟读与实验，不提供生产吞吐承诺。
+主例使用单设备、eager、greedy、FP32 和短上下文。完整注意力采用显式 mask，DeltaNet 按 token 展开递推，方便观察计算和状态变化。现有性能实验只覆盖少量短请求，尚未证明稳定提速。
 
-BF16 的固定短轨迹已通过匹配扫描方式与 FP32 状态的参考；原生分块与不同调度下的长生成仍有差异，[失败记录与原因分析](BF16_REFERENCE.md)继续保留。CPU 注入检查覆盖等待失败时的资源保护，不宣称真实设备故障恢复。
+BF16 的固定短轨迹已通过相同扫描方式、FP32 状态参考的对照，原生分块与不同调度下的长生成仍有差异，见[失败记录与原因分析](BF16_REFERENCE.md)。等待失败后的资源保护用 CPU 异常注入检查过，真实设备故障恢复尚未验证。
 
 视觉编码器、MLA/MoE、MTP/投机解码、bounded replay、分页与共享前缀、抢占、图执行、并行部署和 HTTP 服务不属于本版本。它们在有独立模型、场景和验证需求后再加入，见[后续路线](ROADMAP.md)。
 
 ## English release summary
 
-v0.1.0 provides a small, runnable teaching engine inspired by DeepInfer, with text-only Qwen3.5-2B on Ascend 910C. It includes synchronous batching and prompt chunks, split launch/commit execution, and a separate cross-round device-token experiment covering arrivals, stops, and safe reuse.
+v0.1.0 runs text-only Qwen3.5-2B on Ascend 910C, with model computation, scheduling, and cache management in the project code. Fourteen lessons follow a request from synchronous execution to cross-round device-token handoff, arrivals, stops, and cache reuse.
 
-This release adds generated scheduling checks, installed-wheel smoke checks, a source-backed NPU evidence index, a shorter bilingual README, and an end-to-end setup guide. All 140 tests pass with Transformers 5.12.1; the older-reference and dependency-free environments explicitly skip unsupported model checks.
+The release adds scheduling checks across varied inputs and arrival times, tests the installed wheel outside the repository, and links the saved NPU results to the source used for each run. The bilingual setup guide starts with examples that need no weights. All 140 tests pass with Transformers 5.12.1; model checks that cannot run in the older-reference or dependency-free environments are reported as skipped.
 
-The preserved FP32 device run passes fourteen full-logit comparisons at existing tolerances, with maximum absolute difference about `2.67e-5` and all 24 cache slots reclaimed. Runtime source is unchanged by this release preparation; evidence hashes are checked against the release tree. No new performance claim, device run, weight download, or trace collection is added. Cross-round scheduling remains separate from `generate`, and BF16 scan-dependent differences remain documented.
+The FP32 device run passes fourteen full-logit comparisons at the existing tolerances, with a maximum absolute difference of about `2.67e-5` and all 24 cache slots reclaimed. Release preparation leaves that execution code unchanged, so the saved results still match the source. Cross-round scheduling is a separate experiment from `generate`. BF16 differences across scan methods and schedules are documented, and the small timing workloads have not shown a consistent speedup.

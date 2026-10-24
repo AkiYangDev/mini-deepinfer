@@ -10,13 +10,13 @@ Built for learning, targeting Ascend 910C.
 
 [简体中文](README.md) · **English**
 
-[Setup](docs/START_HERE.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.1 notes](docs/RELEASE_v0.1.md) · [Validation](docs/VALIDATION.md)
+[Setup](docs/START_HERE.en.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.1 notes](docs/RELEASE_v0.1.md) · [Validation](docs/VALIDATION.md)
 
 </div>
 
-mini-DeepInfer studies the design of [DeepInfer](https://github.com/deepseek-ai/DeepInfer) through a small teaching engine: how prompts are split into chunks, how decode consumes the previous device token, who owns the KV and linear-attention state, and why a finished request cannot always release its cache immediately.
+mini-DeepInfer is a teaching inference engine for Ascend 910C, based on ideas from [DeepInfer](https://github.com/deepseek-ai/DeepInfer). Follow a request through input preparation, model execution, sampling, and result handling, then see when its cache can be safely released.
 
-The project runs **text-only Qwen3.5-2B on Ascend 910C** using its own forward pass and cache management. Fourteen lessons follow the same request path, from dependency-free integer examples to tiny PyTorch models and real checkpoints. Qwen3.5-0.8B is the development model; DeepSeek-R1-Distill-Qwen-1.5B remains a regression baseline.
+The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass and cache management. Fourteen lessons start with integer examples whose state you can print, then move to tiny PyTorch models and real checkpoints. Qwen3.5-0.8B is also used during development, and the earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in the regression checks.
 
 ## Start small
 
@@ -29,7 +29,7 @@ python -m pip install -e .
 python -m minideepinfer.step_demo
 ```
 
-Why are A's cache slots still held after cancellation? How does B find its previous result after changing batch rows? The demo prints state transitions and advances events by hand. It does not execute a model; its explanations are in Chinese.
+In this example, A is cancelled while the device still needs its cache. B changes batch rows but must keep its own previous result. The demo prints both cases and advances completion events by hand, without executing a model. Its explanations are in Chinese.
 
 With PyTorch installed, run a tiny hybrid-attention model without downloading weights:
 
@@ -37,11 +37,11 @@ With PyTorch installed, run a tiny hybrid-attention model without downloading we
 python -m minideepinfer.verify_chunk_pipeline --device cpu
 ```
 
-It mixes decode with prompt chunks, admits a later request, and compares the results against synchronous whole-prompt execution. The report contains batch plans, errors, and cache reclamation. See the [setup guide](docs/START_HERE.md) for dependency choices.
+The example batches decode with prompt chunks and adds another request during execution. It compares the output against synchronous whole-prompt execution and reports each batch, numerical differences, and cache reclamation. See [setup](docs/START_HERE.en.md) for installation and expected output.
 
 ## Run a real model on Ascend 910C
 
-Use an environment with matching PyTorch, torch_npu, and CANN. Install the Python dependencies and download the pinned Qwen3.5-2B checkpoint as described in [setup](docs/START_HERE.md). From the repository directory:
+Use an environment with matching PyTorch, torch_npu, and CANN. Install the Python dependencies and download the pinned Qwen3.5-2B checkpoint as described in [setup](docs/START_HERE.en.md). From the repository directory:
 
 ```bash
 python -m minideepinfer.generate \
@@ -85,11 +85,11 @@ Default BatchEngine supports synchronous dynamic batching, input budgets, prompt
 | Cancellation and host errors | Release waits for final device use, and the Runner can be reused. Failed-drain ownership is separately checked through CPU fault injection |
 | BF16 | Fixed short trajectories pass a matched recurrent reference with FP32 state. Native chunk-path and longer cross-schedule generation still differ; see the [notes](docs/BF16_REFERENCE.md) |
 
-These model checks cover short-context correctness. Existing small-workload timing and trace experiments do not establish a general speedup, and this project makes no production-throughput claim. The [validation record](docs/VALIDATION.md) preserves environments, raw results, and source hashes. Run `python scripts/check_evidence.py` to compare the v0.1 evidence with a clean checkout without launching an NPU workload.
+These checks cover numerical correctness and state handling on short prompts. Timing experiments so far use a few short requests and have not shown a consistent speedup. The [validation record](docs/VALIDATION.md) includes environments, raw output, and source hashes. Run `python scripts/check_evidence.py` to compare a clean v0.1 checkout with the saved device report; it does not launch NPU work.
 
 ## Why DeepInfer
 
-DeepInfer is the engine design reference: input preparation, model execution, sampling, result handling, and the lifetime of cross-round state become runnable code. The [source map](docs/SOURCE_MAP.md) identifies pinned upstream files and teaching simplifications. Qwen supplies the model example; DeltaNet is not presented as a DeepInfer-specific mechanism.
+In DeepInfer, input preparation, device execution, and result handling span several components and depend on work from earlier rounds. This project turns those steps into small experiments you can run and compare. The [source map](docs/SOURCE_MAP.md) links to the pinned upstream files and explains what the teaching version changes or leaves out. Qwen3.5 supplies a real model for studying the computation and its two kinds of cache.
 
 [mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, speculative decoding, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
 

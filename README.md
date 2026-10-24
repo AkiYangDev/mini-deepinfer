@@ -14,9 +14,9 @@ A small inference engine for learning DeepInfer, targeting Ascend 910C.
 
 </div>
 
-mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的设计，用一个小型推理引擎解释：prompt 怎样分块计算，decode 怎样接上前轮 token，KV Cache 和线性注意力状态由谁持有，以及请求结束后为什么还不能马上归还缓存。
+mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 [DeepInfer](https://github.com/deepseek-ai/DeepInfer)。你可以沿着一次请求，读清输入准备、模型计算、采样和结果提交的顺序，再看看请求结束后，缓存到底什么时候才能归还。
 
-项目已经用自己的前向计算，在 **Ascend 910C 上运行 Qwen3.5-2B 纯文本推理**。从无依赖的整数例子，到 PyTorch 小模型，再到真实权重，十四课沿着同一条请求执行路径展开。Qwen3.5-0.8B 用于开发，DeepSeek-R1-Distill-Qwen-1.5B 保留为回归基线。
+目前已用项目自己的前向计算，在 **Ascend 910C 上跑通 Qwen3.5-2B 文本生成**。教程从能直接打印状态的整数例子开始，逐步换成 PyTorch 小模型和真实权重，共十四课。开发时也使用 Qwen3.5-0.8B，原有 DeepSeek-R1-Distill-Qwen-1.5B 示例继续用于回归检查。
 
 ## 先跑起来
 
@@ -29,7 +29,7 @@ python -m pip install -e .
 python -m minideepinfer.step_demo
 ```
 
-A 取消了，为什么缓存还不能还？B 换了批次行号，怎样找到自己的上一轮结果？这个例子会打印状态变化，用手动事件解释依赖；它不执行模型。
+例子里，A 取消后仍要等设备用完，才能归还缓存；B 换了批次行号，仍要接上自己的上一轮结果。程序会打印这些状态变化，用手动事件模拟设备完成，无需执行模型。
 
 已有 PyTorch 时，接着跑一个无需下载权重的混合注意力小模型：
 
@@ -37,7 +37,7 @@ A 取消了，为什么缓存还不能还？B 换了批次行号，怎样找到�
 python -m minideepinfer.verify_chunk_pipeline --device cpu
 ```
 
-它把 decode 和分块 prompt 放进同一批，加入晚到的新请求，并与整段 prompt 的同步计算对照。输出包含每轮计划、误差和缓存回收结果。完整安装步骤与依赖分层见[运行指南](docs/START_HERE.md)。
+这个例子把 decode 和分块 prompt 放进同一批，中途再加入一个新请求，并与整段 prompt 的同步计算比较。报告里可以看到每轮输入、数值误差和缓存回收结果。依赖怎么装、输出怎么看，见[运行指南](docs/START_HERE.md)。
 
 ## 在 Ascend 910C 上运行真实模型
 
@@ -85,11 +85,11 @@ python -m minideepinfer.generate \
 | 取消与主机异常 | 等最后使用完成后清理，Runner 可复用；等待失败保留资源的分支另有 CPU 注入检查 |
 | BF16 | 固定短轨迹通过同扫描方式、FP32 状态参考；原生分块与跨调度长生成仍有差异，见[说明](docs/BF16_REFERENCE.md) |
 
-模型对照用于短上下文正确性检查。已有有限负载的时间线和计时没有证明通用提速；项目不承诺生产吞吐。实机原始结果、环境和源码 SHA 见[验证记录](docs/VALIDATION.md)，v0.1 的对应源码可用 `python scripts/check_evidence.py` 核对，无需再次启动 NPU。
+这些结果验证了短上下文下的数值和状态处理。性能实验目前只覆盖少量短请求，尚未得到稳定提速的结论。[验证记录](docs/VALIDATION.md)保留环境、原始输出和源码 SHA；运行 `python scripts/check_evidence.py` 就能核对 v0.1 源码与实测报告，无需启动 NPU。
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是引擎设计主线：输入准备、主模型执行、采样、结果提交以及跨轮状态有效期，逐步落成可运行的代码。[源码映射](docs/SOURCE_MAP.md)列出固定上游版本、入口和简化；Qwen 承载模型实例，不把 DeltaNet 称为 DeepInfer 独有机制。
+读 DeepInfer 时，输入准备、设备计算和结果处理分散在不同组件里，还要考虑前后轮之间的依赖。本项目把这些步骤拆成小实验，便于单独运行和对照。[源码映射](docs/SOURCE_MAP.md)列出了参考的上游版本、对应入口，以及教学版省略或改写的部分。Qwen3.5 则用来观察真实模型计算和两种缓存的变化。
 
 [mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。MLA、MoE、投机解码、bounded replay、图执行和分布式留在[后续路线](docs/ROADMAP.md)。来源与许可证见[参考记录](docs/REFERENCES.md)。
 

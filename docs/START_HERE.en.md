@@ -2,7 +2,9 @@
 
 [Home](../README.en.md) · [简体中文](START_HERE.md) · [Learning path](LEARNING_PATH.md)
 
-The base package has no runtime dependencies. PyTorch is only needed for model execution. Multiline commands below use Bash; in PowerShell, put each command on one line. Use the same Python environment for installation and execution.
+Start with the first section even if you have no NPU or checkpoint. The integer examples need only Python; the later sections add PyTorch and real weights.
+
+Multiline commands use Bash. In PowerShell, put each command on one line. Install and run everything in the same Python environment.
 
 ## No weights or hardware
 
@@ -23,7 +25,7 @@ python -m minideepinfer.batch_demo
 python -m minideepinfer.step_demo
 ```
 
-The first two examples trace integer requests and batches. The third advances events by hand to explain row remapping and protected cache ownership. These are simulations, not model execution; their explanations are in Chinese.
+The first two examples use integers in place of model output to show the request loop and batch scheduling. The third advances completion events by hand so you can inspect row remapping and cache ownership after cancellation. The explanations are in Chinese.
 
 ## Tiny CPU model, no checkpoint
 
@@ -59,7 +61,7 @@ hf download Qwen/Qwen3.5-2B \
   --local-dir weights/Qwen3.5-2B
 ```
 
-Check that your selected logical device is available and has room for FP32 weights, cache, and workspace. Device IDs depend on your mapping; the checker does not reserve or isolate hardware. From the repository directory:
+Check that your selected logical device is available and has room for FP32 weights, cache, and workspace. The example uses `npu:0`; choose the ID mapped into your environment. From the repository directory:
 
 ```bash
 python -m minideepinfer.generate \
@@ -86,7 +88,7 @@ This runs reference and experimental trajectories. To inspect existing evidence 
 python scripts/check_evidence.py
 ```
 
-It compares the current checkout, normalizing CRLF/LF, with source hashes in the preserved NPU report. A mismatch means the historical run does not directly certify your modified source; it is not a newly failed model test. Earlier lesson reports retain historical source versions.
+The script compares your files with source hashes saved during the NPU run, allowing for Windows line endings. If you have changed a relevant file, it names the mismatch so you can decide what needs to be tested again. Earlier reports keep the source versions used for those runs.
 
 ## Troubleshooting
 

@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [先运行](START_HERE.md) · [源码映射](SOURCE_MAP.md)
 
-不用先读完十四课。只想运行就从安装指南开始；想理解调度，先看前三课的整数请求和真实批次。第五课以后逐步把“函数返回了”和“设备用完了”分开，后面的代码都依赖这个区别。
+先跑[安装指南](START_HERE.md)里的例子，再按感兴趣的问题读。前三课从单请求走到批次调度；第五课开始区分函数返回与设备完成，后面再把这些依赖接到真实模型。
 
 ## 从同步请求到真实模型
 
@@ -40,6 +40,6 @@
 
 这些 `verify_*` 入口默认使用随机小模型，不下载权重；真实 Ascend 对照增加 `--model weights/Qwen3.5-2B --device npu:0`。模型检查需要 PyTorch，真实权重还需 tokenizer 与 safetensors。计时、profiling 和固定数值检查的用途不同，不必为了读教程把所有实机实验重跑一遍。
 
-[`plan_step()`](../minideepinfer/planning.py)已经共用同步与跨轮的 Step 构造。[`_launch()` / `_sample()`](../minideepinfer/decode_pipeline.py)已经共用固定批次与动态实验的设备输入和采样路径。同步引擎与跨轮实验仍分别管理准入和结果：前者使用已提交进度，后者必须保留已发出进度和最后使用事件。v0.1 保留这条边界，避免用同一计数承担两种含义。
+读到后几课时，可以回看两个公共入口：[`plan_step()`](../minideepinfer/planning.py)负责构造同步和跨轮使用的 Step；[`_launch()` / `_sample()`](../minideepinfer/decode_pipeline.py)负责固定批次与动态实验的设备输入和采样。两种调度循环仍分别保留，因为跨轮执行必须额外记住已发出的工作和最后使用事件，不能只看 CPU 已提交的进度。
 
 每课记录自己的实现阶段与实测条件；最新可用入口以[运行指南](START_HERE.md)、[v0.1 说明](RELEASE_v0.1.md)为准。DeepInfer 固定参考及教学简化见[源码映射](SOURCE_MAP.md)，后续方向见[路线](ROADMAP.md)。
