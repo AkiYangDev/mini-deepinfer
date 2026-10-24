@@ -98,7 +98,7 @@ python -m minideepinfer.generate \
 | 取消与主机异常 | 等最后使用完成后清理，Runner 可复用；等待失败保留资源的分支另有 CPU 注入检查 |
 | BF16 | 固定短轨迹通过同扫描方式、FP32 状态参考；原生分块与跨调度长生成仍有差异，见[说明](docs/BF16_REFERENCE.md) |
 
-这些结果验证了短上下文下的数值和状态处理。性能实验目前只覆盖少量短请求，尚未得到稳定提速的结论。[验证记录](docs/VALIDATION.md)保留环境、原始输出和源码 SHA；v0.1 与 v0.2 开发版的报告分别保存，核对命令见[文本入口说明](docs/PIPELINE_TEXT.md)。
+这些结果验证了短上下文下的数值和状态处理。v0.2.0 发布后，main 新增[同步与跨轮对照](docs/PIPELINE_BENCHMARK.md)：三类短负载的跨轮耗时都更长，报告保留每次结果并解释批次计划的差异。[验证记录](docs/VALIDATION.md)保留环境、原始输出和源码 SHA；v0.1 与 v0.2 的报告分别保存，核对命令见[文本入口说明](docs/PIPELINE_TEXT.md)。
 
 ## 为什么参考 DeepInfer
 

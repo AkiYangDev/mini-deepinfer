@@ -1,0 +1,11 @@
+{
+  "version": "main-after-v0.2.0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/qwen35-2b-pipeline-benchmark.json",
+      "sha256": "9953ac0a924c8b65b76c78af27ecf1a322643c52868c43a97b64236ba4f9be66",
+      "scope": "Qwen3.5-2B FP32 on one logical Ascend 910C device. Three offline workloads, one warmup per path and three alternating paired measurements. Identical outputs, input-token work and clean final caches across 24 runs; 344 forwards including warmups. CPU-commit latency and whole-workload throughput.",
+      "limits": "Short fixed-length generation with EOS disabled. This is an instrumented whole-path comparison, not an isolated overlap measurement or a serving benchmark. Batch plans differ for the four-request cases. Cross-round execution was slower in all nine measured pairs. No trace or new full-logit comparison was collected. Original runtime sources are unchanged; the report adds the benchmark source hash."
+    }
+  ]
+}

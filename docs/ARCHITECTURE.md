@@ -2,7 +2,15 @@
 
 [返回首页](../README.md) · [实施路线](ROADMAP.md)
 
-第一课保留同步 FIFO 单请求 Engine，第三课增加按轮调度的 BatchEngine。Runner 可以执行 Qwen2，或第四课的纯文本 Qwen3.5。批次通过 mask 隔开完整注意力，通过请求边界隔开 DeltaNet 递推。第八课可选地分开发起计算与收取结果，仍确认本轮计算完成后再提交。
+当前有三种执行方式，共用模型计算与 Step 构造。Runner 可以执行 Qwen2 或纯文本 Qwen3.5；批次通过 mask 隔开完整注意力，通过请求边界隔开 DeltaNet 递推。
+
+| 入口 | 当前行为 | 结果与资源 |
+| --- | --- | --- |
+| 默认 `generate` | Engine 单请求或 BatchEngine 同步合批 | 本轮完成并提交后，再安排下一轮 |
+| `generate --deferred` | BatchEngine 分开发起与收取，最多一批在途 | 可在中间提交或取消请求，等待完成后提交结果 |
+| `generate --pipeline` | StoppingDecodePipeline 跨轮接续，最多持有两轮状态 | 下一轮 forward 先提交，再处理上一轮结果；缓存等最后使用完成后归还 |
+
+三种方式都保留清楚的参考实现。下文带课号的段落解释能力怎样逐步加入，不能把某一课的限制当成当前所有入口的限制。第一次阅读可以先跑[A/B/C 演示](WALKTHROUGH.md)。
 
 ## 核心对象
 
@@ -18,8 +26,9 @@
 | BatchEngine | 按轮准入与整批结果提交；可选分步执行 | 等待队列、运行请求及各自槽位、请求数与 token 预算、本批计划与结果句柄 |
 | DeferredRunner | 提交真实模型计算，读取后再更新主机前缀 | 独占的 ModelRunner、专用流、最多一批在途结果、取消记录 |
 | PendingBatch | 持有本批张量与结果拷贝事件，控制读取、取消和放弃 | Step 元组、CPU token 缓冲区、logits、完成与清理状态 |
+| StoppingDecodePipeline | 跨轮输入预算、动态准入与退出 | 两轮状态、设备 token、每请求已发出进度和最后使用事件 |
 
-调度在 Engine / BatchEngine 内。Runner 将输入准备、主模型与 greedy 选择分开；批次计算后按照同样的请求顺序返回 token，Engine 才提交请求状态。批次版本维护每个请求独立的已计算前缀，并在请求结束后删除对应记录。
+同步与 deferred 调度在 Engine / BatchEngine 内，跨轮调度在 StoppingDecodePipeline 内。Runner 将输入准备、主模型与 greedy 选择分开；执行循环负责提交请求状态。各请求持有独立前缀，确认最后使用结束后再删除相应记录。
 
 一个最小执行循环：
 
@@ -32,7 +41,7 @@ prefill 计算一段输入；decode 通常消费上一轮选出的 token 并预�
 
 ## 状态和资源约定
 
-请求状态从 waiting 进入 running，再转为 finished、cancelled 或 failed。状态转换由 Engine 统一提交，模型层不直接修改请求队列。
+请求状态从 waiting 进入 running，再转为 finished、cancelled 或 failed。状态转换由相应执行循环提交，模型层不直接修改请求队列。
 
 当前准入规则：请求最多需要 `len(prompt) + max_new_tokens - 1` 个槽位；超过总容量时在提交阶段拒绝。运行前一次性预留最大需求，排队请求尚不占用槽位。第一课逐个运行，BatchEngine 在空闲槽位、请求数和本轮 token 预算允许时接纳多个请求，详见[第三课](BATCHING.md)。抢占、重计算及共享前缀的引用计数后续再加入。
 
@@ -56,11 +65,11 @@ BatchEngine 的可选分步路径用 `launch_step()` 提交，`finish_step()` �
 
 ## Ascend 执行后端
 
-底层接口集中管理设备选择、内存、stream/event、同步、图执行和优化算子。模型与调度代码使用项目自己的明确接口。
+当前后端使用基础 PyTorch/torch_npu 运算，设备选择与同步在 ModelRunner，stream/event 在 deferred 和跨轮执行路径。图执行和融合算子仍是候选，尚无统一的优化后端。
 
 参考路径用基础运算表达数学含义；优化路径逐项替换归一化、attention、专家计算或缓存写入。每个算子记录输入形状、布局、dtype、版本和数值对照。
 
-当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。第五、六课解释状态与事件；[第七课](DEFERRED_RUNNER.md)把它们接到真实模型，[第八课](DEFERRED_ENGINE.md)接入现有 BatchEngine。当前仅一批在途，执行重叠和图执行仍需独立验证。扩大范围时，需要重新检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
+当前跨轮文本入口使用 FP32 与 eager，BF16 的已有范围见[对照说明](BF16_REFERENCE.md)。第五、六课解释状态与事件；[第七课](DEFERRED_RUNNER.md)把它们接到真实模型，[第八课](DEFERRED_ENGINE.md)接入 BatchEngine，单批限制属于这条 deferred 路径。第十一至十四课另行实现跨轮循环，v0.2 已通过 `--pipeline` 接入文本生成；后续[短负载对照](PIPELINE_BENCHMARK.md)未显示整批提速，不能由执行顺序推定设备重叠收益。
 
 [第十一课](DECODE_PIPELINE.md)单独实现固定批次的设备 token 接续：下一轮 forward 在上一轮 CPU 输出处理前提交，最多保留两轮状态，整批排空才回收。它独占空闲 Runner，不接入默认生成路径；动态成员、EOS 和取消仍由后续实验处理，没有性能结论。
 
@@ -70,9 +79,9 @@ BatchEngine 的可选分步路径用 `launch_step()` 提交，`finish_step()` �
 
 ## 模型层
 
-入门模型实现 Qwen 架构；V2-Lite 单独实现对应的 MLA、MoE 与权重映射。模型接口尽量共享执行元数据和输出形式，不以过度统一来掩盖缓存布局差异。
+当前模型层实现 Qwen2 和纯文本 Qwen3.5。DeepSeek-V2-Lite 的 MLA、MoE 与权重映射尚未实现；若后续加入，会单独处理其数学与缓存布局。模型接口共享适用的执行元数据，不以过度统一掩盖模型差异。
 
-MLA 教学分为展开计算、压缩缓存和优化计算三个步骤。MoE 从路由结果与逐专家参考计算开始，再引入 token 分组、融合计算及通信。
+候选的 MLA 教学可分为展开计算、压缩缓存和优化计算；MoE 可从路由结果与逐专家参考计算开始。是否开展及实施顺序见[路线](ROADMAP.md)。
 
 ## 当前目录
 
