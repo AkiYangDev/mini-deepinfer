@@ -20,7 +20,7 @@ The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass 
 
 v0.2 connects cross-round execution to text generation and adds a complete scheduling walkthrough without a checkpoint. See the [release notes](docs/RELEASE_v0.2.md) for the new entry points and validation scope.
 
-The v0.3 development version on main adds a [controlled greedy speculation lesson](docs/SPECULATIVE.md#english-summary): accept or correct proposed tokens, then roll back the rejected KV prefix. It runs a tiny random full-attention model on CPU, independently of the existing Ascend 910C text frontend.
+The v0.3 development version on main adds a [controlled greedy speculation lesson](docs/SPECULATIVE.md#english-summary): accept or correct proposed tokens, then roll back the rejected KV prefix. Start with a tiny model without weights, then inspect Qwen3.5 state snapshots and replay. A real 2B Ascend 910C run matched greedy output and cold-cache state checks. This synchronous experiment is separate from the text frontend and records snapshot and replay costs.
 
 ## Start small
 
@@ -109,7 +109,7 @@ A later admission experiment collects a known length completion before schedulin
 
 In DeepInfer, input preparation, device execution, and result handling span several components and depend on work from earlier rounds. This project turns those steps into small experiments you can run and compare. The [source map](docs/SOURCE_MAP.md) links to the pinned upstream files and explains what the teaching version changes or leaves out. Qwen3.5 supplies a real model for studying the computation and its two kinds of cache.
 
-[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, learned-draft execution and hybrid-state rollback, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
+[mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format, while Ascend SGLang informs NPU API and compatibility work. MLA, MoE, learned-draft execution, bounded replay, graph execution, and distribution remain on the [roadmap](docs/ROADMAP.md). See [references](docs/REFERENCES.md) for sources and licenses.
 
 [Open an issue](https://github.com/AkiYangDev/mini-deepinfer/issues) with a concrete question: a confusing step, a command that fails, or a cache behavior needing an example. Code and tutorial improvements are welcome through the [contribution guide](CONTRIBUTING.md). If this learning path is useful, star the project to follow its development.
 

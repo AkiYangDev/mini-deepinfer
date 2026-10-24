@@ -121,7 +121,7 @@ class SpeculativeModelTests(unittest.TestCase):
         result=generate(model,prompt,12,lambda *a: self.fail('draft after prefill EOS'),eos_token_id=golden[0])
         self.assertEqual(result['output_ids'],golden[:1])
 
-    def test_bad_draft_observer_error_and_hybrid_model_rejection(self):
+    def test_bad_draft_observer_error_and_unsupported_model_rejection(self):
         from minideepinfer.kv_cache import SlotPool
         from minideepinfer.speculative import CachedTarget
         model=self.model()
@@ -137,11 +137,8 @@ class SpeculativeModelTests(unittest.TestCase):
                          on_round=lambda r: (_ for _ in ()).throw(ValueError('observer')))
         self.assertEqual(released,[6,6])
         with self.assertRaises(ValueError):generate(model,(2,3),5,lambda p,n: [],cache_capacity=3)
-        from minideepinfer.models.qwen3_5 import Qwen3_5Config,Qwen3_5ForCausalLM
-        config=Qwen3_5Config(97,32,48,4,2,1,16,2,4,8,8,('linear_attention',)*3+('full_attention',),
-                            max_position_embeddings=64,partial_rotary_factor=0.5)
-        with self.assertRaisesRegex(ValueError,'full-attention'):
-            CachedTarget(Qwen3_5ForCausalLM(config),(0,1),2)
+        with self.assertRaisesRegex(ValueError,'Qwen2 or Qwen3.5'):
+            CachedTarget(torch.nn.Linear(2,2),(0,1),2)
 
     def test_demo_reports_oracle_cost_and_real_target_work(self):
         from minideepinfer.spec_demo import run
@@ -160,3 +157,105 @@ class SpeculativeModelTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     generate(model,(2,3),count,lambda p,n: [1]*n,width=width)
             target.assert_not_called()
+
+
+@unittest.skipUnless(AVAILABLE,'install torch for hybrid rollback')
+class HybridSpeculativeTests(unittest.TestCase):
+    def test_failed_cache_check_is_saved_before_next_case(self):
+        import json
+        import tempfile
+        from pathlib import Path
+        from minideepinfer.spec_demo import run
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'failed.json'
+            with patch('minideepinfer.spec_demo.compare_cache',return_value=dict(passed=False,mismatches=['recurrence_0'])) as check:
+                with self.assertRaisesRegex(RuntimeError,'cold full-prefix'):
+                    run(output,hybrid=True,verbose=False)
+            saved=json.loads(output.read_text(encoding='utf-8'))
+            self.assertEqual(check.call_count,1)
+            self.assertEqual(saved['status'],'failed')
+            self.assertFalse(saved['passed'])
+            self.assertEqual(saved['failure_count'],1)
+            self.assertEqual(saved['cache_checks'][0]['case'],'first_reject')
+            self.assertEqual(saved['cases'],{})
+            self.assertGreater(saved['in_progress']['replayed_input_tokens'],0)
+            self.assertEqual(len(saved['source_sha256']),9)
+
+    def model(self):
+        from minideepinfer.models.qwen3_5 import Qwen3_5Config,Qwen3_5ForCausalLM
+        torch.set_num_threads(1);torch.manual_seed(2036)
+        config=Qwen3_5Config(97,32,48,4,2,1,16,2,4,8,8,('linear_attention',)*3+('full_attention',),
+                            max_position_embeddings=64,partial_rotary_factor=0.5)
+        return Qwen3_5ForCausalLM(config).eval()
+
+    def test_hybrid_rollbacks_match_greedy_and_cold_cache_for_each_commit(self):
+        from minideepinfer.spec_demo import compare_cache
+        model=self.model();prompt=(2,3,4)
+        engine=Engine(ModelRunner(model,16),16)
+        request=engine.submit(prompt,8)
+        list(engine.run());golden=request.output_ids
+        for reject in (0,1,None):
+            checked=[]
+            def draft(prefix,n):
+                start=len(prefix)-len(prompt)
+                values=golden[start:start+n].copy()
+                if reject is not None and reject<len(values):values[reject]=(values[reject]+1)%97
+                return values
+            result=generate(model,prompt,8,draft,on_cache=lambda t:checked.append(compare_cache(t)))
+            self.assertEqual(result['output_ids'],golden)
+            self.assertEqual(result['free_slots'],10)
+            self.assertEqual(len(checked),len(result['rounds']))
+            self.assertGreater(result['snapshot_count'],0)
+            self.assertGreater(result['peak_snapshot_bytes'],0)
+            if reject is None:
+                self.assertEqual(result['replay_forward_calls'],0)
+            else:
+                self.assertGreater(result['replayed_input_tokens'],0)
+            self.assertEqual(result['target_forward_calls'],1+len(result['rounds'])+result['replay_forward_calls'])
+
+    def test_snapshot_restores_poisoned_linear_states_and_rejected_storage(self):
+        from minideepinfer.spec_demo import compare_cache
+        target=CachedTarget(self.model(),(11,2,9,5,0,15,3,8,4,12,1,14),16)
+        target.forward((2,3,4));target.checkpoint()
+        saved={k:tuple(t.clone() for t in values) for k,values in target._snapshot[1].items()}
+        target.forward((5,6,7,8))
+        self.assertTrue(any(not torch.equal(target.cache.linear_states[k][1],v[1]) for k,v in saved.items()))
+        with torch.inference_mode():
+            for values in target.cache.linear_states.values():
+                for t in values:t.fill_(float('nan'))
+            for slot in target.slots[5:]:
+                target.cache.keys[:,slot].fill_(float('nan'));target.cache.values[:,slot].fill_(float('nan'))
+        for k,values in saved.items():
+            for actual,expected in zip(target._snapshot[1][k],values):
+                torch.testing.assert_close(actual,expected,atol=0,rtol=0)
+        self.assertEqual(target.rollback(5),(15,3))
+        self.assertEqual((target.replay_calls,target.replay_tokens),(1,2))
+        compare_cache(target)
+        target.forward((9,));compare_cache(target)
+        with self.assertRaisesRegex(ValueError,'checkpoint'):target.rollback(4)
+
+    def test_hybrid_eos_length_and_callback_error_cleanup(self):
+        from minideepinfer.kv_cache import SlotPool
+        model=self.model();prompt=(2,3,4)
+        engine=Engine(ModelRunner(model,16),16);request=engine.submit(prompt,8)
+        list(engine.run());golden=request.output_ids
+        def draft(prefix,n):return golden[len(prefix)-3:len(prefix)-3+n]
+        result=generate(model,prompt,8,draft,eos_token_id=golden[1])
+        self.assertEqual(result['output_ids'],golden[:2] if golden[1]!=golden[0] else golden[:1])
+        self.assertEqual(result['finish_reason'],'eos')
+        result=generate(model,prompt,1,lambda *a:self.fail('draft after length end'))
+        self.assertEqual((result['output_ids'],result['snapshot_count']),(golden[:1],0))
+        released=[];release=SlotPool.release
+        def observe_release(pool,rid):release(pool,rid);released.append(pool.free_count)
+        with patch.object(SlotPool,'release',observe_release):
+            with self.assertRaisesRegex(ValueError,'observer'):
+                generate(model,prompt,8,draft,on_cache=lambda t:(_ for _ in ()).throw(ValueError('observer')))
+        self.assertEqual(released,[10])
+
+    def test_failed_synchronization_does_not_release_slots(self):
+        from minideepinfer.kv_cache import SlotPool
+        with patch.object(CachedTarget,'synchronize',side_effect=RuntimeError('drain failed')), \
+                patch.object(SlotPool,'release') as release:
+            with self.assertRaisesRegex(RuntimeError,'drain failed'):
+                generate(self.model(),(2,3),3,lambda p,n:[1]*n)
+            release.assert_not_called()

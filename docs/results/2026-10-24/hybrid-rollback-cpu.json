@@ -1,0 +1,974 @@
+{
+  "passed": true,
+  "model": "tiny-random-Qwen3.5",
+  "device": "cpu",
+  "dtype": "float32",
+  "seed": 2026,
+  "torch": "2.5.1+cpu",
+  "prompt_ids": [
+    2,
+    3,
+    4
+  ],
+  "output_length": 10,
+  "draft_width": 3,
+  "scope": "controlled candidates from a precomputed greedy oracle; no timing or speedup claim",
+  "oracle": {
+    "output_ids": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "forward_calls": 10,
+    "input_tokens": 12,
+    "free_slots": 12
+  },
+  "cases": {
+    "first_reject": {
+      "output_ids": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "draft": [
+            5,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 3,
+          "tentative_cached": 7,
+          "retained_cached": 4,
+          "invalidated_slots": [
+            4,
+            5,
+            6
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "draft": [
+            5,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 4,
+          "tentative_cached": 8,
+          "retained_cached": 5,
+          "invalidated_slots": [
+            5,
+            6,
+            7
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "draft": [
+            5,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 5,
+          "tentative_cached": 9,
+          "retained_cached": 6,
+          "invalidated_slots": [
+            6,
+            7,
+            8
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "draft": [
+            5,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 6,
+          "tentative_cached": 10,
+          "retained_cached": 7,
+          "invalidated_slots": [
+            7,
+            8,
+            9
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "draft": [
+            5,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 7,
+          "tentative_cached": 11,
+          "retained_cached": 8,
+          "invalidated_slots": [
+            8,
+            9,
+            10
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "draft": [
+            5,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            5,
+            4,
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 8,
+          "tentative_cached": 12,
+          "retained_cached": 9,
+          "invalidated_slots": [
+            9,
+            10,
+            11
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            5,
+            4
+          ],
+          "draft": [
+            5,
+            4
+          ],
+          "target": [
+            4,
+            5,
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 9,
+          "tentative_cached": 12,
+          "retained_cached": 10,
+          "invalidated_slots": [
+            10,
+            11
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            5
+          ],
+          "draft": [
+            5
+          ],
+          "target": [
+            4,
+            5
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 10,
+          "tentative_cached": 12,
+          "retained_cached": 11,
+          "invalidated_slots": [
+            11
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4
+          ],
+          "draft": [],
+          "target": [
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length"
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 21,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 8,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 18,
+      "target_input_tokens": 41,
+      "replay_forward_calls": 8,
+      "replayed_input_tokens": 8,
+      "snapshot_count": 9,
+      "snapshot_bytes_total": 48384,
+      "peak_snapshot_bytes": 5376,
+      "free_slots": 12,
+      "matches_greedy": true
+    },
+    "middle_reject": {
+      "output_ids": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            4,
+            4,
+            5,
+            4
+          ],
+          "draft": [
+            4,
+            5,
+            4
+          ],
+          "target": [
+            4,
+            4,
+            5,
+            4
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 3,
+          "tentative_cached": 7,
+          "retained_cached": 5,
+          "invalidated_slots": [
+            5,
+            6
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 2,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            4,
+            5,
+            4
+          ],
+          "draft": [
+            4,
+            5,
+            4
+          ],
+          "target": [
+            4,
+            4,
+            5,
+            4
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 5,
+          "tentative_cached": 9,
+          "retained_cached": 7,
+          "invalidated_slots": [
+            7,
+            8
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 2,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            4,
+            5,
+            4
+          ],
+          "draft": [
+            4,
+            5,
+            4
+          ],
+          "target": [
+            4,
+            4,
+            5,
+            4
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 7,
+          "tentative_cached": 11,
+          "retained_cached": 9,
+          "invalidated_slots": [
+            9,
+            10
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 2,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            4,
+            5
+          ],
+          "draft": [
+            4,
+            5
+          ],
+          "target": [
+            4,
+            4,
+            5
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 9,
+          "tentative_cached": 12,
+          "retained_cached": 11,
+          "invalidated_slots": [
+            11
+          ],
+          "pending_token": 4,
+          "replay_calls": 1,
+          "replay_tokens": 2,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4
+          ],
+          "draft": [],
+          "target": [
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length"
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 11,
+      "accepted_draft_tokens": 4,
+      "correction_tokens": 4,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 10,
+      "target_input_tokens": 27,
+      "replay_forward_calls": 4,
+      "replayed_input_tokens": 8,
+      "snapshot_count": 5,
+      "snapshot_bytes_total": 26880,
+      "peak_snapshot_bytes": 5376,
+      "free_slots": 12,
+      "matches_greedy": true
+    },
+    "all_accept": {
+      "output_ids": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "draft": [
+            4,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "committed": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "accepted_draft": 3,
+          "final_role": "bonus",
+          "cached_before": 3,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "draft": [
+            4,
+            4,
+            4
+          ],
+          "target": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "committed": [
+            4,
+            4,
+            4,
+            4
+          ],
+          "accepted_draft": 3,
+          "final_role": "bonus",
+          "cached_before": 7,
+          "tentative_cached": 11,
+          "retained_cached": 11,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null
+        },
+        {
+          "input_ids": [
+            4
+          ],
+          "draft": [],
+          "target": [
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length"
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 6,
+      "accepted_draft_tokens": 6,
+      "correction_tokens": 0,
+      "bonus_tokens": 2,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 4,
+      "target_input_tokens": 12,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 3,
+      "snapshot_bytes_total": 16128,
+      "peak_snapshot_bytes": 5376,
+      "free_slots": 12,
+      "matches_greedy": true
+    }
+  },
+  "source_sha256": {
+    "minideepinfer/speculative.py": "37a93515456e194f6062014f236263240547671fdab55e535208df69002f8132",
+    "minideepinfer/spec_demo.py": "1ffdad609c9b95e0cf5fc6fc3087087325f4baaf20b6b7f075c87cf4383b06cc",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8"
+  },
+  "hybrid": true,
+  "cache_checks": [
+    {
+      "case": "first_reject",
+      "cached_tokens": 4,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 4,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 3.337860107421875e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 4.470348358154297e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 2.60770320892334e-08,
+      "conv_2_max_abs": 4.76837158203125e-07,
+      "recurrence_2_max_abs": 7.450580596923828e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 5,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 5,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 3.814697265625e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 8.940696716308594e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 7.450580596923828e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 3.725290298461914e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 6,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 6,
+      "passed": true,
+      "keys_max_abs": 1.6838312149047852e-06,
+      "values_max_abs": 1.5795230865478516e-06,
+      "logits_max_abs": 1.2159347534179688e-05,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 1.1920928955078125e-07,
+      "conv_2_max_abs": 8.493661880493164e-07,
+      "recurrence_2_max_abs": 5.587935447692871e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 7,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 7,
+      "passed": true,
+      "keys_max_abs": 1.6838312149047852e-06,
+      "values_max_abs": 1.5795230865478516e-06,
+      "logits_max_abs": 4.76837158203125e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 8.940696716308594e-08,
+      "conv_2_max_abs": 8.493661880493164e-07,
+      "recurrence_2_max_abs": 9.685754776000977e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 8,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 8,
+      "passed": true,
+      "keys_max_abs": 1.4975666999816895e-06,
+      "values_max_abs": 1.430511474609375e-06,
+      "logits_max_abs": 9.417533874511719e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 8.642673492431641e-07,
+      "recurrence_2_max_abs": 3.725290298461914e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 9,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 9,
+      "passed": true,
+      "keys_max_abs": 1.4975666999816895e-06,
+      "values_max_abs": 1.430511474609375e-06,
+      "logits_max_abs": 2.1457672119140625e-06,
+      "conv_0_max_abs": 1.7881393432617188e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 2.7939677238464355e-08,
+      "conv_2_max_abs": 6.258487701416016e-07,
+      "recurrence_2_max_abs": 7.82310962677002e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 10,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 10,
+      "passed": true,
+      "keys_max_abs": 1.4975666999816895e-06,
+      "values_max_abs": 1.430511474609375e-06,
+      "logits_max_abs": 5.7220458984375e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 4.470348358154297e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 2.9802322387695312e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 2.9802322387695312e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 11,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 11,
+      "passed": true,
+      "keys_max_abs": 1.4975666999816895e-06,
+      "values_max_abs": 1.430511474609375e-06,
+      "logits_max_abs": 3.814697265625e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 4.470348358154297e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 8.940696716308594e-08,
+      "conv_2_max_abs": 2.384185791015625e-07,
+      "recurrence_2_max_abs": 2.60770320892334e-08
+    },
+    {
+      "case": "first_reject",
+      "cached_tokens": 12,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 12,
+      "passed": true,
+      "keys_max_abs": 1.4975666999816895e-06,
+      "values_max_abs": 1.430511474609375e-06,
+      "logits_max_abs": 3.814697265625e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 4.470348358154297e-08,
+      "conv_1_max_abs": 2.980232238769531e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 2.384185791015625e-07,
+      "recurrence_2_max_abs": 4.470348358154297e-08
+    },
+    {
+      "case": "middle_reject",
+      "cached_tokens": 5,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 5,
+      "passed": true,
+      "keys_max_abs": 7.152557373046875e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 4.291534423828125e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 1.043081283569336e-07,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 8.940696716308594e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 3.725290298461914e-08
+    },
+    {
+      "case": "middle_reject",
+      "cached_tokens": 7,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 7,
+      "passed": true,
+      "keys_max_abs": 2.0936131477355957e-06,
+      "values_max_abs": 2.0265579223632812e-06,
+      "logits_max_abs": 5.7220458984375e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 1.1920928955078125e-07,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 1.1920928955078125e-06,
+      "recurrence_2_max_abs": 1.1920928955078125e-07
+    },
+    {
+      "case": "middle_reject",
+      "cached_tokens": 9,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 9,
+      "passed": true,
+      "keys_max_abs": 1.9073486328125e-06,
+      "values_max_abs": 1.8775463104248047e-06,
+      "logits_max_abs": 2.384185791015625e-06,
+      "conv_0_max_abs": 1.1920928955078125e-07,
+      "recurrence_0_max_abs": 8.940696716308594e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 4.470348358154297e-08,
+      "conv_2_max_abs": 3.8743019104003906e-07,
+      "recurrence_2_max_abs": 8.568167686462402e-08
+    },
+    {
+      "case": "middle_reject",
+      "cached_tokens": 11,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 11,
+      "passed": true,
+      "keys_max_abs": 1.9073486328125e-06,
+      "values_max_abs": 1.8775463104248047e-06,
+      "logits_max_abs": 3.814697265625e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 4.76837158203125e-07,
+      "recurrence_1_max_abs": 4.470348358154297e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 2.3283064365386963e-08
+    },
+    {
+      "case": "middle_reject",
+      "cached_tokens": 12,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 12,
+      "passed": true,
+      "keys_max_abs": 1.9073486328125e-06,
+      "values_max_abs": 1.8775463104248047e-06,
+      "logits_max_abs": 2.0265579223632812e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 4.76837158203125e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 2.9802322387695312e-08
+    },
+    {
+      "case": "all_accept",
+      "cached_tokens": 7,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 7,
+      "passed": true,
+      "keys_max_abs": 9.164214134216309e-07,
+      "values_max_abs": 9.5367431640625e-07,
+      "logits_max_abs": 5.9604644775390625e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 3.3527612686157227e-08,
+      "conv_1_max_abs": 4.76837158203125e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 6.556510925292969e-07,
+      "recurrence_2_max_abs": 7.450580596923828e-08
+    },
+    {
+      "case": "all_accept",
+      "cached_tokens": 11,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 11,
+      "passed": true,
+      "keys_max_abs": 7.301568984985352e-07,
+      "values_max_abs": 8.046627044677734e-07,
+      "logits_max_abs": 3.814697265625e-06,
+      "conv_0_max_abs": 0.0,
+      "recurrence_0_max_abs": 9.313225746154785e-10,
+      "conv_1_max_abs": 1.1920928955078125e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 2.7008354663848877e-08
+    },
+    {
+      "case": "all_accept",
+      "cached_tokens": 12,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 12,
+      "passed": true,
+      "keys_max_abs": 7.301568984985352e-07,
+      "values_max_abs": 8.046627044677734e-07,
+      "logits_max_abs": 3.814697265625e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 2.9802322387695312e-08,
+      "conv_1_max_abs": 2.980232238769531e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 1.4901161193847656e-08
+    }
+  ],
+  "status": "passed",
+  "failure_count": 0,
+  "reference_forward_calls": 17,
+  "reference_input_tokens": 146,
+  "total_forward_calls": 59
+}

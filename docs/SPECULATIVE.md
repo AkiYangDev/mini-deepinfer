@@ -4,7 +4,7 @@
 
 前面的执行循环里，已发出的计算可以领先于 CPU 已提交的结果。投机解码把这个区别变得更直接：模型已经算过几个猜测 token，但它们未必都能成为输出。猜错以后，下一轮必须沿着被接受的前缀继续，不能读到错误分支的缓存。
 
-这个实验在 main 的 v0.3.0.dev0 中加入。用一个无需权重的 CPU 小模型，把候选、验证、提交与回退走完。主生成示例仍是 Ascend 910C 上的 Qwen3.5-2B；本章先使用已有的纯注意力 Qwen2 实现，因为它的 KV 前缀容易检查。Qwen3.5 的线性状态不能套用这里的回退方式。
+这个实验在 main 的 v0.3.0.dev0 中加入。用一个无需权重的 CPU 小模型，把候选、验证、提交与回退走完。主生成示例仍是 Ascend 910C 上的 Qwen3.5-2B；本章先使用已有的纯注意力 Qwen2 实现，因为它的 KV 前缀容易检查。Qwen3.5 的线性状态需要额外恢复，见后面的快照与重算部分。
 
 ## 先运行
 
@@ -116,7 +116,7 @@ EOS 若出现在接受的候选中，到这里就停止，不再提交后面的�
 
 另一个数值检查把分块验证的完整 logits 与冷缓存整段重算比较，包括错误候选分支；使用非连续物理槽位。回退后将失效槽位填入 NaN，再逐步继续计算。若下一轮读到了它们，结果会出错；本次仍在 `atol=1e-5, rtol=1e-4` 下与重算一致。
 
-边界覆盖首次、中途和末尾拒绝、全部接受、EOS 出现在 prefill/候选/最终输出、输出长度裁剪、零宽度、非法候选、容量不足，以及观察回调失败时释放槽位。混合注意力模型会明确拒绝接入这个缓存实现。
+边界覆盖首次、中途和末尾拒绝、全部接受、EOS 出现在 prefill/候选/最终输出、输出长度裁剪、零宽度、非法候选、容量不足，以及观察回调失败时释放槽位。第一版只接入纯注意力模型；下面记录新增的 Qwen3.5 路径。
 
 公开示例使用 CPU、FP32、固定 seed 的随机小模型，没有真实权重、NPU 运行或性能测量。报告绑定七份相关执行源码，[索引](results/speculative/evidence.json)固定报告本身的 SHA。核对保存的数据，无需执行模型：
 
@@ -124,7 +124,73 @@ EOS 若出现在接受的候选中，到这里就停止，不再提交后面的�
 python scripts/check_evidence.py --index docs/results/speculative/evidence.json
 ```
 
-下一阶段需要分别处理真实 draft 的成本、Qwen3.5 线性状态的恢复，以及 NPU 资源生命周期。完成这些前，本实验保持独立，已有文本生成入口继续按原来的路径运行。
+这份纯注意力报告按原 commit 校验，保留当时的七份源码，不用新版实现替换历史数据。新增的混合状态检查另存报告。本实验仍保持独立，已有文本生成入口继续按原来的路径运行。
+
+## Qwen3.5 猜错后，还要恢复线性状态
+
+完整注意力 KV 按 token 存放，截短有效长度就能让错误尾部退出上下文。Qwen3.5 的线性层还有卷积窗口和递推矩阵：算过错误候选后，这两份状态已经变了，截短 KV 不会把它们变回去。
+
+这里先用一个直接的办法：验证之前复制各线性层的状态；拒绝发生后恢复这份快照，再计算本轮留下的有效输入。比如上轮末尾待计算的是 `A`，提出候选 `B C D`，只接受 `B`，最后改正输出为 `X`：
+
+```text
+保存状态 → 暂算 A B C D → 接受 B，提交 B X
+恢复状态 → 重算 A B → 下轮从待计算的 X 接着走
+```
+
+`X` 已经提交给用户，但还没有作为输入计算，所以不用重算它。全部接受时，刚得到的状态已经对应有效前缀，直接保留即可。完整注意力的失效 KV 仍只退出可读范围，保留位置在重算时覆盖；不会复制整份 KV。
+
+快照、验证和重算都走同一同步路径。NPU forward 返回前等待设备完成，最终清理也先等待；等待失败时不会把槽位归还。它没有接入跨轮 pipeline，也没有跨请求复用快照。这是本项目的精确快照与重算参考，不是 DeepInfer 的 SWA Bounded Replay 实现。
+
+### 自己运行
+
+无需权重的 CPU 例子：
+
+```bash
+python -m minideepinfer.spec_demo --hybrid --output outputs/hybrid-cpu.json
+```
+
+使用已下载的 Qwen3.5-2B 权重，在 Ascend 910C 上运行同样的检查：
+
+```bash
+ASCEND_RT_VISIBLE_DEVICES=0 OMP_NUM_THREADS=1 python -m minideepinfer.spec_demo \
+  --model /path/to/Qwen3.5-2B --device npu:0 \
+  --output outputs/qwen35-2b-hybrid-rollback.json
+```
+
+真实权重例子使用原始文本 `The capital of France is`，不加聊天模板，输入 5 token，输出固定 10 token，不按 EOS 提前结束。独立 Engine 的 greedy 输出为 `[11751, 13, 198, 32, 13, 2912, 198, 33, 13, 3439]`。这里检查执行一致性，不评价模型回答质量。
+
+### 实际成本与检查结果
+
+下面是一次 Ascend 910C / Qwen3.5-2B / FP32 的记录。HF32 关闭，线程数为 1，复用已有权重，一次加载，没有下载、预热压测或计时。
+
+| 候选模式 | target forward，含重算 | target 输入 token，含重算 | 其中重算 forward / token | 快照次数 | 累计复制状态字节 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 首候选拒绝 | 18 | 43 | 8 / 8 | 9 | 181,813,248 |
+| 第二候选拒绝 | 10 | 29 | 4 / 8 | 5 | 101,007,360 |
+| 全部接受 | 4 | 14 | 0 / 0 | 3 | 60,604,416 |
+
+三种模式都得到相同输出，各自归还全部 14 个槽位。每份快照 20,201,472 字节，约 19.27 MiB；这只统计克隆的线性状态张量，不是进程峰值显存，也不是显存带宽测量。普通 greedy 是 10 次 forward、14 个输入 token。另有准备答案的 10 次 forward，以及 17 次独立冷缓存检查、180 个参考输入 token。完整演示共 59 次 forward，不能只挑全部接受的四次来计算加速倍数。
+
+每次提交后，从空缓存计算整个有效前缀，对照有效 KV、所有线性层的卷积窗口和递推矩阵，以及前缀末尾的完整 logits。17 次检查均通过预设的 `atol=1e-4, rtol=2e-4`；最大绝对差如下。绝对差本身不代替包含相对误差的逐元素检查。
+
+| 比较对象 | 最大绝对差 |
+| --- | ---: |
+| 完整注意力 K / V | 1.0491e-5 / 2.4796e-5 |
+| 卷积窗口 | 2.5750e-5 |
+| 递推矩阵 | 2.6227e-6 |
+| 前缀末尾 logits | 2.9564e-5 |
+
+CPU 随机小模型另有同样的 17 次检查，使用 `atol=1e-5, rtol=1e-4`。测试还把错误分支的线性状态和失效 KV 填成 NaN，确认快照没有随之改变，恢复后仍能与冷缓存对齐；EOS、长度结束、观察回调异常和设备等待失败也单独覆盖。失败报告先落盘再停止，不继续后面的模式。
+
+这次实机环境沿用已记录的 Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6 和 CANN 9.1.0。权重固定为 revision `15852e8c16360a2fea060d615a32b45270f8a8fc`，配置文件 SHA 保存在报告中。检查参考是本项目的整段计算，不是本轮新增的 Transformers 对照。
+
+[CPU 原始报告](results/2026-10-24/hybrid-rollback-cpu.json)与[Ascend 910C 原始报告](results/2026-10-24/qwen35-2b-hybrid-rollback.json)分别绑定九份执行源码。[索引](results/hybrid-rollback/evidence.json)固定两份报告的 SHA：
+
+```bash
+python scripts/check_evidence.py --index docs/results/hybrid-rollback/evidence.json
+```
+
+下一步应先引入一个独立、可计成本的 draft，再讨论是否值得优化快照和重算。当前没有训练 draft、概率采样、MTP/DSpark、BF16 投机数值结论或性能收益。
 
 ## English summary
 
@@ -132,4 +198,6 @@ python scripts/check_evidence.py --index docs/results/speculative/evidence.json
 
 Each verification consumes the pending last output plus the candidates. After commit, the valid cache covers the prompt and committed outputs except the new pending last token. Rejected tensor bytes remain in storage but are excluded from future context and overwritten before reuse. Tests compare outputs with an independent greedy engine and full logits with cold recomputation, including noncontiguous slots and NaN-poisoned rejected storage.
 
-The fixed DeepInfer references above distinguish verification, accepted versus final outputs, and subsequent length correction. This lesson simplifies them to one greedy CPU request. It does not implement probability-preserving speculative sampling, MTP/DSpark, hybrid-state rollback or an NPU pipeline. The main text model remains Qwen3.5-2B. This is a v0.3 development entry point on main; v0.2.0 release artifacts do not contain it.
+The fixed DeepInfer references above distinguish verification, accepted versus final outputs, and subsequent length correction. The original full-attention CPU report remains tied to its historical commit. The new `--hybrid` path snapshots Qwen3.5 convolution and recurrent states before verification, then restores and replays only retained inputs after rejection. It does not copy the full KV cache or implement SWA Bounded Replay.
+
+One Ascend 910C FP32 run with existing Qwen3.5-2B weights matched independent greedy output in all three controlled cases. All 17 committed-prefix checks passed against cold full-prefix KV, convolution states, recurrence states and endpoint logits at `atol=1e-4, rtol=2e-4`. Per-case target forward counts including replay were 18/10/4, with 43/29/14 input tokens. Each snapshot held 20,201,472 bytes of linear state. Oracle preparation and cold checks bring the complete demonstration to 59 model calls; there is no timing or speedup claim. This synchronous reference does not implement probability-preserving sampling, a learned draft, MTP/DSpark or an NPU pipeline. This is a v0.3 development entry point on main; v0.2.0 artifacts do not contain it.

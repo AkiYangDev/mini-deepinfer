@@ -2,6 +2,7 @@
   "version": "0.3.0.dev0",
   "reports": [
     {
+      "source_revision": "73d4f67eee124997420b53c9f828e1a83e112c92",
       "path": "docs/results/2026-10-24/spec-demo-cpu.json",
       "sha256": "c07661232bd7b193cee5be7fcf743aee12743ee320a133683c3ca2268327caf9",
       "scope": "CPU FP32 tiny random full-attention Qwen2. Controlled first rejection, middle rejection and all-accepted drafts produce the same ten outputs as an independent Engine greedy reference; all twelve reserved slots are returned. Separate oracle preparation, target input work, accepted/proposed counts, correction, bonus and direct target tokens are recorded. Seven related source hashes.",

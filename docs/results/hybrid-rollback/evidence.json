@@ -1,0 +1,17 @@
+{
+  "version": "0.3.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/hybrid-rollback-cpu.json",
+      "sha256": "4814aa94aad4db8936f9e973600348ce8132cb42dd0cc4ea82af995eb86b4448",
+      "scope": "CPU FP32 tiny random Qwen3.5; 17 committed-prefix cold-reference checks at atol=1e-5, rtol=1e-4. Controlled rejection and acceptance match independent Engine greedy; KV, convolution state, recurrence and endpoint logits checked. Snapshot and replay work recorded.",
+      "limits": "Candidates use a precomputed answer, not a learned draft. Synchronous FP32 only; no timing, speedup, MTP/DSpark, SWA Bounded Replay or cross-request cache reuse. Cold reference uses this project model, not Transformers. Snapshot bytes describe cloned tensors, not measured peak memory."
+    },
+    {
+      "path": "docs/results/2026-10-24/qwen35-2b-hybrid-rollback.json",
+      "sha256": "ccd511bb793e1c601fbb6ab0593053092fddc22535c8571d444e22fbc780fbff",
+      "scope": "Ascend 910C FP32 real Qwen3.5-2B; 17 committed-prefix cold-reference checks at atol=1e-4, rtol=2e-4. Controlled rejection and acceptance match independent Engine greedy; KV, convolution state, recurrence and endpoint logits checked. Snapshot and replay work recorded.",
+      "limits": "Candidates use a precomputed answer, not a learned draft. Synchronous FP32 only; no timing, speedup, MTP/DSpark, SWA Bounded Replay or cross-request cache reuse. Cold reference uses this project model, not Transformers. Snapshot bytes describe cloned tensors, not measured peak memory."
+    }
+  ]
+}

@@ -25,6 +25,7 @@ jobs:
       - run: python scripts/check_evidence.py --index docs/results/first-result/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/admission/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/speculative/evidence.json
+      - run: python scripts/check_evidence.py --index docs/results/hybrid-rollback/evidence.json
       - run: python -m minideepinfer
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
@@ -62,6 +63,7 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - run: python -m minideepinfer.pipeline_demo --output outputs/pipeline-demo.json
       - run: python -m minideepinfer.spec_demo --output outputs/spec-demo.json
+      - run: python -m minideepinfer.spec_demo --hybrid --output outputs/hybrid-rollback.json
       - run: python -m minideepinfer.verify_deferred --device cpu --output outputs/deferred-cpu.json
       - run: python -m minideepinfer.verify_deferred_engine --device cpu --output outputs/deferred-engine-cpu.json
       - run: python -m minideepinfer.verify_decode_pipeline --device cpu --output outputs/decode-pipeline-cpu.json
@@ -80,6 +82,8 @@ jobs:
       - run: python -I -m minideepinfer.pipeline_demo --output installed-pipeline-demo.json
         working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.spec_demo --output installed-spec-demo.json
+        working-directory: ${{ runner.temp }}
+      - run: python -I -m minideepinfer.spec_demo --hybrid --output installed-hybrid-rollback.json
         working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.benchmark_pipeline --repeats 1 --output installed-pipeline-benchmark.json
         working-directory: ${{ runner.temp }}
