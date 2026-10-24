@@ -1,0 +1,23 @@
+{
+  "version": "0.3.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/lookup-draft-hybrid-cpu.json",
+      "sha256": "32153016bf64542fff5669bf3f8e8a4484949f335ead8f3028d5af117c95adee",
+      "scope": "CPU FP32 random Qwen3.5; accepted 4/4 proposals in a repeated-token output; 5 cold-reference checks. Candidates use committed history only; independent greedy baseline runs afterwards. Lookup, snapshot and replay work are separate.",
+      "limits": "Short fixed trajectory; no timing, speedup, learned draft, MTP/DSpark, probability sampling or cross-round pipeline. Lookup comparisons exclude validation, slicing and other host costs. Cold reference uses this project model, not Transformers. Random repeated output is not a real acceptance benchmark."
+    },
+    {
+      "path": "docs/results/2026-10-24/lookup-draft-qwen2-cpu.json",
+      "sha256": "2dd7d41aff4acf0ecf1cd93ee296055368ba37fc5352b4936f5da21126982bf5",
+      "scope": "CPU FP32 random Qwen2; no proposals in 9 calls; same 10 target calls as ordinary greedy. Candidates use committed history only; independent greedy baseline runs afterwards. Lookup, snapshot and replay work are separate.",
+      "limits": "Short fixed trajectory; no timing, speedup, learned draft, MTP/DSpark, probability sampling or cross-round pipeline. Lookup comparisons exclude validation, slicing and other host costs. Cold reference uses this project model, not Transformers. Random repeated output is not a real acceptance benchmark."
+    },
+    {
+      "path": "docs/results/2026-10-24/qwen35-2b-lookup-draft.json",
+      "sha256": "050827e09590afcfaec5b1cf8c7760e1314eea19e1963ddd6c30d1f925d1e194",
+      "scope": "Ascend 910C FP32 real Qwen3.5-2B; accepted 0/5 proposals; target work 12 forwards / 21 input tokens including replay, versus baseline 10 / 14. All 9 cold-reference checks passed. Candidates use committed history only; independent greedy baseline runs afterwards. Lookup, snapshot and replay work are separate.",
+      "limits": "Short fixed trajectory; no timing, speedup, learned draft, MTP/DSpark, probability sampling or cross-round pipeline. Lookup comparisons exclude validation, slicing and other host costs. Cold reference uses this project model, not Transformers. Random repeated output is not a real acceptance benchmark."
+    }
+  ]
+}

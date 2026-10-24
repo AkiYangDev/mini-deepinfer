@@ -1,0 +1,336 @@
+{
+  "passed": true,
+  "model": "tiny-random-Qwen3.5",
+  "device": "cpu",
+  "dtype": "float32",
+  "seed": 2026,
+  "torch": "2.5.1+cpu",
+  "prompt_ids": [
+    2,
+    3,
+    4
+  ],
+  "output_length": 10,
+  "draft_width": 3,
+  "scope": "lookup candidates from committed context; independent greedy baseline runs afterwards; no timing or speedup claim",
+  "cases": {
+    "lookup": {
+      "output_ids": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            4,
+            4
+          ],
+          "draft": [
+            4
+          ],
+          "target": [
+            4,
+            4
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "bonus",
+          "cached_before": 3,
+          "tentative_cached": 5,
+          "retained_cached": 5,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 4,
+            "limit": 3,
+            "match_length": 1,
+            "source_start": 2
+          }
+        },
+        {
+          "input_ids": [
+            4,
+            4
+          ],
+          "draft": [
+            4
+          ],
+          "target": [
+            4,
+            4
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "bonus",
+          "cached_before": 5,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 6,
+            "limit": 3,
+            "match_length": 3,
+            "source_start": 2
+          }
+        },
+        {
+          "input_ids": [
+            4,
+            4
+          ],
+          "draft": [
+            4
+          ],
+          "target": [
+            4,
+            4
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "bonus",
+          "cached_before": 7,
+          "tentative_cached": 9,
+          "retained_cached": 9,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 8,
+            "limit": 3,
+            "match_length": 4,
+            "source_start": 3
+          }
+        },
+        {
+          "input_ids": [
+            4,
+            4
+          ],
+          "draft": [
+            4
+          ],
+          "target": [
+            4,
+            4
+          ],
+          "committed": [
+            4,
+            4
+          ],
+          "accepted_draft": 1,
+          "final_role": "bonus",
+          "cached_before": 9,
+          "tentative_cached": 11,
+          "retained_cached": 11,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 10,
+            "limit": 2,
+            "match_length": 4,
+            "source_start": 5
+          }
+        },
+        {
+          "input_ids": [
+            4
+          ],
+          "draft": [],
+          "target": [
+            4
+          ],
+          "committed": [
+            4
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 4,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length",
+          "lookup": {
+            "context_length": 12,
+            "limit": 0,
+            "match_length": 0,
+            "source_start": null
+          }
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 4,
+      "accepted_draft_tokens": 4,
+      "correction_tokens": 0,
+      "bonus_tokens": 4,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 6,
+      "target_input_tokens": 12,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 5,
+      "snapshot_bytes_total": 26880,
+      "peak_snapshot_bytes": 5376,
+      "free_slots": 12,
+      "matches_greedy": true
+    }
+  },
+  "source_sha256": {
+    "minideepinfer/speculative.py": "579214b1e26e99f7285493868bf75cc9df0034fe43d81762b647ccd4c8f8780f",
+    "minideepinfer/spec_demo.py": "a55b298d3bcef6ca3efaaaa93fca0c2722b2cd9138e83706a6369db8e8d1331d",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/lookup_draft.py": "ddbad9eb543172580a5ecfe2c3df8d636bcd666cc9ffff60551f149986ac4e97"
+  },
+  "hybrid": true,
+  "cache_checks": [
+    {
+      "case": "lookup",
+      "cached_tokens": 5,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 5,
+      "passed": true,
+      "keys_max_abs": 7.152557373046875e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 4.291534423828125e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 1.043081283569336e-07,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 8.940696716308594e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 3.725290298461914e-08
+    },
+    {
+      "case": "lookup",
+      "cached_tokens": 7,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 7,
+      "passed": true,
+      "keys_max_abs": 2.0936131477355957e-06,
+      "values_max_abs": 2.0265579223632812e-06,
+      "logits_max_abs": 5.7220458984375e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 1.1920928955078125e-07,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 1.1920928955078125e-06,
+      "recurrence_2_max_abs": 1.1920928955078125e-07
+    },
+    {
+      "case": "lookup",
+      "cached_tokens": 9,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 9,
+      "passed": true,
+      "keys_max_abs": 1.9073486328125e-06,
+      "values_max_abs": 1.8775463104248047e-06,
+      "logits_max_abs": 2.384185791015625e-06,
+      "conv_0_max_abs": 1.1920928955078125e-07,
+      "recurrence_0_max_abs": 8.940696716308594e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 4.470348358154297e-08,
+      "conv_2_max_abs": 3.8743019104003906e-07,
+      "recurrence_2_max_abs": 8.568167686462402e-08
+    },
+    {
+      "case": "lookup",
+      "cached_tokens": 11,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 11,
+      "passed": true,
+      "keys_max_abs": 1.9073486328125e-06,
+      "values_max_abs": 1.8775463104248047e-06,
+      "logits_max_abs": 3.814697265625e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 4.76837158203125e-07,
+      "recurrence_1_max_abs": 4.470348358154297e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 2.3283064365386963e-08
+    },
+    {
+      "case": "lookup",
+      "cached_tokens": 12,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 12,
+      "passed": true,
+      "keys_max_abs": 1.9073486328125e-06,
+      "values_max_abs": 1.8775463104248047e-06,
+      "logits_max_abs": 2.0265579223632812e-06,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 4.76837158203125e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 2.9802322387695312e-08
+    }
+  ],
+  "status": "passed",
+  "failure_count": 0,
+  "draft": {
+    "calls": 5,
+    "matched_calls": 4,
+    "proposed_tokens": 4,
+    "windows_checked": 9,
+    "tokens_compared": 17,
+    "model_forward_calls": 0,
+    "max_match": 4
+  },
+  "baseline": {
+    "output_ids": [
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4,
+      4
+    ],
+    "forward_calls": 10,
+    "input_tokens": 12,
+    "free_slots": 12
+  },
+  "reference_forward_calls": 5,
+  "reference_input_tokens": 44,
+  "total_forward_calls": 21
+}

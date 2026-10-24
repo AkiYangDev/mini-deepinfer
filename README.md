@@ -20,7 +20,7 @@ mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 
 
 v0.2 把跨轮执行接到文本生成入口，并提供一个无需权重的完整调度演示。[版本说明](docs/RELEASE_v0.2.md)列出新增入口和验证范围。
 
-main 的 v0.3 开发版新增[可控 greedy 投机实验](docs/SPECULATIVE.md)：在 CPU 上看候选怎样被接受或改正，以及拒绝分支的 KV 怎样退出可读前缀。先跑无需权重的小模型，再看 Qwen3.5 混合状态怎样恢复；真实 2B 的 Ascend 910C 输出和缓存对照已通过。这个同步实验独立于现有文本入口，快照和重算成本单独记录。
+main 的 v0.3 开发版新增[可控 greedy 投机实验](docs/SPECULATIVE.md)：在 CPU 上看候选怎样被接受或改正，以及拒绝分支的 KV 怎样退出可读前缀。先跑无需权重的小模型，再看 Qwen3.5 混合状态怎样恢复；真实 2B 的 Ascend 910C 输出和缓存对照已通过。这个同步实验独立于现有文本入口，快照和重算成本单独记录。[独立 lookup draft](docs/LOOKUP_DRAFT.md)只从已提交上下文找候选；真实 2B 的短例子接受 0/5，保留了工作量增加的结果。
 
 ## 先跑起来
 
@@ -87,6 +87,7 @@ python -m minideepinfer.generate \
 | CPU 没读到 token，下一轮怎样接着算？ | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [第十一课](docs/DECODE_PIPELINE.md) |
 | EOS、新请求、分块 prompt 怎样进入同一个循环？ | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十二至十四课](docs/CHUNK_PIPELINE.md) |
 | 已发出、已提交和设备已用完，有什么区别？ | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [第十四课](docs/CHUNK_PIPELINE.md) |
+| 不预先知道答案，draft 怎样提出候选？ | [`LookupDraft`](minideepinfer/lookup_draft.py) · [独立候选](docs/LOOKUP_DRAFT.md) |
 | draft 猜错后，哪些输出和缓存能保留？ | [`verify_greedy()` / `CachedTarget`](minideepinfer/speculative.py) · [投机实验](docs/SPECULATIVE.md) |
 
 默认 BatchEngine 支持同步动态批处理、输入预算、分块 prefill、取消和回收；`--deferred` 把发起与结果提交拆开，仍只允许一批在途。现在也可以用 `--pipeline` 选择跨轮执行，配合 `--stagger-prompts --trace-rounds` 观察文本到达和缓存回收，见[自己的文本怎样进入跨轮循环](docs/PIPELINE_TEXT.md)。各章节入口见[学习路线](docs/LEARNING_PATH.md)。

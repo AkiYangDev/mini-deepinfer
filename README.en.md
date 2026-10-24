@@ -20,7 +20,7 @@ The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass 
 
 v0.2 connects cross-round execution to text generation and adds a complete scheduling walkthrough without a checkpoint. See the [release notes](docs/RELEASE_v0.2.md) for the new entry points and validation scope.
 
-The v0.3 development version on main adds a [controlled greedy speculation lesson](docs/SPECULATIVE.md#english-summary): accept or correct proposed tokens, then roll back the rejected KV prefix. Start with a tiny model without weights, then inspect Qwen3.5 state snapshots and replay. A real 2B Ascend 910C run matched greedy output and cold-cache state checks. This synchronous experiment is separate from the text frontend and records snapshot and replay costs.
+The v0.3 development version on main adds a [controlled greedy speculation lesson](docs/SPECULATIVE.md#english-summary): accept or correct proposed tokens, then roll back the rejected KV prefix. Start with a tiny model without weights, then inspect Qwen3.5 state snapshots and replay. A real 2B Ascend 910C run matched greedy output and cold-cache state checks. This synchronous experiment is separate from the text frontend and records snapshot and replay costs. An [independent lookup draft](docs/LOOKUP_DRAFT.md#english-summary) uses committed context only; the real 2B short example accepted 0/5 candidates and increased target work.
 
 ## Start small
 
@@ -87,6 +87,7 @@ The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu
 | How can the next forward use a token before the CPU reads it? | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
 | How do stops, arrivals, and chunks share one loop? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lessons twelve through fourteen](docs/CHUNK_PIPELINE.md) |
 | How do issued progress, CPU commits, and final device use differ? | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [lesson fourteen](docs/CHUNK_PIPELINE.md) |
+| Where do candidates come from without knowing the answer? | [`LookupDraft`](minideepinfer/lookup_draft.py) · [independent draft](docs/LOOKUP_DRAFT.md#english-summary) |
 | What can be committed when a draft token is wrong? | [`verify_greedy()` / `CachedTarget`](minideepinfer/speculative.py) · [speculation lesson](docs/SPECULATIVE.md#english-summary) |
 
 Default BatchEngine supports synchronous dynamic batching, input budgets, prompt chunks, cancellation, and reclamation. `--deferred` separates launch from commit while keeping one batch in flight. You can now choose cross-round execution with `--pipeline`, then add `--stagger-prompts --trace-rounds` to observe arrivals and cache ownership; see [setup](docs/START_HERE.en.md). Detailed lessons are currently in Chinese, with English code comments. The [learning path](docs/LEARNING_PATH.md) lists all fourteen.

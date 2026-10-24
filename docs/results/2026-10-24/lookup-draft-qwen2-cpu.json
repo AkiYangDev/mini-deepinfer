@@ -1,0 +1,345 @@
+{
+  "passed": true,
+  "model": "tiny-random-Qwen2",
+  "device": "cpu",
+  "dtype": "float32",
+  "seed": 2026,
+  "torch": "2.5.1+cpu",
+  "prompt_ids": [
+    2,
+    3,
+    4
+  ],
+  "output_length": 10,
+  "draft_width": 3,
+  "scope": "lookup candidates from committed context; independent greedy baseline runs afterwards; no timing or speedup claim",
+  "cases": {
+    "lookup": {
+      "output_ids": [
+        41,
+        66,
+        63,
+        27,
+        60,
+        39,
+        54,
+        72,
+        57,
+        15
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            41
+          ],
+          "draft": [],
+          "target": [
+            66
+          ],
+          "committed": [
+            66
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 3,
+          "tentative_cached": 4,
+          "retained_cached": 4,
+          "invalidated_slots": [],
+          "pending_token": 66,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 4,
+            "limit": 3,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            66
+          ],
+          "draft": [],
+          "target": [
+            63
+          ],
+          "committed": [
+            63
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 4,
+          "tentative_cached": 5,
+          "retained_cached": 5,
+          "invalidated_slots": [],
+          "pending_token": 63,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 5,
+            "limit": 3,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            63
+          ],
+          "draft": [],
+          "target": [
+            27
+          ],
+          "committed": [
+            27
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 5,
+          "tentative_cached": 6,
+          "retained_cached": 6,
+          "invalidated_slots": [],
+          "pending_token": 27,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 6,
+            "limit": 3,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            27
+          ],
+          "draft": [],
+          "target": [
+            60
+          ],
+          "committed": [
+            60
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 6,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 60,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 7,
+            "limit": 3,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            60
+          ],
+          "draft": [],
+          "target": [
+            39
+          ],
+          "committed": [
+            39
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 7,
+          "tentative_cached": 8,
+          "retained_cached": 8,
+          "invalidated_slots": [],
+          "pending_token": 39,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 8,
+            "limit": 3,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            39
+          ],
+          "draft": [],
+          "target": [
+            54
+          ],
+          "committed": [
+            54
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 8,
+          "tentative_cached": 9,
+          "retained_cached": 9,
+          "invalidated_slots": [],
+          "pending_token": 54,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 9,
+            "limit": 3,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            54
+          ],
+          "draft": [],
+          "target": [
+            72
+          ],
+          "committed": [
+            72
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 9,
+          "tentative_cached": 10,
+          "retained_cached": 10,
+          "invalidated_slots": [],
+          "pending_token": 72,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 10,
+            "limit": 2,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            72
+          ],
+          "draft": [],
+          "target": [
+            57
+          ],
+          "committed": [
+            57
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 10,
+          "tentative_cached": 11,
+          "retained_cached": 11,
+          "invalidated_slots": [],
+          "pending_token": 57,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "lookup": {
+            "context_length": 11,
+            "limit": 1,
+            "match_length": 0,
+            "source_start": null
+          }
+        },
+        {
+          "input_ids": [
+            57
+          ],
+          "draft": [],
+          "target": [
+            15
+          ],
+          "committed": [
+            15
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 15,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length",
+          "lookup": {
+            "context_length": 12,
+            "limit": 0,
+            "match_length": 0,
+            "source_start": null
+          }
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 0,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 10,
+      "target_forward_calls": 10,
+      "target_input_tokens": 12,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 0,
+      "snapshot_bytes_total": 0,
+      "peak_snapshot_bytes": 0,
+      "free_slots": 12,
+      "matches_greedy": true
+    }
+  },
+  "source_sha256": {
+    "minideepinfer/speculative.py": "579214b1e26e99f7285493868bf75cc9df0034fe43d81762b647ccd4c8f8780f",
+    "minideepinfer/spec_demo.py": "a55b298d3bcef6ca3efaaaa93fca0c2722b2cd9138e83706a6369db8e8d1331d",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/lookup_draft.py": "ddbad9eb543172580a5ecfe2c3df8d636bcd666cc9ffff60551f149986ac4e97"
+  },
+  "hybrid": false,
+  "cache_checks": [],
+  "status": "passed",
+  "failure_count": 0,
+  "draft": {
+    "calls": 9,
+    "matched_calls": 0,
+    "proposed_tokens": 0,
+    "windows_checked": 160,
+    "tokens_compared": 160,
+    "model_forward_calls": 0,
+    "max_match": 4
+  },
+  "baseline": {
+    "output_ids": [
+      41,
+      66,
+      63,
+      27,
+      60,
+      39,
+      54,
+      72,
+      57,
+      15
+    ],
+    "forward_calls": 10,
+    "input_tokens": 12,
+    "free_slots": 12
+  },
+  "reference_forward_calls": 0,
+  "reference_input_tokens": 0,
+  "total_forward_calls": 20
+}

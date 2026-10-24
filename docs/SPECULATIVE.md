@@ -190,7 +190,7 @@ CPU 随机小模型另有同样的 17 次检查，使用 `atol=1e-5, rtol=1e-4`�
 python scripts/check_evidence.py --index docs/results/hybrid-rollback/evidence.json
 ```
 
-下一步应先引入一个独立、可计成本的 draft，再讨论是否值得优化快照和重算。当前没有训练 draft、概率采样、MTP/DSpark、BF16 投机数值结论或性能收益。
+后续的[独立 lookup draft](LOOKUP_DRAFT.md)已接入同一条验证与回退路径，不读取预先计算的答案，并单列查找成本。真实 2B 短输入没有接受候选，target 工作量反而增加，暂不据此优化快照和重算。当前没有训练 draft、概率采样、MTP/DSpark、BF16 投机数值结论或性能收益。
 
 ## English summary
 

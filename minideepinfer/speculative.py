@@ -132,7 +132,7 @@ class CachedTarget:
 
 def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=None,
              cache_capacity=None, on_round=None, on_cache=None):
-    """draft(committed_prefix, width) supplies candidates after the pending token.
+    """draft(committed_prefix, limit) supplies up to limit candidates after pending.
 
     The last committed output is pending: it has not yet been consumed by target.
     Each verify forward consumes pending+draft, then keeps only the valid prefix.
@@ -165,8 +165,8 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
             remaining = max_new_tokens-len(output)
             count = min(width,remaining-1)
             candidates = tuple(draft(prompt+tuple(output),count))
-            if len(candidates) != count or any(type(t) is not int or not 0 <= t < model.config.vocab_size for t in candidates):
-                raise ValueError('draft must return exactly the requested number of vocabulary IDs')
+            if len(candidates) > count or any(type(t) is not int or not 0 <= t < model.config.vocab_size for t in candidates):
+                raise ValueError('draft must return at most the requested number of vocabulary IDs')
             before = len(target.tokens)
             inputs = (output[-1],)+candidates
             target.checkpoint()
