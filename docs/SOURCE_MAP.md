@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [开发路线](ROADMAP.md) · [来源记录](REFERENCES.md)
 
-更新时间：2026-10-20。本文把部署报告、DeepInfer 和 Ascend SGLang 的不同参考作用对应到项目交付；源码阅读不等于 Ascend 910C 兼容性验证。
+更新时间：2026-10-24。本文把部署报告、DeepInfer 和 Ascend SGLang 的不同参考作用对应到项目交付；源码阅读不等于 Ascend 910C 兼容性验证。
 
 ## 三类参考，各自解决一个问题
 
@@ -28,7 +28,7 @@ Qwen3.5 继续使用下面相同的执行职责。新增 [`HybridCache`](../mini
 | [`ModelRunner._prepare_input_tensors()` / `execute_main_model()` / `execute_sample()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py#L110) | [`ModelRunner.prepare_input()` / `execute_main_model()` / `execute_sample()`](../minideepinfer/model_runner.py) | 显式传递输入、位置和缓存映射，分开准备、forward 与 greedy；当前 `run()` 等待设备完成后才返回，尚无图执行或调度重叠 |
 | [`LLMEngine._process_model_outputs()` / `post_process()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L624) | Runner 返回后的输出与请求状态提交 | 原版通过 scheduler 处理结果；当前直接提交一个 token，后续扩展批次和投机接受/回退时保留明确提交边界 |
 | [`BlockManager` 与 `CacheEngine`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/cache_engine.py) | [`SlotPool`](../minideepinfer/kv_cache.py) | 当前只演示逻辑归属和回收，不等同于原版的块管理、设备存储或模型状态布局 |
-| [`WorkerStepState` / `MetadataZOS`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py) 与 [`DeferredRelease`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L64) | 尚未实现 | 后续学习调度重叠时，显式表达前一步结果、批次重映射、事件同步和延迟释放；当前同步返回后立即回收的规则不能直接用于异步执行 |
+| [`WorkerStepState` / `MetadataZOS`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py) 与 [`DeferredRelease`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L64) | [`step_state.py`](../minideepinfer/step_state.py)，[第五课](STEP_STATE.md)独立 CPU 实验 | 保留按请求映射旧输出、跨轮状态和等待使用者完成后释放的概念；手动事件、整数结果和整批逻辑槽位保护，不复现设备映射内核或上游各类池，尚未接入 NPU/主引擎 |
 
 FIFO、prefill/decode 和槽位分配是推理框架的通用基础，单独实现它们还不足以展示 DeepInfer 的特点。后续每项教学实现都需要给出原版入口、保留的机制、简化理由和相应验证，逐步进入执行/采样分工、在途状态管理、投机提交/回退和 bounded replay。
 
@@ -75,11 +75,6 @@ mask/compact 对照通过，不能证明近似回放与完整重算严格等价�
 
 同步执行与真实模型路径已落地：第一课保留 [`Engine.step()`](../minideepinfer/engine.py)，第三课增加 [`BatchEngine`](../minideepinfer/batch_engine.py) 与真正合并计算的多请求 Runner。阅读入口见[第一课](FIRST_REQUEST.md)、[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)，验证范围见[实验记录](VALIDATION.md)。当前没有调度重叠。
 
-单请求阶段需要保留以下证据，随后再推进同步动态批处理：
+Qwen3.5 的 CPU 与 Ascend 910C FP32 路径、BF16 的固定短轨迹参考检查已经记录；原生 BF16 分块与长生成差异继续保留。[第五课](STEP_STATE.md)新增独立的跨轮状态实验，解释按请求映射旧输出，以及 CPU 和设备全部用完后才回收。
 
-1. **环境清单。** 记录设备枚举与物理卡映射、可用 HBM、驱动、CANN、PyTorch 和 `torch_npu`；公开版本去掉私人机器信息。
-2. **基础运算探测。** 用固定小输入检查 BF16 matmul、归一化、RoPE 基础运算、缓存索引写入和 attention 参考计算。
-3. **融合 attention 探测。** 仅对实际需要的最小形状验证调用，保留参考结果，明确未通过与未验证项。
-4. **M1 输入/缓存约定。** 固定入门模型的 token、位置、KV 写入和采样接口，再实现真实权重生成。
-
-硬件执行前检查资源占用，并使用独立环境。M0 的结束标志是一套可复现的实际结果；文档完善或 import 成功不替代硬件验证。
+下一项交付是实际 NPU 事件与张量生命周期验证，然后才把在途状态接到真实 Runner。硬件执行前检查资源占用，复用已有权重和数值基线；同步和新路径的结果、取消与异常回收需要分别验证。设备重叠与性能收益以实际时间线和同负载计时为准。

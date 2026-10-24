@@ -39,13 +39,23 @@ The English answer from the real 2B run:
 
 The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt), inputs, environment, errors, and failed BF16 checks are preserved in the [validation record](docs/VALIDATION.md). These are short-context correctness checks, without throughput or latency claims.
 
-## Run a real model
+## Start with a small example
 
-Clone the project and install the model dependencies:
+No dependencies, weights, or NPU are needed for this CPU simulation:
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
+python -m minideepinfer.step_demo
+```
+
+Follow requests A, B, and C: B changes batch rows but keeps its own result; A is cancelled but its slots stay protected until all users finish. [Lesson five](docs/STEP_STATE.md) explains the code in Chinese. The demo prints Chinese explanations and advances events by hand; the real-model engine remains synchronous.
+
+## Run a real model
+
+Install the model dependencies from the repository directory:
+
+```bash
 python -m pip install -e ".[qwen35]"
 ```
 
@@ -82,11 +92,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-Without model dependencies, 19 engine tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+Without model dependencies, 25 engine and state tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
 
 ## How this relates to DeepInfer
 
-DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. Future lessons will study in-flight states and scheduling overlap. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
+DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. [Lesson five](docs/STEP_STATE.md) adds an independent experiment for in-flight state, batch remapping, and deferred release; NPU scheduling overlap is the next step. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
 
 **Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 

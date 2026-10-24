@@ -39,13 +39,23 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 
 [完整双语输出](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)、输入、环境、逐步误差和 BF16 失败记录均见[验证记录](docs/VALIDATION.md)。这些是短上下文正确性检查，没有吞吐或延迟结论。
 
-## 运行真实模型
+## 先跑一个小例子
 
-先克隆项目并安装模型依赖：
+想先看懂执行过程，可以先跑一个无需依赖、权重或 NPU 的小例子：
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
+python -m minideepinfer.step_demo
+```
+
+它跟着 A、B、C 三个请求，展示 B 换了行怎样接上自己的结果，以及 A 取消后为什么还不能立刻归还缓存。讲解见[第五课：请求结束了，缓存为什么还不能还？](docs/STEP_STATE.md)。这是手动事件驱动的 CPU 实验，真实模型路径仍按下面的方法运行。
+
+## 运行真实模型
+
+在仓库目录安装模型依赖：
+
+```bash
 python -m pip install -e ".[qwen35]"
 ```
 
@@ -82,11 +92,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-未安装模型依赖时执行 19 项引擎测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
+未安装模型依赖时执行 25 项引擎与状态测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；后续再学习跨轮状态与调度重叠。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
+DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；[第五课](docs/STEP_STATE.md)进一步用独立实验解释跨轮状态、批次映射与延迟释放，NPU 调度重叠随后验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
 **Qwen 小模型承载教学实例，DeepInfer 继续作为引擎设计主线。** 单请求与同步批次保留对照，[第四课](docs/QWEN35.md)展开混合模型的状态管理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 
