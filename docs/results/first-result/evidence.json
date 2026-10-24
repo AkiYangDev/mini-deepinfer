@@ -1,0 +1,11 @@
+{
+  "version": "main-after-v0.2.0-first-result",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/qwen35-2b-first-result.json",
+      "sha256": "cd2a00fc902262ab38a6b19f481f7ce52affe5df6ae24fc58e8ac11c7b70cf08",
+      "scope": "Qwen3.5-2B FP32 on one logical Ascend 910C device. Optional early round-zero collection versus delayed collection within the same source. Single and two fixed active requests, matching complete plans, outputs, work and clean caches. Two one-token checks plus four warmups and twelve alternating measurements; 130 forwards total.",
+      "limits": "Short offline inputs, EOS disabled, eight output tokens, token budget 16, no waiting arrivals. TTFT ends after CPU commit and round cleanup; whole-workload timing includes final draining. Earlier first-result delivery is observed, but no consistent throughput improvement is established. No new full-logit comparison or trace was collected. CPU tests separately cover early EOS, cancellation, partial prefill, callback arrivals and error cleanup."
+    }
+  ]
+}

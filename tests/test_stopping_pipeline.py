@@ -38,6 +38,77 @@ class StoppingPipelineTests(unittest.TestCase):
         self.assertFalse(pipeline.runner._prefixes or pipeline.runner.cache.linear_states)
         self.assertEqual(pipeline.pool.free_count, 32)
 
+    def test_early_first_result_is_collected_once_before_second_forward(self):
+        pipeline = self.pipeline()
+        expected = self.baseline(pipeline, {'A': (2, 3, 4)})
+        calls, observed = [], []
+        forward = pipeline.runner.execute_main_model
+        def capture(inputs):
+            calls.append(inputs.steps)
+            return forward(inputs)
+        def observe(index, steps, tokens, logits):
+            observed.append((index, len(calls)))
+        with patch.object(pipeline.runner, 'execute_main_model', capture):
+            result = pipeline.run({'A': (2, 3, 4)}, 4, early_first_result=True, on_result=observe)
+        self.assertEqual(observed, [(0, 1), (1, 3), (2, 4), (3, 4)])
+        self.assertEqual(result['A'].output_ids, expected['A'])
+        self.assert_clean(pipeline)
+
+    def test_early_partial_chunk_preserves_output_and_next_round_input(self):
+        pipeline = self.pipeline()
+        prompts = {'A': (2, 3, 4, 5, 6)}
+        expected = self.baseline(pipeline, prompts)
+        observed = []
+        result = pipeline.run(prompts, 4, max_num_seqs=1, max_num_batched_tokens=2,
+                              chunked_prefill=True, early_first_result=True,
+                              on_result=lambda i,s,t,l: observed.append((i,t)))
+        self.assertEqual(result['A'].output_ids, expected['A'])
+        self.assertEqual(observed[:2], [(0,(None,)), (1,(None,))])
+        self.assertEqual([i for i,t in observed], list(range(6)))
+        self.assert_clean(pipeline)
+
+    def test_early_eos_and_one_token_tail_can_admit_callback_arrival(self):
+        pipeline = self.pipeline()
+        expected = self.baseline(pipeline, {'A': (2, 3), 'B': (7,)})
+        seen = []
+        def arrive(index, steps, tokens, logits):
+            seen.append(index)
+            if index == 0:
+                pipeline.submit('B', (7,), max_new_tokens=1)
+        result = pipeline.run({'A': (2, 3)}, 4, early_first_result=True,
+                              eos_token_ids={'A':expected['A'][0]}, on_result=arrive)
+        self.assertEqual(result['A'].output_ids, expected['A'][:1])
+        self.assertEqual(result['A'].finish_reason, 'eos')
+        self.assertEqual(result['B'].output_ids, expected['B'][:1])
+        self.assertEqual(seen, [0, 1])
+        self.assert_clean(pipeline)
+
+    def test_early_observer_error_drains_and_runner_remains_reusable(self):
+        pipeline = self.pipeline()
+        with self.assertRaisesRegex(ValueError, 'observer'):
+            pipeline.run({'A': (2, 3)}, 4, early_first_result=True,
+                         on_result=lambda *args: (_ for _ in ()).throw(ValueError('observer')))
+        self.assert_clean(pipeline)
+        result = pipeline.run({'A': (2, 3)}, 1, early_first_result=True)
+        self.assertEqual(len(result['A'].output_ids), 1)
+        self.assert_clean(pipeline)
+        with self.assertRaisesRegex(ValueError, 'boolean'):
+            pipeline.run({'A': (2, 3)}, 1, early_first_result=1)
+
+    def test_early_cancel_keeps_survivor_device_token_mapping(self):
+        pipeline = self.pipeline()
+        prompts = {'A': (2,3), 'B': (7,)}
+        expected = self.baseline(pipeline, prompts)
+        def cancel(index, steps, tokens, logits):
+            if index == 0:
+                pipeline.cancel('A')
+        result = pipeline.run(prompts,4,early_first_result=True,on_result=cancel,
+                              orders=(('A','B'),('B','A'),('A','B'),('B','A')))
+        self.assertEqual(result['A'].output_ids,[])
+        self.assertEqual(result['A'].finish_reason,'cancelled')
+        self.assertEqual(result['B'].output_ids,expected['B'])
+        self.assert_clean(pipeline)
+
     def test_eos_keeps_one_later_round_then_releases_and_survivor_matches_sync(self):
         pipeline = self.pipeline()
         prompts = {'A': (2, 3, 4), 'B': (7,)}

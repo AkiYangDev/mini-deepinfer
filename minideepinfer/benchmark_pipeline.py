@@ -30,7 +30,8 @@ def metrics(times, start, end):
                 requests=requests)
 
 
-def run_trial(model, prompts, mode, *, count=8, capacity=128, limit=2, budget=8):
+def run_trial(model, prompts, mode, *, count=8, capacity=128, limit=2, budget=8,
+              early_first_result=False):
     from .batch_engine import BatchEngine
     from .model_runner import ModelRunner
     from .stopping_pipeline import StoppingDecodePipeline
@@ -70,7 +71,8 @@ def run_trial(model, prompts, mode, *, count=8, capacity=128, limit=2, budget=8)
             pool = engine.cache
         else:
             requests = engine.run({f'req-{i}': p for i,p in enumerate(prompts)}, count,
-                                  max_num_seqs=limit, max_num_batched_tokens=budget, chunked_prefill=True)
+                                  max_num_seqs=limit, max_num_batched_tokens=budget, chunked_prefill=True,
+                                  early_first_result=early_first_result)
             pool = engine.pool
         runner.synchronize()
         end = perf_counter_ns()

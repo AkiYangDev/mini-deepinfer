@@ -4,6 +4,8 @@
 
 这次没有。2026-10-24，用 Qwen3.5-2B 在 Ascend 910C 的一个逻辑设备上比较同步与跨轮路径，三类短负载的跨轮耗时都更长。输出一致，缓存也都归还了；这说明实现通过了本次检查，并不说明它更快。
 
+本文保留首次基准的源码与结果。后续只改变首轮收取时机的实验见[首轮结果](FIRST_RESULT.md)，它使用同一轮运行里的基线，没有重写本文数据。
+
 这个结果回答了一个容易混淆的问题：把下一轮计算提前发出去，只改变了执行顺序。它能否节省时间，还取决于准备输入、提交结果、接纳新请求和等待设备各自的成本。
 
 ## 怎样比较
@@ -98,7 +100,7 @@ python -m minideepinfer.benchmark_pipeline \
 
 `--repeats` 限定为 1–3；每个测量项结束后先落盘，再检查输出、工作量和资源状态。失败就停止后续测量，已完成的记录继续保留。CPU 用例检查统计与执行逻辑，不能代替 Ascend 910C 的计时结果。
 
-原始报告绑定十五份源码，报告本身的 SHA256 保存在[证据索引](results/pipeline-benchmark/evidence.json)。核对当前源码与报告，无需启动设备：
+原始报告绑定十五份源码，报告本身的 SHA256 与对应固定 commit 保存在[证据索引](results/pipeline-benchmark/evidence.json)。在具备该历史对象的 Git 检出中核对原版源码，无需启动设备：
 
 ```bash
 python scripts/check_evidence.py --index docs/results/pipeline-benchmark/evidence.json

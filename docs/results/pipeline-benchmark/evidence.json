@@ -2,6 +2,7 @@
   "version": "main-after-v0.2.0",
   "reports": [
     {
+      "source_revision": "54429818e05ab574a89f648c5f572d2cb7a1b427",
       "path": "docs/results/2026-10-24/qwen35-2b-pipeline-benchmark.json",
       "sha256": "9953ac0a924c8b65b76c78af27ecf1a322643c52868c43a97b64236ba4f9be66",
       "scope": "Qwen3.5-2B FP32 on one logical Ascend 910C device. Three offline workloads, one warmup per path and three alternating paired measurements. Identical outputs, input-token work and clean final caches across 24 runs; 344 forwards including warmups. CPU-commit latency and whole-workload throughput.",

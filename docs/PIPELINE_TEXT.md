@@ -108,7 +108,7 @@ pipeline drained
 
 首次实机程序在计算完成后，因对照脚本缺少 EOS 多算一步的参考而报 `KeyError`，未生成通过报告。补上独立重算和受控 EOS 的 CPU 回归后才做第二次检查。因此本轮实际加载了两次权重；另有显存门槛拦下的请求，没有加载模型。这次失败属于验证脚本，不计为模型数值失败，也不作性能结论。
 
-[原始报告](results/2026-10-24/qwen35-2b-pipeline-text-npu-fp32.json)保留每次观察、完整输出和十八份相关源码 SHA。它调用与 CLI 相同的 `run_generation()`，用预加载权重避免为每个方式重复加载模型；参数分派另有 CPU CLI 检查。可在干净检出中核对：
+[原始报告](results/2026-10-24/qwen35-2b-pipeline-text-npu-fp32.json)保留每次观察、完整输出和十八份相关源码 SHA。它调用与 CLI 相同的 `run_generation()`，用预加载权重避免为每个方式重复加载模型；参数分派另有 CPU CLI 检查。当前检查脚本按索引里的 v0.2.0 commit 核对原版源码，需要具备历史对象的 Git 检出，见[历史证据说明](EVIDENCE.md)：
 
 ```bash
 python scripts/check_evidence.py --index docs/results/v0.2/evidence.json

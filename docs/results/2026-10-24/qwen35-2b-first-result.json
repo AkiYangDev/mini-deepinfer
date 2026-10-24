@@ -1,0 +1,3073 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "setup_model_and_tokenization_ms": 5266.530527,
+  "prompt_ids": [
+    760,
+    6511,
+    314,
+    9338,
+    369
+  ],
+  "raw_text": "The capital of France is",
+  "repeats": 3,
+  "output_length": 8,
+  "eos_disabled": true,
+  "capacity": 128,
+  "max_num_seqs": 2,
+  "token_budget": 16,
+  "chunked_prefill": true,
+  "scope": "offline common arrival; CPU commit including round cleanup; whole includes final drain",
+  "passed": true,
+  "status": "complete",
+  "failure_count": 0,
+  "checks": [
+    {
+      "mode": "pipeline",
+      "elapsed_ms": 288.242432,
+      "output_tokens_per_s": 3.469301841028041,
+      "drain_after_last_commit_ms": 0.203036,
+      "requests": {
+        "req-0": {
+          "ttft_ms": 288.039396,
+          "e2e_ms": 288.039396,
+          "output_tokens": 1,
+          "tpot_ms": null,
+          "itl_ms": []
+        }
+      },
+      "setup_ms": 15.496488,
+      "forward_calls": 1,
+      "processed_input_tokens": 5,
+      "expected_input_tokens": 5,
+      "extra_input_tokens": 0,
+      "plans": [
+        [
+          {
+            "request_id": "req-0",
+            "phase": "prefill",
+            "positions": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "partial": false
+          }
+        ]
+      ],
+      "outputs": {
+        "req-0": [
+          11751
+        ]
+      },
+      "free_slots": 128,
+      "clean": true,
+      "passed": true,
+      "first_result": "delayed"
+    },
+    {
+      "mode": "pipeline",
+      "elapsed_ms": 51.412562,
+      "output_tokens_per_s": 19.450499276810987,
+      "drain_after_last_commit_ms": 0.114193,
+      "requests": {
+        "req-0": {
+          "ttft_ms": 51.298369,
+          "e2e_ms": 51.298369,
+          "output_tokens": 1,
+          "tpot_ms": null,
+          "itl_ms": []
+        }
+      },
+      "setup_ms": 1.498854,
+      "forward_calls": 1,
+      "processed_input_tokens": 5,
+      "expected_input_tokens": 5,
+      "extra_input_tokens": 0,
+      "plans": [
+        [
+          {
+            "request_id": "req-0",
+            "phase": "prefill",
+            "positions": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "partial": false
+          }
+        ]
+      ],
+      "outputs": {
+        "req-0": [
+          11751
+        ]
+      },
+      "free_slots": 128,
+      "clean": true,
+      "passed": true,
+      "first_result": "early"
+    }
+  ],
+  "cases": {
+    "single": {
+      "prompt_lengths": [
+        5
+      ],
+      "warmups": [
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 291.422947,
+          "output_tokens_per_s": 27.45151019284696,
+          "drain_after_last_commit_ms": 0.200576,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 84.718368,
+              "e2e_ms": 291.222371,
+              "output_tokens": 8,
+              "tpot_ms": 29.50057185714286,
+              "itl_ms": [
+                34.263434,
+                34.091499,
+                34.048008,
+                34.027527,
+                34.222573,
+                34.0889,
+                1.762062
+              ]
+            }
+          },
+          "setup_ms": 1.417392,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": -1,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 292.316934,
+          "output_tokens_per_s": 27.367555791345293,
+          "drain_after_last_commit_ms": 0.109293,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 49.192687,
+              "e2e_ms": 292.207641,
+              "output_tokens": 8,
+              "tpot_ms": 34.716422,
+              "itl_ms": [
+                68.766025,
+                35.151441,
+                34.393468,
+                34.298665,
+                34.312966,
+                34.330146,
+                1.762243
+              ]
+            }
+          },
+          "setup_ms": 1.391701,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": -1,
+          "outputs_match": true,
+          "plans_match": true
+        }
+      ],
+      "trials": [
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 290.144399,
+          "output_tokens_per_s": 27.572477799235404,
+          "drain_after_last_commit_ms": 0.102013,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 83.78588,
+              "e2e_ms": 290.042386,
+              "output_tokens": 8,
+              "tpot_ms": 29.465215142857144,
+              "itl_ms": [
+                34.190202,
+                34.11058,
+                34.146661,
+                34.049938,
+                33.995716,
+                34.003017,
+                1.760392
+              ]
+            }
+          },
+          "setup_ms": 1.472514,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": 0,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 289.166241,
+          "output_tokens_per_s": 27.665746777128106,
+          "drain_after_last_commit_ms": 0.101163,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 48.801115,
+              "e2e_ms": 289.065078,
+              "output_tokens": 8,
+              "tpot_ms": 34.32342328571429,
+              "itl_ms": [
+                68.531869,
+                33.934904,
+                34.000267,
+                34.005237,
+                33.999726,
+                34.027238,
+                1.764722
+              ]
+            }
+          },
+          "setup_ms": 1.439892,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": 0,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 289.96108,
+          "output_tokens_per_s": 27.589909652702357,
+          "drain_after_last_commit_ms": 0.103843,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 48.699723,
+              "e2e_ms": 289.857237,
+              "output_tokens": 8,
+              "tpot_ms": 34.451073428571426,
+              "itl_ms": [
+                68.305563,
+                33.935126,
+                34.039968,
+                33.992427,
+                34.372698,
+                34.747229,
+                1.764503
+              ]
+            }
+          },
+          "setup_ms": 1.456743,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": 1,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 294.834933,
+          "output_tokens_per_s": 27.133826777575237,
+          "drain_after_last_commit_ms": 0.102613,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 84.830583,
+              "e2e_ms": 294.73232,
+              "output_tokens": 8,
+              "tpot_ms": 29.985962428571433,
+              "itl_ms": [
+                34.690237,
+                34.600475,
+                34.670967,
+                34.701208,
+                34.711768,
+                34.76663,
+                1.760452
+              ]
+            }
+          },
+          "setup_ms": 1.461163,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": 1,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 294.330148,
+          "output_tokens_per_s": 27.180362101404576,
+          "drain_after_last_commit_ms": 0.102963,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 84.861303,
+              "e2e_ms": 294.227185,
+              "output_tokens": 8,
+              "tpot_ms": 29.909411714285714,
+              "itl_ms": [
+                34.688508,
+                34.603695,
+                34.570944,
+                34.534593,
+                34.616965,
+                34.579725,
+                1.771452
+              ]
+            }
+          },
+          "setup_ms": 1.470714,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": 2,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 295.255736,
+          "output_tokens_per_s": 27.095155231802167,
+          "drain_after_last_commit_ms": 0.104623,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 49.64122,
+              "e2e_ms": 295.151113,
+              "output_tokens": 8,
+              "tpot_ms": 35.072841857142855,
+              "itl_ms": [
+                70.094016,
+                34.702098,
+                34.731619,
+                34.77898,
+                34.714589,
+                34.731219,
+                1.757372
+              ]
+            }
+          },
+          "setup_ms": 1.427853,
+          "forward_calls": 8,
+          "processed_input_tokens": 12,
+          "expected_input_tokens": 12,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": 2,
+          "outputs_match": true,
+          "plans_match": true
+        }
+      ],
+      "summary": {
+        "delayed": {
+          "median_mean_ttft_ms": 84.830583,
+          "median_mean_tpot_ms": 29.909411714285714,
+          "median_mean_e2e_ms": 294.227185,
+          "median_elapsed_ms": 294.330148,
+          "min_elapsed_ms": 290.144399,
+          "max_elapsed_ms": 294.834933,
+          "median_output_tokens_per_s": 27.180362101404576
+        },
+        "early": {
+          "median_mean_ttft_ms": 48.801115,
+          "median_mean_tpot_ms": 34.451073428571426,
+          "median_mean_e2e_ms": 289.857237,
+          "median_elapsed_ms": 289.96108,
+          "min_elapsed_ms": 289.166241,
+          "max_elapsed_ms": 295.255736,
+          "median_output_tokens_per_s": 27.589909652702357
+        }
+      }
+    },
+    "two_active": {
+      "prompt_lengths": [
+        5,
+        5
+      ],
+      "warmups": [
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 403.286456,
+          "output_tokens_per_s": 39.674032593844416,
+          "drain_after_last_commit_ms": 0.106043,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 122.430477,
+              "e2e_ms": 403.180413,
+              "output_tokens": 8,
+              "tpot_ms": 40.107133714285716,
+              "itl_ms": [
+                46.728744,
+                46.376013,
+                46.494168,
+                46.385364,
+                46.518458,
+                46.427855,
+                1.819334
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 122.430477,
+              "e2e_ms": 403.180413,
+              "output_tokens": 8,
+              "tpot_ms": 40.107133714285716,
+              "itl_ms": [
+                46.728744,
+                46.376013,
+                46.494168,
+                46.385364,
+                46.518458,
+                46.427855,
+                1.819334
+              ]
+            }
+          },
+          "setup_ms": 1.439973,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": -1,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 402.381589,
+          "output_tokens_per_s": 39.763250698828564,
+          "drain_after_last_commit_ms": 0.105763,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 73.865618,
+              "e2e_ms": 402.275826,
+              "output_tokens": 8,
+              "tpot_ms": 46.915744000000004,
+              "itl_ms": [
+                93.807848,
+                46.451916,
+                46.681473,
+                46.458186,
+                46.652672,
+                46.550769,
+                1.807344
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 73.865618,
+              "e2e_ms": 402.275826,
+              "output_tokens": 8,
+              "tpot_ms": 46.915744000000004,
+              "itl_ms": [
+                93.807848,
+                46.451916,
+                46.681473,
+                46.458186,
+                46.652672,
+                46.550769,
+                1.807344
+              ]
+            }
+          },
+          "setup_ms": 1.464514,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": -1,
+          "outputs_match": true,
+          "plans_match": true
+        }
+      ],
+      "trials": [
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 447.742573,
+          "output_tokens_per_s": 35.73481943607806,
+          "drain_after_last_commit_ms": 0.106343,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 166.995247,
+              "e2e_ms": 447.63623,
+              "output_tokens": 8,
+              "tpot_ms": 40.091569,
+              "itl_ms": [
+                46.532998,
+                46.419615,
+                46.502288,
+                46.363103,
+                46.520358,
+                46.483587,
+                1.819034
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 166.995247,
+              "e2e_ms": 447.63623,
+              "output_tokens": 8,
+              "tpot_ms": 40.091569,
+              "itl_ms": [
+                46.532998,
+                46.419615,
+                46.502288,
+                46.363103,
+                46.520358,
+                46.483587,
+                1.819034
+              ]
+            }
+          },
+          "setup_ms": 1.454923,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": 0,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 403.142302,
+          "output_tokens_per_s": 39.688219074563904,
+          "drain_after_last_commit_ms": 0.114514,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 74.117095,
+              "e2e_ms": 403.027788,
+              "output_tokens": 8,
+              "tpot_ms": 46.987241857142855,
+              "itl_ms": [
+                94.098128,
+                46.633451,
+                46.638972,
+                46.60126,
+                46.646392,
+                46.469206,
+                1.823284
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 74.117095,
+              "e2e_ms": 403.027788,
+              "output_tokens": 8,
+              "tpot_ms": 46.987241857142855,
+              "itl_ms": [
+                94.098128,
+                46.633451,
+                46.638972,
+                46.60126,
+                46.646392,
+                46.469206,
+                1.823284
+              ]
+            }
+          },
+          "setup_ms": 1.464384,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": 0,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 401.605226,
+          "output_tokens_per_s": 39.84011901279392,
+          "drain_after_last_commit_ms": 0.110893,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 73.475436,
+              "e2e_ms": 401.494333,
+              "output_tokens": 8,
+              "tpot_ms": 46.859842428571426,
+              "itl_ms": [
+                93.874951,
+                46.422025,
+                46.632861,
+                46.423605,
+                46.453266,
+                46.387265,
+                1.824924
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 73.475436,
+              "e2e_ms": 401.494333,
+              "output_tokens": 8,
+              "tpot_ms": 46.859842428571426,
+              "itl_ms": [
+                93.874951,
+                46.422025,
+                46.632861,
+                46.423605,
+                46.453266,
+                46.387265,
+                1.824924
+              ]
+            }
+          },
+          "setup_ms": 1.466244,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": 1,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 401.243475,
+          "output_tokens_per_s": 39.87603785955647,
+          "drain_after_last_commit_ms": 0.106703,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 120.882401,
+              "e2e_ms": 401.136772,
+              "output_tokens": 8,
+              "tpot_ms": 40.03633871428571,
+              "itl_ms": [
+                46.448265,
+                46.216489,
+                46.541609,
+                46.335413,
+                46.540838,
+                46.355363,
+                1.816394
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 120.882401,
+              "e2e_ms": 401.136772,
+              "output_tokens": 8,
+              "tpot_ms": 40.03633871428571,
+              "itl_ms": [
+                46.448265,
+                46.216489,
+                46.541609,
+                46.335413,
+                46.540838,
+                46.355363,
+                1.816394
+              ]
+            }
+          },
+          "setup_ms": 1.459903,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": 1,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 401.782022,
+          "output_tokens_per_s": 39.82258817941835,
+          "drain_after_last_commit_ms": 0.104643,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 120.968593,
+              "e2e_ms": 401.677379,
+              "output_tokens": 8,
+              "tpot_ms": 40.10125514285714,
+              "itl_ms": [
+                46.456637,
+                46.397364,
+                46.612391,
+                46.526618,
+                46.59976,
+                46.309792,
+                1.806224
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 120.968593,
+              "e2e_ms": 401.677379,
+              "output_tokens": 8,
+              "tpot_ms": 40.10125514285714,
+              "itl_ms": [
+                46.456637,
+                46.397364,
+                46.612391,
+                46.526618,
+                46.59976,
+                46.309792,
+                1.806224
+              ]
+            }
+          },
+          "setup_ms": 1.454753,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "delayed",
+          "pair": 2,
+          "outputs_match": true,
+          "plans_match": true
+        },
+        {
+          "mode": "pipeline",
+          "elapsed_ms": 400.788272,
+          "output_tokens_per_s": 39.92132783765688,
+          "drain_after_last_commit_ms": 0.104903,
+          "requests": {
+            "req-0": {
+              "ttft_ms": 73.523548,
+              "e2e_ms": 400.683369,
+              "output_tokens": 8,
+              "tpot_ms": 46.73711728571429,
+              "itl_ms": [
+                93.570312,
+                46.336562,
+                46.389475,
+                46.301501,
+                46.444066,
+                46.286611,
+                1.831294
+              ]
+            },
+            "req-1": {
+              "ttft_ms": 73.523548,
+              "e2e_ms": 400.683369,
+              "output_tokens": 8,
+              "tpot_ms": 46.73711728571429,
+              "itl_ms": [
+                93.570312,
+                46.336562,
+                46.389475,
+                46.301501,
+                46.444066,
+                46.286611,
+                1.831294
+              ]
+            }
+          },
+          "setup_ms": 1.442133,
+          "forward_calls": 8,
+          "processed_input_tokens": 24,
+          "expected_input_tokens": 24,
+          "extra_input_tokens": 0,
+          "plans": [
+            [
+              {
+                "request_id": "req-0",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "prefill",
+                "positions": [
+                  0,
+                  1,
+                  2,
+                  3,
+                  4
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  5
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  6
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  7
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  8
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  9
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  10
+                ],
+                "partial": false
+              }
+            ],
+            [
+              {
+                "request_id": "req-0",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              },
+              {
+                "request_id": "req-1",
+                "phase": "decode",
+                "positions": [
+                  11
+                ],
+                "partial": false
+              }
+            ]
+          ],
+          "outputs": {
+            "req-0": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ],
+            "req-1": [
+              11751,
+              13,
+              198,
+              32,
+              13,
+              2912,
+              198,
+              33
+            ]
+          },
+          "free_slots": 128,
+          "clean": true,
+          "passed": true,
+          "first_result": "early",
+          "pair": 2,
+          "outputs_match": true,
+          "plans_match": true
+        }
+      ],
+      "summary": {
+        "delayed": {
+          "median_mean_ttft_ms": 120.968593,
+          "median_mean_tpot_ms": 40.091569,
+          "median_mean_e2e_ms": 401.677379,
+          "median_elapsed_ms": 401.782022,
+          "min_elapsed_ms": 401.243475,
+          "max_elapsed_ms": 447.742573,
+          "median_output_tokens_per_s": 39.82258817941835
+        },
+        "early": {
+          "median_mean_ttft_ms": 73.523548,
+          "median_mean_tpot_ms": 46.859842428571426,
+          "median_mean_e2e_ms": 401.494333,
+          "median_elapsed_ms": 401.605226,
+          "min_elapsed_ms": 400.788272,
+          "max_elapsed_ms": 403.142302,
+          "median_output_tokens_per_s": 39.84011901279392
+        }
+      }
+    }
+  },
+  "source_sha256": {
+    "minideepinfer/benchmark_first_result.py": "f7643b0a6dcb331fbeb6ec68f0e00a95190c6cb686340c29e1b96dc700381739",
+    "minideepinfer/benchmark_pipeline.py": "15566dcdb60cfa5f6efbab2be897bddef8b26ee766517374b5a8cba9cb8d2ed7",
+    "minideepinfer/stopping_pipeline.py": "4494714dc870fbaf4c8c2ff224c283d124cf922188668965b405de35a4f5d9b8",
+    "minideepinfer/decode_pipeline.py": "13bb8e41dbcf2c2e74768acd08abf56f8039c2566e6afb6ffa5f9990075cd5b9",
+    "minideepinfer/batch_engine.py": "16f7eb89a11ce2e103884d51508546b6b4823cef4ef0f7222b923e1e40e7e30e",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/planning.py": "4e94702014a8110ce4698437b7a75166da73d89a3df3d706c0334c8e6661cca8",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/deferred_runner.py": "c14296990ddad9bdd915be1afcaef8cba2c2bcb22477627a5dd4d62b7fbd4422",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  },
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "total_forward_calls": 130
+}

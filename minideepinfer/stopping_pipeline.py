@@ -27,7 +27,7 @@ class StoppingDecodePipeline(FixedDecodePipeline):
 
     @torch.inference_mode()
     def run(self, prompts, max_new_tokens, *, eos_token_ids=None, orders=None, on_result=None, max_num_seqs=None,
-            max_num_batched_tokens=None, chunked_prefill=False):
+            max_num_batched_tokens=None, chunked_prefill=False, early_first_result=False):
         """Queue initial prompts; the result callback may submit or cancel requests.
 
         The callback has the fixed experiment's signature, with None for rows
@@ -35,12 +35,16 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         Calls are single-threaded. Orders permute initial IDs for the first rounds;
         new IDs follow them in FIFO order. Later rounds use insertion order.
         Returns request records, including committed tokens and stopping reasons.
+        early_first_result collects round zero before launching round one. Later
+        rounds keep the usual order; this also changes the first callback's timing.
         """
         if self._active or self.runner._prefixes or self.runner._request_id is not None:
             raise RuntimeError("pipeline requires an idle, exclusively owned runner")
         prompts = {rid: tuple(tokens) for rid, tokens in prompts.items()}
         if not prompts:
             raise ValueError("provide at least one initial request")
+        if type(early_first_result) is not bool:
+            raise ValueError("early_first_result must be boolean")
         limit = len(prompts) if max_num_seqs is None else max_num_seqs
         if type(limit) is not int or limit < 1:
             raise ValueError("max_num_seqs must be a positive integer")
@@ -68,6 +72,7 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         self._default_max = max_new_tokens
         self._active = True
         previous, index = None, 0
+        previous_collected = False
         try:
             if self.is_npu:
                 self.stream.wait_stream(torch.npu.current_stream(self.runner.device))
@@ -79,7 +84,8 @@ class StoppingDecodePipeline(FixedDecodePipeline):
                             if any(r.status in (Status.WAITING, Status.RUNNING) for r in self.requests.values()):
                                 raise RuntimeError("waiting work cannot be admitted after draining")
                             break
-                        self._finish(previous, None, on_result)
+                        if not previous_collected:
+                            self._finish(previous, None, on_result)
                         self._states.pop(0)
                         previous = None
                         continue  # Freed slots may admit a waiting prompt.
@@ -89,9 +95,13 @@ class StoppingDecodePipeline(FixedDecodePipeline):
                         self._issued[rid] = self._issued[rid].advance(step)
                         self._last_use[rid] = current.ready
                     if previous is not None:
-                        self._finish(previous, None, on_result)
+                        if not previous_collected:
+                            self._finish(previous, None, on_result)
                         self._states.pop(0)
                     self._sample(current)
+                    previous_collected = early_first_result and index == 0
+                    if previous_collected:
+                        self._finish(current, None, on_result)
                     previous, index = current, index + 1
             return dict(self.requests)
         except Exception as error:
