@@ -105,16 +105,19 @@ class DeferredRunner:
             with torch.npu.stream(self.stream) if self.is_npu else nullcontext():
                 inputs = self.runner.prepare_batch(steps)
                 pending._buffers.append(inputs)
+                rows = [i for i, step in enumerate(steps) if step.is_last_prompt_chunk]
+                if rows:
+                    # This host-to-device copy does not depend on model outputs.
+                    indices = torch.tensor(rows, dtype=torch.long, device=self.runner.device)
+                    pending._buffers.append(indices)
                 pending._writes_started = True
                 packed = self.runner.execute_main_model(inputs)
                 pending.logits = packed.split([len(s.input_ids) for s in steps])
-                rows = [i for i, step in enumerate(steps) if step.is_last_prompt_chunk]
                 tokens = torch.full((len(steps),), -1, dtype=torch.long, device=self.runner.device)
                 if rows:
                     selected = torch.stack([pending.logits[i][-1] for i in rows]).argmax(-1)
-                    indices = torch.tensor(rows, dtype=torch.long, device=self.runner.device)
                     tokens.index_copy_(0, indices, selected)
-                    pending._buffers.extend((selected, indices))
+                    pending._buffers.append(selected)
                 pending._buffers.extend((packed, tokens))
                 pending.host_tokens.copy_(tokens, non_blocking=self.is_npu)
                 pending.ready.record(self.stream)

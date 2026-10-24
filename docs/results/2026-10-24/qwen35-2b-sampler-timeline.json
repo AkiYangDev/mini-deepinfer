@@ -1,0 +1,182 @@
+{
+  "scope": "paired profiled interval facts; not unprofiled performance",
+  "sampler_analyzer_sha256": "6c8eb214d9ae5f8ab7a5107b44a85196709e6941e236aed77a7589cc7f996d6e",
+  "variants": {
+    "late": {
+      "scope": "profiled interval intersections, not unprofiled performance or causality",
+      "time_unit": "us",
+      "kernel_rows": 8609,
+      "matching_device_events": 8609,
+      "max_export_duration_difference_us": 0.001,
+      "steps": [
+        {
+          "step": 0,
+          "launch_us": 73960.99,
+          "tokenize_us": 175.31,
+          "finish_us": 1364.16,
+          "kernel_overlap_us": 175.31,
+          "launch_start_us": 0.0,
+          "launch_end_us": 73960.99,
+          "tokenize_start_us": 73973.36,
+          "tokenize_end_us": 74148.67,
+          "finish_start_us": 74172.87,
+          "finish_end_us": 75537.03,
+          "sampler_index_us": null,
+          "index_before_forward": null,
+          "index_after_forward": null,
+          "index_copy_us": [],
+          "nearby_device_busy_us": [
+            [
+              73723.36,
+              74398.67
+            ]
+          ]
+        },
+        {
+          "step": 1,
+          "launch_us": 85544.48,
+          "tokenize_us": 183.0,
+          "finish_us": 189.13,
+          "kernel_overlap_us": 0.0,
+          "launch_start_us": 75664.5,
+          "launch_end_us": 161208.98,
+          "tokenize_start_us": 161222.77,
+          "tokenize_end_us": 161405.77,
+          "finish_start_us": 161429.18,
+          "finish_end_us": 161618.31,
+          "sampler_index_us": 1477.61,
+          "index_before_forward": false,
+          "index_after_forward": true,
+          "index_copy_us": [
+            1391.66
+          ],
+          "nearby_device_busy_us": [
+            [
+              161125.306,
+              161127.626
+            ]
+          ]
+        },
+        {
+          "step": 2,
+          "launch_us": 73827.38,
+          "tokenize_us": 154.32,
+          "finish_us": 182.79,
+          "kernel_overlap_us": 0.0,
+          "launch_start_us": 161726.61,
+          "launch_end_us": 235553.99,
+          "tokenize_start_us": 235566.48,
+          "tokenize_end_us": 235720.8,
+          "finish_start_us": 235742.39,
+          "finish_end_us": 235925.18,
+          "sampler_index_us": 1631.0,
+          "index_before_forward": false,
+          "index_after_forward": true,
+          "index_copy_us": [
+            1554.53
+          ],
+          "nearby_device_busy_us": [
+            [
+              235497.458,
+              235499.879
+            ]
+          ]
+        }
+      ],
+      "window_us": 235925.18,
+      "kernel_busy_union_us": 61445.32,
+      "trace_sha256": "a8d3924ee44466279666379c11c3e29d9a946dba35ffd34354ec020797c670e4",
+      "kernel_table_sha256": "0a3d86cdb75d6aad35cacf069a17dbb2f595b825ec42ae92640b18afaed1dafc",
+      "analyzer_sha256": "23b8038e360f025ad45563a68bf5f200f0cae4cc54cd2c9cc7e9b8365bb01bc6",
+      "representation": "profiled spans; busy intervals limited to +/-250 us around tokenization"
+    },
+    "early": {
+      "scope": "profiled interval intersections, not unprofiled performance or causality",
+      "time_unit": "us",
+      "kernel_rows": 8609,
+      "matching_device_events": 8609,
+      "max_export_duration_difference_us": 0.001,
+      "steps": [
+        {
+          "step": 0,
+          "launch_us": 73446.1,
+          "tokenize_us": 178.98,
+          "finish_us": 1357.5,
+          "kernel_overlap_us": 178.98,
+          "launch_start_us": 0.0,
+          "launch_end_us": 73446.1,
+          "tokenize_start_us": 73459.0,
+          "tokenize_end_us": 73637.98,
+          "finish_start_us": 73663.17,
+          "finish_end_us": 75020.67,
+          "sampler_index_us": null,
+          "index_before_forward": null,
+          "index_after_forward": null,
+          "index_copy_us": [],
+          "nearby_device_busy_us": [
+            [
+              73209.0,
+              73887.98
+            ]
+          ]
+        },
+        {
+          "step": 1,
+          "launch_us": 82579.5,
+          "tokenize_us": 192.51,
+          "finish_us": 1190.48,
+          "kernel_overlap_us": 192.51,
+          "launch_start_us": 75122.96,
+          "launch_end_us": 157702.46,
+          "tokenize_start_us": 157715.73,
+          "tokenize_end_us": 157908.24,
+          "finish_start_us": 157931.84,
+          "finish_end_us": 159122.32,
+          "sampler_index_us": 107.54,
+          "index_before_forward": true,
+          "index_after_forward": false,
+          "index_copy_us": [
+            42.42
+          ],
+          "nearby_device_busy_us": [
+            [
+              157465.73,
+              158158.24
+            ]
+          ]
+        },
+        {
+          "step": 2,
+          "launch_us": 72899.87,
+          "tokenize_us": 195.38,
+          "finish_us": 1298.04,
+          "kernel_overlap_us": 195.38,
+          "launch_start_us": 159215.66,
+          "launch_end_us": 232115.53,
+          "tokenize_start_us": 232129.63,
+          "tokenize_end_us": 232325.01,
+          "finish_start_us": 232355.75,
+          "finish_end_us": 233653.79,
+          "sampler_index_us": 115.17,
+          "index_before_forward": true,
+          "index_after_forward": false,
+          "index_copy_us": [
+            42.74
+          ],
+          "nearby_device_busy_us": [
+            [
+              231879.63,
+              232575.01
+            ]
+          ]
+        }
+      ],
+      "window_us": 233653.79,
+      "kernel_busy_union_us": 61375.591,
+      "trace_sha256": "bcc042ee51744bea381b90e74c65627579df2f9e5ed24bbd4fe401c2bf068f83",
+      "kernel_table_sha256": "5ff6d87e45946f1e45098ed6e7cbd4fb8d53c59ec6329b80310533cb186d12b3",
+      "analyzer_sha256": "23b8038e360f025ad45563a68bf5f200f0cae4cc54cd2c9cc7e9b8365bb01bc6",
+      "representation": "profiled spans; busy intervals limited to +/-250 us around tokenization"
+    }
+  }
+}

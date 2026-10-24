@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 import unittest
 
 from minideepinfer.analyze_prepare_trace import analyze, merge
+from examples.analyze_sampler_order import analyze_one
 
 
 class PrepareTraceTests(unittest.TestCase):
@@ -62,6 +63,26 @@ class PrepareTraceTests(unittest.TestCase):
             table.write_text(original.replace(',2', ',2.002'), encoding='utf-8')
             with self.assertRaisesRegex(ValueError, 'export precision'):
                 analyze(trace, table)
+
+    def test_sampler_markers_identify_position_and_reject_ambiguous_ranges(self):
+        for before in (False, True):
+            with TemporaryDirectory() as directory:
+                trace, table = self.fixtures(Path(directory), ((12, 2),))
+                events = json.loads(trace.read_text(encoding='utf-8'))
+                base = Decimal(events[0]['ts'])
+                events.append(dict(name='mini.forward', ph='X', ts=str(base + 3), dur=3))
+                start = base + (1 if before else 8)
+                events.extend([dict(name='mini.sampler_indices', ph='X', ts=str(start), dur=1),
+                               dict(name='aten::copy_', ph='X', ts=str(start), dur=.5)])
+                trace.write_text(json.dumps(events), encoding='utf-8')
+                step = analyze_one(trace, table)['steps'][0]
+                self.assertEqual(step['index_before_forward'], before)
+                self.assertEqual(step['index_after_forward'], not before)
+                self.assertEqual(step['index_copy_us'], [.5])
+                events.append(events[-2])  # Duplicate span must not silently choose a row.
+                trace.write_text(json.dumps(events), encoding='utf-8')
+                with self.assertRaisesRegex(ValueError, 'at most one'):
+                    analyze_one(trace, table)
 
 
 if __name__ == '__main__':

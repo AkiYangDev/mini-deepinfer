@@ -32,6 +32,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | 2B 结果延后提交实验 | 六轮真实权重 FP32 轨迹与同步 Runner 的 logits 差异为 0；覆盖分块、取消和异常清理，见[第七课](docs/DEFERRED_RUNNER.md) |
 | BatchEngine 分步执行 | 真实 2B 六轮、十组 logits 与同步路径差异为 0；计算途中取消、动态加入、槽位复用和停止条件通过，见[第八课](docs/DEFERRED_ENGINE.md) |
 | 等待期间准备新文本 | 两种顺序的批次与输出一致；四条短文本未显示提速，三步 trace 仅一步观察到重叠，见[第九课](docs/PREPARE_DURING_STEP.md) |
+| 采样索引提前准备 | 13 组完整 logits 差异为 0；移开 forward 后的索引复制等待，捕获的三步均有分词重叠，整体收益未确定，见[第十课](docs/SAMPLER_INPUTS.md) |
 
 真实 2B 运行中的英文回答：
 
@@ -66,6 +67,8 @@ python -m minideepinfer.verify_deferred_engine --device cpu
 ```
 
 [第九课](docs/PREPARE_DURING_STEP.md)让 CPU 在等待时为下一条文本分词，提供两种调用顺序的对照和实际时间线。它解释了为什么“可以重叠”仍然不一定更快。
+
+[第十课](docs/SAMPLER_INPUTS.md)沿着这份时间线找到一处采样索引复制：行号已经知道了，为什么还留到 forward 后才准备？改动、数值检查和等待边界都在同一条执行链中展开。
 
 ## 运行真实模型
 
@@ -113,7 +116,7 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-未安装模型依赖时执行 50 项引擎、状态与时间区间测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
+未安装模型依赖时执行 51 项引擎、状态与时间区间测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
 
 ## 为什么参考 DeepInfer
 

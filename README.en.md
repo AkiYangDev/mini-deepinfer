@@ -32,6 +32,7 @@ The main example uses FP32. BF16 also passes fixed short trajectories against an
 | 2B deferred-result experiment | Six real-weight FP32 batches match synchronous Runner logits with zero difference, covering chunks, cancellation, and host-error cleanup; see [lesson seven](docs/DEFERRED_RUNNER.md) |
 | Split-step BatchEngine | Six real 2B rounds and ten logit comparisons match the sync path with zero difference, covering in-flight cancellation, arrivals, slot reuse, and stopping; see [lesson eight](docs/DEFERRED_ENGINE.md) |
 | Prepare text while waiting | Both orders produce identical batches and tokens. Four short texts show no speedup; only one of three captured steps overlaps tokenization with device activity. See [lesson nine](docs/PREPARE_DURING_STEP.md) |
+| Prepare sampler indices earlier | Thirteen full-logit comparisons match exactly. Moving the index upload before forward allows tokenization overlap in all three captured steps; an overall speedup is not established. See [lesson ten](docs/SAMPLER_INPUTS.md) |
 
 The English answer from the real 2B run:
 
@@ -66,6 +67,8 @@ python -m minideepinfer.verify_deferred_engine --device cpu
 ```
 
 [Lesson nine](docs/PREPARE_DURING_STEP.md) prepares the next text while waiting, then compares both orders and checks an actual device timeline. It explains why allowing overlap does not automatically make execution faster.
+
+[Lesson ten](docs/SAMPLER_INPUTS.md) follows that trace to a sampler-index copy: if the row numbers are already known, why prepare them after forward? It walks through the small change, numerical checks, and the resulting wait boundary.
 
 ## Run a real model
 
@@ -113,7 +116,7 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-Without model dependencies, 50 engine, state, and interval tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+Without model dependencies, 51 engine, state, and interval tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
 
 ## How this relates to DeepInfer
 

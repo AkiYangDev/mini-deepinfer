@@ -130,4 +130,4 @@ python -m minideepinfer.generate \
 
 固定版本 DeepInfer 的 [`ModelRunner`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py)区分输入准备、主模型执行与采样，[`WorkerStepState`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py)保留跨轮仍要使用的信息。拆分职责后，才能讨论哪些工作依赖新 token、哪些可以提前做。
 
-本课的文本入口是教学选择，没有复现上游 ZOS。它验证了一个具体的独立 CPU 工作可以放在哪里，也记录了收益很小、重叠不连续的实测结果。接下来沿现有 trace 检查 `launch`，先找到值得改的同步边界，再决定是否扩大执行范围。
+本课的文本入口是教学选择，没有复现上游 ZOS。它验证了一个具体的独立 CPU 工作可以放在哪里，也记录了收益很小、重叠不连续的实测结果。[第十课](SAMPLER_INPUTS.md)接着检查 `launch` 尾部的采样索引复制，做一个只移动准备位置的对照。本课报告继续对应当时的旧实现。

@@ -1,6 +1,7 @@
 """The model runs now; host prefixes and outputs commit only when read."""
 
 import importlib.util
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -271,6 +272,55 @@ class DeferredRunnerTests(unittest.TestCase):
             self.assertEqual(a['finish_reason'], b['finish_reason'])
         self.assertTrue(after['clean'] and before['clean'])
         self.assertEqual(after['output_tokens'], 16)
+
+    def test_sampler_index_upload_precedes_forward_and_partial_batches_skip_it(self):
+        for sampling in (False, True):
+            with self.subTest(sampling=sampling):
+                runner = self.runner()
+                deferred = DeferredRunner(runner)
+                original_tensor, original_forward = torch.tensor, runner.execute_main_model
+                calls = []
+                def tensor(values, *args, **kwargs):
+                    if sys._getframe(1).f_code.co_name == 'launch':
+                        calls.append(('indices', list(values)))
+                    return original_tensor(values, *args, **kwargs)
+                def forward(inputs):
+                    calls.append(('forward', None))
+                    return original_forward(inputs)
+                a = Step('A', 'prefill', (2, 3), (0, 1), (0, 1), (0, 1), False)
+                b = Step('B', 'prefill', (4,), (0,), (8,), (8,), sampling)
+                with patch.object(torch, 'tensor', tensor), patch.object(runner, 'execute_main_model', forward):
+                    pending = deferred.launch((a, b))
+                self.assertEqual(calls, [('indices', [1]), ('forward', None)] if sampling
+                                 else [('forward', None)])
+                values = pending.wait().result()
+                self.assertIsNone(values[0])
+                self.assertEqual(values[1] is not None, sampling)
+                deferred.release('A')
+                deferred.release('B')
+
+    def test_index_upload_failure_keeps_existing_prefix_before_any_model_write(self):
+        runner = self.runner()
+        deferred = DeferredRunner(runner)
+        deferred.launch((self.first(),)).wait().result()
+        prefix = dict(runner._prefixes)
+        states = dict(runner.cache.linear_states)
+        original_tensor = torch.tensor
+        def tensor(values, *args, **kwargs):
+            if sys._getframe(1).f_code.co_name == 'launch':
+                raise RuntimeError('sample index upload failed')
+            return original_tensor(values, *args, **kwargs)
+        step = Step('A', 'decode', (4,), (2,), (2,), (0, 1, 2))
+        with patch.object(torch, 'tensor', tensor):
+            with self.assertRaisesRegex(RuntimeError, 'sample index upload failed'):
+                deferred.launch((step,))
+        self.assertEqual(runner._prefixes, prefix)
+        self.assertEqual(set(runner.cache.linear_states), set(states))
+        for key, value in states.items():
+            self.assertIs(runner.cache.linear_states[key], value)
+        self.assertIsNone(deferred.pending)
+        deferred.launch((step,)).wait().result()
+        deferred.release('A')
 
 
 if __name__ == '__main__':

@@ -1,0 +1,1408 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "paired late/early index upload; one shared model; fixed four-request workload",
+  "latency_origin": "start of each tokenizer.encode to CPU token commit; no network",
+  "max_num_seqs": 2,
+  "token_budget": 4,
+  "cache_capacity": 128,
+  "max_new_tokens": 4,
+  "eos_disabled": true,
+  "numerical_control_trials": 2,
+  "warmup_trials": 2,
+  "repeats": 3,
+  "failure_count": 0,
+  "baseline_sha256": "f5a747a9b30df5b7a2802d43f7a42a60ea4020efea1aa3f37438de1feabcbf10",
+  "shared_plans": [
+    [
+      {
+        "request_id": "req-0",
+        "phase": "prefill",
+        "input_ids": [
+          760,
+          6511,
+          314,
+          9338
+        ],
+        "positions": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "slot_mapping": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "req-0",
+        "phase": "prefill",
+        "input_ids": [
+          369
+        ],
+        "positions": [
+          4
+        ],
+        "slot_mapping": [
+          4
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "req-1",
+        "phase": "prefill",
+        "input_ids": [
+          32,
+          81726,
+          6297
+        ],
+        "positions": [
+          0,
+          1,
+          2
+        ],
+        "slot_mapping": [
+          8,
+          9,
+          10
+        ],
+        "context_slots": [
+          8,
+          9,
+          10
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-0",
+        "phase": "decode",
+        "input_ids": [
+          11751
+        ],
+        "positions": [
+          5
+        ],
+        "slot_mapping": [
+          5
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "req-1",
+        "phase": "decode",
+        "input_ids": [
+          369
+        ],
+        "positions": [
+          3
+        ],
+        "slot_mapping": [
+          11
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-0",
+        "phase": "decode",
+        "input_ids": [
+          13
+        ],
+        "positions": [
+          6
+        ],
+        "slot_mapping": [
+          6
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "req-1",
+        "phase": "decode",
+        "input_ids": [
+          264
+        ],
+        "positions": [
+          4
+        ],
+        "slot_mapping": [
+          12
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-0",
+        "phase": "decode",
+        "input_ids": [
+          198
+        ],
+        "positions": [
+          7
+        ],
+        "slot_mapping": [
+          7
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "req-1",
+        "phase": "decode",
+        "input_ids": [
+          795
+        ],
+        "positions": [
+          5
+        ],
+        "slot_mapping": [
+          13
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-2",
+        "phase": "prefill",
+        "input_ids": [
+          814,
+          20139,
+          829,
+          7320
+        ],
+        "positions": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "slot_mapping": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "req-2",
+        "phase": "prefill",
+        "input_ids": [
+          303,
+          799,
+          11316,
+          13
+        ],
+        "positions": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "slot_mapping": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-2",
+        "phase": "decode",
+        "input_ids": [
+          271
+        ],
+        "positions": [
+          8
+        ],
+        "slot_mapping": [
+          8
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "req-3",
+        "phase": "prefill",
+        "input_ids": [
+          3710,
+          369,
+          220
+        ],
+        "positions": [
+          0,
+          1,
+          2
+        ],
+        "slot_mapping": [
+          11,
+          12,
+          13
+        ],
+        "context_slots": [
+          11,
+          12,
+          13
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "req-2",
+        "phase": "decode",
+        "input_ids": [
+          248068
+        ],
+        "positions": [
+          9
+        ],
+        "slot_mapping": [
+          9
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "req-3",
+        "phase": "prefill",
+        "input_ids": [
+          16,
+          5346,
+          220
+        ],
+        "positions": [
+          3,
+          4,
+          5
+        ],
+        "slot_mapping": [
+          14,
+          15,
+          16
+        ],
+        "context_slots": [
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "req-2",
+        "phase": "decode",
+        "input_ids": [
+          271
+        ],
+        "positions": [
+          10
+        ],
+        "slot_mapping": [
+          10
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "req-3",
+        "phase": "prefill",
+        "input_ids": [
+          16,
+          30
+        ],
+        "positions": [
+          6,
+          7
+        ],
+        "slot_mapping": [
+          17,
+          18
+        ],
+        "context_slots": [
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-3",
+        "phase": "decode",
+        "input_ids": [
+          271
+        ],
+        "positions": [
+          8
+        ],
+        "slot_mapping": [
+          19
+        ],
+        "context_slots": [
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-3",
+        "phase": "decode",
+        "input_ids": [
+          16
+        ],
+        "positions": [
+          9
+        ],
+        "slot_mapping": [
+          20
+        ],
+        "context_slots": [
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "req-3",
+        "phase": "decode",
+        "input_ids": [
+          5346
+        ],
+        "positions": [
+          10
+        ],
+        "slot_mapping": [
+          21
+        ],
+        "context_slots": [
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ]
+  ],
+  "trials": [
+    {
+      "order": "before_finish",
+      "elapsed_ms": 678.091904,
+      "output_tokens": 16,
+      "output_tokens_per_s": 23.59562163420255,
+      "tokenize_ms": 0.41898199999999997,
+      "requests": [
+        {
+          "request_id": "req-0",
+          "prompt": "The capital of France is",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.106553,
+          "ttft_ms": 117.1623,
+          "e2e_ms": 279.115467,
+          "tpot_ms": 53.984389,
+          "itl_ms": [
+            54.70314,
+            53.32537,
+            53.924657
+          ]
+        },
+        {
+          "request_id": "req-1",
+          "prompt": "A KV cache",
+          "prompt_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "output_ids": [
+            369,
+            264,
+            795,
+            5759
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.099673,
+          "ttft_ms": 64.176231,
+          "e2e_ms": 226.129398,
+          "tpot_ms": 53.984389,
+          "itl_ms": [
+            54.70314,
+            53.32537,
+            53.924657
+          ]
+        },
+        {
+          "request_id": "req-2",
+          "prompt": "Explain prefill in one sentence.",
+          "prompt_ids": [
+            814,
+            20139,
+            829,
+            7320,
+            303,
+            799,
+            11316,
+            13
+          ],
+          "output_ids": [
+            271,
+            248068,
+            271,
+            248069
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.109933,
+          "ttft_ms": 260.540687,
+          "e2e_ms": 440.553989,
+          "tpot_ms": 60.004434,
+          "itl_ms": [
+            60.234984,
+            59.917405,
+            59.860913
+          ]
+        },
+        {
+          "request_id": "req-3",
+          "prompt": "What is 1 plus 1?",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.102823,
+          "ttft_ms": 385.841548,
+          "e2e_ms": 506.410009,
+          "tpot_ms": 40.18948700000001,
+          "itl_ms": [
+            41.87649,
+            39.046297,
+            39.645674
+          ]
+        }
+      ],
+      "free_slots": 128,
+      "clean": true,
+      "variant": "late",
+      "pair": 0
+    },
+    {
+      "order": "before_finish",
+      "elapsed_ms": 675.58317,
+      "output_tokens": 16,
+      "output_tokens_per_s": 23.683242434828564,
+      "tokenize_ms": 0.455712,
+      "requests": [
+        {
+          "request_id": "req-0",
+          "prompt": "The capital of France is",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.121653,
+          "ttft_ms": 116.360196,
+          "e2e_ms": 278.345264,
+          "tpot_ms": 53.995022666666664,
+          "itl_ms": [
+            55.390651,
+            53.220326,
+            53.374091
+          ]
+        },
+        {
+          "request_id": "req-1",
+          "prompt": "A KV cache",
+          "prompt_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "output_ids": [
+            369,
+            264,
+            795,
+            5759
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.102463,
+          "ttft_ms": 63.802619,
+          "e2e_ms": 225.787687,
+          "tpot_ms": 53.99502266666667,
+          "itl_ms": [
+            55.390651,
+            53.220326,
+            53.374091
+          ]
+        },
+        {
+          "request_id": "req-2",
+          "prompt": "Explain prefill in one sentence.",
+          "prompt_ids": [
+            814,
+            20139,
+            829,
+            7320,
+            303,
+            799,
+            11316,
+            13
+          ],
+          "output_ids": [
+            271,
+            248068,
+            271,
+            248069
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.119313,
+          "ttft_ms": 260.637649,
+          "e2e_ms": 440.353573,
+          "tpot_ms": 59.90530799999999,
+          "itl_ms": [
+            60.07571,
+            59.944665,
+            59.695549
+          ]
+        },
+        {
+          "request_id": "req-3",
+          "prompt": "What is 1 plus 1?",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.112283,
+          "ttft_ms": 385.052105,
+          "e2e_ms": 505.449741,
+          "tpot_ms": 40.13254533333335,
+          "itl_ms": [
+            41.54603,
+            39.065947,
+            39.785659
+          ]
+        }
+      ],
+      "free_slots": 128,
+      "clean": true,
+      "variant": "early",
+      "pair": 0
+    },
+    {
+      "order": "before_finish",
+      "elapsed_ms": 675.562249,
+      "output_tokens": 16,
+      "output_tokens_per_s": 23.68397586408059,
+      "tokenize_ms": 0.419563,
+      "requests": [
+        {
+          "request_id": "req-0",
+          "prompt": "The capital of France is",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.100163,
+          "ttft_ms": 116.804909,
+          "e2e_ms": 278.88992,
+          "tpot_ms": 54.028337,
+          "itl_ms": [
+            55.623078,
+            53.268398,
+            53.193535
+          ]
+        },
+        {
+          "request_id": "req-1",
+          "prompt": "A KV cache",
+          "prompt_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "output_ids": [
+            369,
+            264,
+            795,
+            5759
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.099213,
+          "ttft_ms": 64.14632,
+          "e2e_ms": 226.231331,
+          "tpot_ms": 54.028337,
+          "itl_ms": [
+            55.623078,
+            53.268398,
+            53.193535
+          ]
+        },
+        {
+          "request_id": "req-2",
+          "prompt": "Explain prefill in one sentence.",
+          "prompt_ids": [
+            814,
+            20139,
+            829,
+            7320,
+            303,
+            799,
+            11316,
+            13
+          ],
+          "output_ids": [
+            271,
+            248068,
+            271,
+            248069
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.112463,
+          "ttft_ms": 261.211156,
+          "e2e_ms": 439.875808,
+          "tpot_ms": 59.554883999999994,
+          "itl_ms": [
+            59.533914,
+            59.75518,
+            59.375558
+          ]
+        },
+        {
+          "request_id": "req-3",
+          "prompt": "What is 1 plus 1?",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.107724,
+          "ttft_ms": 384.341694,
+          "e2e_ms": 504.762201,
+          "tpot_ms": 40.14016899999999,
+          "itl_ms": [
+            41.599192,
+            39.008746,
+            39.812569
+          ]
+        }
+      ],
+      "free_slots": 128,
+      "clean": true,
+      "variant": "early",
+      "pair": 1
+    },
+    {
+      "order": "before_finish",
+      "elapsed_ms": 677.196458,
+      "output_tokens": 16,
+      "output_tokens_per_s": 23.626821745721536,
+      "tokenize_ms": 0.410072,
+      "requests": [
+        {
+          "request_id": "req-0",
+          "prompt": "The capital of France is",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.099173,
+          "ttft_ms": 117.308225,
+          "e2e_ms": 279.520029,
+          "tpot_ms": 54.07060133333334,
+          "itl_ms": [
+            55.737231,
+            53.231116,
+            53.243457
+          ]
+        },
+        {
+          "request_id": "req-1",
+          "prompt": "A KV cache",
+          "prompt_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "output_ids": [
+            369,
+            264,
+            795,
+            5759
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.097383,
+          "ttft_ms": 64.506151,
+          "e2e_ms": 226.717955,
+          "tpot_ms": 54.07060133333332,
+          "itl_ms": [
+            55.737231,
+            53.231116,
+            53.243457
+          ]
+        },
+        {
+          "request_id": "req-2",
+          "prompt": "Explain prefill in one sentence.",
+          "prompt_ids": [
+            814,
+            20139,
+            829,
+            7320,
+            303,
+            799,
+            11316,
+            13
+          ],
+          "output_ids": [
+            271,
+            248068,
+            271,
+            248069
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.111223,
+          "ttft_ms": 260.423193,
+          "e2e_ms": 440.133436,
+          "tpot_ms": 59.90341433333333,
+          "itl_ms": [
+            60.020158,
+            59.958406,
+            59.731679
+          ]
+        },
+        {
+          "request_id": "req-3",
+          "prompt": "What is 1 plus 1?",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.102293,
+          "ttft_ms": 384.388035,
+          "e2e_ms": 504.338248,
+          "tpot_ms": 39.98340433333334,
+          "itl_ms": [
+            41.677244,
+            38.81236,
+            39.460609
+          ]
+        }
+      ],
+      "free_slots": 128,
+      "clean": true,
+      "variant": "late",
+      "pair": 1
+    },
+    {
+      "order": "before_finish",
+      "elapsed_ms": 677.085474,
+      "output_tokens": 16,
+      "output_tokens_per_s": 23.630694519965438,
+      "tokenize_ms": 0.399853,
+      "requests": [
+        {
+          "request_id": "req-0",
+          "prompt": "The capital of France is",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.097553,
+          "ttft_ms": 117.340585,
+          "e2e_ms": 279.197799,
+          "tpot_ms": 53.95240466666666,
+          "itl_ms": [
+            55.446263,
+            53.316409,
+            53.094542
+          ]
+        },
+        {
+          "request_id": "req-1",
+          "prompt": "A KV cache",
+          "prompt_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "output_ids": [
+            369,
+            264,
+            795,
+            5759
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.088333,
+          "ttft_ms": 64.316725,
+          "e2e_ms": 226.173939,
+          "tpot_ms": 53.952404666666666,
+          "itl_ms": [
+            55.446263,
+            53.316409,
+            53.094542
+          ]
+        },
+        {
+          "request_id": "req-2",
+          "prompt": "Explain prefill in one sentence.",
+          "prompt_ids": [
+            814,
+            20139,
+            829,
+            7320,
+            303,
+            799,
+            11316,
+            13
+          ],
+          "output_ids": [
+            271,
+            248068,
+            271,
+            248069
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.108274,
+          "ttft_ms": 260.137726,
+          "e2e_ms": 439.473887,
+          "tpot_ms": 59.77872033333333,
+          "itl_ms": [
+            59.837052,
+            59.860313,
+            59.638796
+          ]
+        },
+        {
+          "request_id": "req-3",
+          "prompt": "What is 1 plus 1?",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.105693,
+          "ttft_ms": 384.025664,
+          "e2e_ms": 504.487012,
+          "tpot_ms": 40.153782666666665,
+          "itl_ms": [
+            41.787538,
+            38.998465,
+            39.675345
+          ]
+        }
+      ],
+      "free_slots": 128,
+      "clean": true,
+      "variant": "late",
+      "pair": 2
+    },
+    {
+      "order": "before_finish",
+      "elapsed_ms": 724.568141,
+      "output_tokens": 16,
+      "output_tokens_per_s": 22.082119119835827,
+      "tokenize_ms": 0.401532,
+      "requests": [
+        {
+          "request_id": "req-0",
+          "prompt": "The capital of France is",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.097503,
+          "ttft_ms": 167.244074,
+          "e2e_ms": 328.51023,
+          "tpot_ms": 53.75538533333332,
+          "itl_ms": [
+            55.482163,
+            52.830065,
+            52.953928
+          ]
+        },
+        {
+          "request_id": "req-1",
+          "prompt": "A KV cache",
+          "prompt_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "output_ids": [
+            369,
+            264,
+            795,
+            5759
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.091223,
+          "ttft_ms": 114.250174,
+          "e2e_ms": 275.51633,
+          "tpot_ms": 53.75538533333332,
+          "itl_ms": [
+            55.482163,
+            52.830065,
+            52.953928
+          ]
+        },
+        {
+          "request_id": "req-2",
+          "prompt": "Explain prefill in one sentence.",
+          "prompt_ids": [
+            814,
+            20139,
+            829,
+            7320,
+            303,
+            799,
+            11316,
+            13
+          ],
+          "output_ids": [
+            271,
+            248068,
+            271,
+            248069
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.113173,
+          "ttft_ms": 260.211027,
+          "e2e_ms": 439.332212,
+          "tpot_ms": 59.707061666666675,
+          "itl_ms": [
+            59.747589,
+            59.943146,
+            59.43045
+          ]
+        },
+        {
+          "request_id": "req-3",
+          "prompt": "What is 1 plus 1?",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "finish_reason": "length",
+          "tokenize_ms": 0.099633,
+          "ttft_ms": 383.937512,
+          "e2e_ms": 503.446582,
+          "tpot_ms": 39.83635666666665,
+          "itl_ms": [
+            41.487749,
+            38.659995,
+            39.361326
+          ]
+        }
+      ],
+      "free_slots": 128,
+      "clean": true,
+      "variant": "early",
+      "pair": 2
+    }
+  ],
+  "summary": {
+    "late": {
+      "median_elapsed_ms": 677.196458,
+      "median_output_tokens_per_s": 23.626821745721536,
+      "median_mean_ttft_ms": 206.65640100000002,
+      "median_mean_tpot_ms": 52.00700533333333,
+      "median_mean_e2e_ms": 362.677417
+    },
+    "early": {
+      "median_elapsed_ms": 675.58317,
+      "median_output_tokens_per_s": 23.683242434828564,
+      "median_mean_ttft_ms": 206.62601975,
+      "median_mean_tpot_ms": 51.93793175,
+      "median_mean_e2e_ms": 362.48406625
+    }
+  },
+  "logit_comparisons": [
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    },
+    {
+      "max_abs": 0.0,
+      "passed": true
+    }
+  ],
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "traces": {
+    "late": {
+      "clean": true,
+      "same_trajectory": true
+    },
+    "early": {
+      "clean": true,
+      "same_trajectory": true
+    }
+  },
+  "same_plans_and_outputs": true,
+  "source_sha256": {
+    "minideepinfer/deferred_runner.py": "c14296990ddad9bdd915be1afcaef8cba2c2bcb22477627a5dd4d62b7fbd4422",
+    "minideepinfer/benchmark_prepare.py": "44824507ebad0c4b6fdbcf36011761769cad52d709f350389fd644fabdc2c025",
+    "minideepinfer/text_loop.py": "cc5d07d283fd42756d0aeaf31954db83b5a06c9fe2cf6b809ca3553cfa798d03",
+    "minideepinfer/batch_engine.py": "99fc155d31b2030af01c2e6f65721262fa0b0a63e414173f83d143ada77decac",
+    "minideepinfer/model_runner.py": "3c34a7686dc3a14efa1d4f3149e02b8874724b84fbb78d5320482023d205611f",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "examples/compare_sampler_order.py": "6f20df1ff8a87ec0055d31f94390bb9f84ac09b3734ae11ae8c1ccd4277399fb"
+  },
+  "measurement_passed": true,
+  "profile_requested": true,
+  "profile_complete": true,
+  "passed": true,
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "torch_npu": "2.10.0.post6"
+}

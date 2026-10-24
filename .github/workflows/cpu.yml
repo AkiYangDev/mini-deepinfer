@@ -26,6 +26,8 @@ jobs:
       - run: python -m minideepinfer.benchmark_prepare --help
       - run: python -m minideepinfer.analyze_prepare_trace --help
       - run: python -m examples.profile_prepare --help
+      - run: python -m examples.compare_sampler_order --help
+      - run: python -m examples.analyze_sampler_order --help
 
   numerical:
     runs-on: ubuntu-24.04
