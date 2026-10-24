@@ -10,7 +10,7 @@ Built for learning, targeting Ascend 910C.
 
 [简体中文](README.md) · **English**
 
-[Setup](docs/START_HERE.en.md) · [A/B/C walkthrough](docs/WALKTHROUGH.en.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.2 notes](docs/RELEASE_v0.2.md)
+[Setup](docs/START_HERE.en.md) · [A/B/C walkthrough](docs/WALKTHROUGH.en.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.3 notes](docs/RELEASE_v0.3.md)
 
 </div>
 
@@ -18,9 +18,7 @@ mini-DeepInfer is a teaching inference engine for Ascend 910C, based on ideas fr
 
 The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass and cache management. Fourteen lessons start with integer examples whose state you can print, then move to tiny PyTorch models and real checkpoints. Qwen3.5-0.8B is also used during development, and the earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in the regression checks.
 
-v0.2 connects cross-round execution to text generation and adds a complete scheduling walkthrough without a checkpoint. See the [release notes](docs/RELEASE_v0.2.md) for the new entry points and validation scope.
-
-The v0.3 development version on main adds a [controlled greedy speculation lesson](docs/SPECULATIVE.md#english-summary): accept or correct proposed tokens, then roll back the rejected KV prefix. Start with a tiny model without weights, then inspect Qwen3.5 state snapshots and replay. A real 2B Ascend 910C run matched greedy output and cold-cache state checks. This synchronous experiment is separate from the text frontend and records snapshot and replay costs. An [independent lookup draft](docs/LOOKUP_DRAFT.md#english-summary) uses committed context only; the real 2B short example accepted 0/5 candidates and increased target work.
+v0.3 adds a [three-step walkthrough](docs/RELEASE_v0.3.md#english-release-notes): controlled greedy verification → Qwen3.5 state recovery → an independent lookup draft. CPU examples need no checkpoint, and real 2B output and cache checks passed on Ascend 910C. The lookup short example accepted 0/5 candidates and increased work; that result and its costs are preserved. This synchronous lesson is separate from the cross-round text frontend, with no speedup claim.
 
 ## Start small
 

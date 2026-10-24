@@ -13,6 +13,7 @@ With Python 3.10+:
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
+git checkout v0.3.0
 python -m venv .venv
 ```
 
@@ -48,6 +49,18 @@ python -m minideepinfer.verify_pipeline_text --device cpu \
 ```
 
 Random-model mode does not use natural EOS. With a real checkpoint, the verifier also checks chat-template generation and natural EOS. Floating-point error values need not be identical across environments.
+
+## v0.3: continue after rejecting a draft
+
+With the CPU model dependencies ready, run these in order:
+
+```bash
+python -m minideepinfer.spec_demo --output outputs/spec-controlled.json
+python -m minideepinfer.spec_demo --hybrid --output outputs/spec-hybrid.json
+python -m minideepinfer.spec_demo --draft lookup --hybrid --output outputs/spec-lookup.json
+```
+
+Inspect verification, hybrid-state recovery, then candidates from committed history only. Lookup runs its independent greedy baseline afterwards. Each JSON should contain `passed: true`, output and cleanup checks, and separate work counters. See [v0.3 notes](RELEASE_v0.3.md#english-release-notes) for expected results and hardware scope. These examples make no timing or speedup claim.
 
 ## Real Qwen3.5-2B on Ascend 910C
 
@@ -105,7 +118,7 @@ This runs reference and experimental trajectories. To inspect existing evidence 
 python scripts/check_evidence.py
 ```
 
-The script compares your files with source hashes saved during the NPU run, allowing for Windows line endings. If you have changed a relevant file, it names the mismatch so you can decide what needs to be tested again. Earlier reports keep the source versions used for those runs.
+The index selects either a recorded immutable Git revision or current files. A historical match does not establish a new hardware run. Use `--index docs/results/v0.3/evidence.json` for the speculation reports. See [evidence handling](EVIDENCE.md) for the rules and Git-history requirements.
 
 ## Troubleshooting
 
@@ -118,4 +131,4 @@ The script compares your files with source hashes saved during the NPU run, allo
 | Old Transformers cannot load Qwen3.5 tokenizer | Use 5.12.1 for this example; 4.46.3 covers the older Qwen2 regression |
 | BF16 generation changes across chunks | Read the [scan/state precision notes](BF16_REFERENCE.md); v0.1 defaults to FP32 |
 
-Run `python -m unittest discover -s tests -v` from source. Model tests explicitly skip without their dependencies. The installable package contains runtime modules; lessons, tests, scripts, and reports live in the source repository. v0.1 is not published on PyPI.
+Run `python -m unittest discover -s tests -v` from source. Model tests explicitly skip without their dependencies. The installable package contains runtime modules; lessons, tests, scripts, and reports live in the source repository. Install from the repository or [GitHub Releases](https://github.com/AkiYangDev/mini-deepinfer/releases); the project is not published on PyPI.

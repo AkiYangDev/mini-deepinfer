@@ -13,6 +13,7 @@ Python 3.10+。建议在新虚拟环境里安装，避免影响已有推理环�
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
+git checkout v0.3.0
 python -m venv .venv
 ```
 
@@ -60,6 +61,18 @@ python -m minideepinfer.verify_pipeline_text --device cpu \
 ```
 
 随机模型不使用自然 EOS；真实权重模式才增加聊天模板与自然 EOS 对照。浮点误差会随设备和软件版本略有变化，以报告中的容差检查为准。
+
+## v0.3：候选猜错后，怎样接着算
+
+CPU 小模型依赖准备好后，按顺序运行：
+
+```bash
+python -m minideepinfer.spec_demo --output outputs/spec-controlled.json
+python -m minideepinfer.spec_demo --hybrid --output outputs/spec-hybrid.json
+python -m minideepinfer.spec_demo --draft lookup --hybrid --output outputs/spec-lookup.json
+```
+
+三步分别观察候选验证、混合状态回退、独立候选来源。最后一个模式在生成完成后才运行普通 greedy 对照。JSON 应有 `passed: true`，并记录输出、槽位归还和各类计算成本。例子的完整解释与实机范围见[v0.3 说明](RELEASE_v0.3.md)；这里没有计时或性能承诺。
 
 ## Ascend 910C：真实权重
 
@@ -129,7 +142,7 @@ python -m minideepinfer.verify_chunk_pipeline \
 python scripts/check_evidence.py
 ```
 
-脚本比较当前文件与实机运行时保存的源码 SHA，并处理 Windows 换行符的差别。如果你改过相关源码，它会指出不一致的文件；此时需要针对改动补验证。各课原始结果对应的版本见[验证记录](VALIDATION.md)。
+脚本按索引读取报告对应的固定 Git commit，或核对未指定版本的当前文件；历史通过不表示新代码重新跑过实机。v0.3 投机结果使用 `--index docs/results/v0.3/evidence.json`。完整规则和源码包不含历史的区别见[证据说明](EVIDENCE.md)。
 
 ## 常见卡点
 
@@ -142,4 +155,4 @@ python scripts/check_evidence.py
 | 旧 Transformers 无法识别 Qwen3.5 tokenizer | 本例固定使用 5.12.1；4.46.3 只用于旧 Qwen2 回归 |
 | BF16 不同分块得到不同文本 | 先读[BF16 说明](BF16_REFERENCE.md)，区分扫描方式和状态精度；v0.1 主例使用 FP32 |
 
-模型依赖测试运行 `python -m unittest discover -s tests -v`；未装模型依赖时，模型项明确跳过。安装包包含运行模块，教程、原始报告、测试和 `scripts` 从源码仓库读取；v0.1 没有发布到 PyPI。
+模型依赖测试运行 `python -m unittest discover -s tests -v`；未装模型依赖时，模型项明确跳过。安装包包含运行模块，教程、原始报告、测试和 `scripts` 从源码仓库读取；各版本通过仓库或 [GitHub Releases](https://github.com/AkiYangDev/mini-deepinfer/releases)安装，尚未发布到 PyPI。

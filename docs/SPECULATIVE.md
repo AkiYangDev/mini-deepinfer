@@ -4,7 +4,7 @@
 
 前面的执行循环里，已发出的计算可以领先于 CPU 已提交的结果。投机解码把这个区别变得更直接：模型已经算过几个猜测 token，但它们未必都能成为输出。猜错以后，下一轮必须沿着被接受的前缀继续，不能读到错误分支的缓存。
 
-这个实验在 main 的 v0.3.0.dev0 中加入。用一个无需权重的 CPU 小模型，把候选、验证、提交与回退走完。主生成示例仍是 Ascend 910C 上的 Qwen3.5-2B；本章先使用已有的纯注意力 Qwen2 实现，因为它的 KV 前缀容易检查。Qwen3.5 的线性状态需要额外恢复，见后面的快照与重算部分。
+这个实验在 v0.3 开发阶段加入，现已收入 [v0.3.0](RELEASE_v0.3.md)。用一个无需权重的 CPU 小模型，把候选、验证、提交与回退走完。主生成示例仍是 Ascend 910C 上的 Qwen3.5-2B；本章先使用已有的纯注意力 Qwen2 实现，因为它的 KV 前缀容易检查。Qwen3.5 的线性状态需要额外恢复，见后面的快照与重算部分。
 
 ## 先运行
 
@@ -200,4 +200,4 @@ Each verification consumes the pending last output plus the candidates. After co
 
 The fixed DeepInfer references above distinguish verification, accepted versus final outputs, and subsequent length correction. The original full-attention CPU report remains tied to its historical commit. The new `--hybrid` path snapshots Qwen3.5 convolution and recurrent states before verification, then restores and replays only retained inputs after rejection. It does not copy the full KV cache or implement SWA Bounded Replay.
 
-One Ascend 910C FP32 run with existing Qwen3.5-2B weights matched independent greedy output in all three controlled cases. All 17 committed-prefix checks passed against cold full-prefix KV, convolution states, recurrence states and endpoint logits at `atol=1e-4, rtol=2e-4`. Per-case target forward counts including replay were 18/10/4, with 43/29/14 input tokens. Each snapshot held 20,201,472 bytes of linear state. Oracle preparation and cold checks bring the complete demonstration to 59 model calls; there is no timing or speedup claim. This synchronous reference does not implement probability-preserving sampling, a learned draft, MTP/DSpark or an NPU pipeline. This is a v0.3 development entry point on main; v0.2.0 artifacts do not contain it.
+One Ascend 910C FP32 run with existing Qwen3.5-2B weights matched independent greedy output in all three controlled cases. All 17 committed-prefix checks passed against cold full-prefix KV, convolution states, recurrence states and endpoint logits at `atol=1e-4, rtol=2e-4`. Per-case target forward counts including replay were 18/10/4, with 43/29/14 input tokens. Each snapshot held 20,201,472 bytes of linear state. Oracle preparation and cold checks bring the complete demonstration to 59 model calls; there is no timing or speedup claim. This synchronous reference does not implement probability-preserving sampling, a learned draft, MTP/DSpark or an NPU pipeline. This lesson is included in v0.3.0; v0.2.0 artifacts do not contain it.

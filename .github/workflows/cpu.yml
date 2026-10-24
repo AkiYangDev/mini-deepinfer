@@ -27,6 +27,7 @@ jobs:
       - run: python scripts/check_evidence.py --index docs/results/speculative/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/hybrid-rollback/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/lookup-draft/evidence.json
+      - run: python scripts/check_evidence.py --index docs/results/v0.3/evidence.json
       - run: python -m minideepinfer
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
@@ -109,7 +110,7 @@ jobs:
       - name: Run the installed package outside the checkout
         working-directory: ${{ runner.temp }}
         run: |
-          "$RUNNER_TEMP/mini-install/bin/python" -I -c "from importlib.metadata import version; assert version('mini-deepinfer') == '0.3.0.dev0'"
+          "$RUNNER_TEMP/mini-install/bin/python" -I -c "from importlib.metadata import version; assert version('mini-deepinfer') == '0.3.0'"
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.batch_demo
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.step_demo

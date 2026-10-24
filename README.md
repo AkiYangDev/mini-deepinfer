@@ -10,7 +10,7 @@ A small inference engine for learning DeepInfer, targeting Ascend 910C.
 
 **简体中文** · [English](README.en.md)
 
-[开始运行](docs/START_HERE.md) · [A、B、C 演示](docs/WALKTHROUGH.md) · [十四课学习路线](docs/LEARNING_PATH.md) · [v0.2 说明](docs/RELEASE_v0.2.md)
+[开始运行](docs/START_HERE.md) · [A、B、C 演示](docs/WALKTHROUGH.md) · [十四课学习路线](docs/LEARNING_PATH.md) · [v0.3 说明](docs/RELEASE_v0.3.md)
 
 </div>
 
@@ -18,9 +18,7 @@ mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 
 
 目前已用项目自己的前向计算，在 **Ascend 910C 上跑通 Qwen3.5-2B 文本生成**。教程从能直接打印状态的整数例子开始，逐步换成 PyTorch 小模型和真实权重，共十四课。开发时也使用 Qwen3.5-0.8B，原有 DeepSeek-R1-Distill-Qwen-1.5B 示例继续用于回归检查。
 
-v0.2 把跨轮执行接到文本生成入口，并提供一个无需权重的完整调度演示。[版本说明](docs/RELEASE_v0.2.md)列出新增入口和验证范围。
-
-main 的 v0.3 开发版新增[可控 greedy 投机实验](docs/SPECULATIVE.md)：在 CPU 上看候选怎样被接受或改正，以及拒绝分支的 KV 怎样退出可读前缀。先跑无需权重的小模型，再看 Qwen3.5 混合状态怎样恢复；真实 2B 的 Ascend 910C 输出和缓存对照已通过。这个同步实验独立于现有文本入口，快照和重算成本单独记录。[独立 lookup draft](docs/LOOKUP_DRAFT.md)只从已提交上下文找候选；真实 2B 的短例子接受 0/5，保留了工作量增加的结果。
+v0.3 围绕“候选猜错后，怎样继续生成”增加一条[三步学习路线](docs/RELEASE_v0.3.md)：可控 greedy 验证 → Qwen3.5 状态恢复 → 不读取答案的 lookup draft。CPU 例子无需权重，真实 2B 的 Ascend 910C 输出与缓存对照已通过。lookup 的实机短例子接受 0/5、增加了计算，这个结果和全部成本一同保留。独立同步实验没有接入跨轮文本入口，也没有提速结论。
 
 ## 先跑起来
 

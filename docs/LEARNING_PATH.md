@@ -1,6 +1,6 @@
 # 十四课：沿着一个请求读代码
 
-下面十四课记录主执行路径的演进。v0.3 开发中的独立新课题是[可控 greedy 投机解码](SPECULATIVE.md)：从候选验证走到输出提交与 KV 回退，先用 CPU 小模型把状态检查清楚。
+下面十四课记录主执行路径的演进。[v0.3 的三步投机路线](RELEASE_v0.3.md)在主线之外继续研究候选验证、Qwen3.5 状态恢复，以及不读取答案的 lookup draft。
 
 [返回首页](../README.md) · [先运行](START_HERE.md) · [源码映射](SOURCE_MAP.md)
 
@@ -52,4 +52,4 @@
 
 读到后几课时，可以回看两个公共入口：[`plan_step()`](../minideepinfer/planning.py)负责构造同步和跨轮使用的 Step；[`_launch()` / `_sample()`](../minideepinfer/decode_pipeline.py)负责固定批次与动态实验的设备输入和采样。两种调度循环仍分别保留，因为跨轮执行必须额外记住已发出的工作和最后使用事件，不能只看 CPU 已提交的进度。
 
-每课记录自己的实现阶段与实测条件；最新可用入口以[运行指南](START_HERE.md)、[v0.1 说明](RELEASE_v0.1.md)为准。DeepInfer 固定参考及教学简化见[源码映射](SOURCE_MAP.md)，后续方向见[路线](ROADMAP.md)。
+每课记录自己的实现阶段与实测条件；最新可用入口以[运行指南](START_HERE.md)、[v0.3 说明](RELEASE_v0.3.md)为准。DeepInfer 固定参考及教学简化见[源码映射](SOURCE_MAP.md)，后续方向见[路线](ROADMAP.md)。
