@@ -8,16 +8,31 @@ Multiline commands use Bash. In PowerShell, put each command on one line. Instal
 
 ## No weights or hardware
 
-With Python 3.10+:
+The integer examples support Python 3.10+. Use Python 3.12 below if you also want to run the CPU model examples, matching the version used for those checks:
+
+For integer examples only, an existing Python 3.10+ can run `python -m venv .venv`. The platform commands below create a Python 3.12 environment.
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
 git checkout v0.3.0
-python -m venv .venv
 ```
 
-Activate with `source .venv/bin/activate` on Linux/macOS, or `.\.venv\Scripts\Activate.ps1` in Windows PowerShell. From the repository directory:
+Create and activate the environment on Linux/macOS:
+
+```bash
+python3.12 -m venv .venv
+source .venv/bin/activate
+```
+
+In Windows PowerShell:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+From the repository directory:
 
 ```bash
 python -m pip install -e .
@@ -30,14 +45,25 @@ The first two examples use integers in place of model output to show the request
 
 ## Tiny CPU model, no checkpoint
 
-In a regular CPU environment:
+In the Python 3.12 environment above, install CPU PyTorch. On Linux/Windows:
 
 ```bash
-python -m pip install -e ".[qwen35]"
+python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+```
+
+On macOS:
+
+```bash
+python -m pip install torch==2.5.1
+```
+
+These download sources follow the [official PyTorch 2.5.1 instructions](https://pytorch.org/get-started/previous-versions/#v251). Project CPU checks cover Windows/Linux; this is not a new macOS validation. Skip installation if compatible PyTorch is already present. The random examples use this project's forward pass and need no Transformers, tokenizer, safetensors or checkpoint:
+
+```bash
 python -m minideepinfer.pipeline_demo
 ```
 
-The checker itself only needs PyTorch. The extra also installs the tokenizer and safetensors dependencies used by real checkpoints. If compatible PyTorch is already installed, the base package is sufficient for this random-model check.
+Real-checkpoint interface dependencies are introduced in the Ascend section below.
 
 The tiny hybrid-attention model processes A's long prompt in chunks. B finishes first, and C waits before taking B's slots. Expect `whole-prompt reference outputs match: True` and `free slots: 20/20; clean: True`. The [A/B/C walkthrough](WALKTHROUGH.en.md) explains the observations.
 
@@ -61,6 +87,20 @@ python -m minideepinfer.spec_demo --draft lookup --hybrid --output outputs/spec-
 ```
 
 Inspect verification, hybrid-state recovery, then candidates from committed history only. Lookup runs its independent greedy baseline afterwards. Each JSON should contain `passed: true`, output and cleanup checks, and separate work counters. See [v0.3 notes](RELEASE_v0.3.md#english-release-notes) for expected results and hardware scope. These examples make no timing or speedup claim.
+
+For `outputs/spec-lookup.json`, start with these fields:
+
+| Field | Expected in this CPU example |
+| --- | --- |
+| `passed` | `true`: the overall check passed |
+| `cases.lookup.matches_greedy` | `true`: output matches the subsequent independent baseline |
+| `cases.lookup.free_slots` | `12`: all slots were returned |
+| `cases.lookup.target_forward_calls` | `6`: generation calls, including replay |
+| `baseline.forward_calls` | `10`: separate baseline calls |
+| `reference_forward_calls` | `5`: cold-cache checks after commits |
+| `total_forward_calls` | `21`: the sum of those three parts |
+
+The total includes extra work used to verify the example. No time was measured, so `10/6` is not a speedup. This random model repeats one token at the fixed seed, making lookup matches easy. The real checkpoint accepted 0/5; see the [independent-draft results](LOOKUP_DRAFT.md#english-summary).
 
 ## Real Qwen3.5-2B on Ascend 910C
 

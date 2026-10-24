@@ -8,24 +8,27 @@
 
 ## 先看请求怎样执行
 
-Python 3.10+。建议在新虚拟环境里安装，避免影响已有推理环境：
+整数例子支持 Python 3.10+。如果还要继续跑 CPU 小模型，下面用 Python 3.12 创建环境，与本项目的 CPU 检查版本一致。
+
+只看整数例子时，可用已有 Python 3.10+ 执行 `python -m venv .venv`；下面分别给出 Python 3.12 的创建和激活命令。
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
 git checkout v0.3.0
-python -m venv .venv
 ```
 
-Linux/macOS 激活环境：
+Linux/macOS 创建并激活环境：
 
 ```bash
+python3.12 -m venv .venv
 source .venv/bin/activate
 ```
 
-Windows PowerShell 激活环境：
+Windows PowerShell 创建并激活环境：
 
 ```powershell
+py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
@@ -42,14 +45,25 @@ python -m minideepinfer.step_demo
 
 ## CPU 小模型：无需下载权重
 
-在普通 CPU 虚拟环境中安装模型依赖：
+在上面的 Python 3.12 环境中，只需安装 CPU PyTorch。Linux/Windows 使用：
 
 ```bash
-python -m pip install -e ".[qwen35]"
+python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+```
+
+macOS 使用：
+
+```bash
+python -m pip install torch==2.5.1
+```
+
+下载源按 [PyTorch 2.5.1 官方说明](https://pytorch.org/get-started/previous-versions/#v251)区分平台；本项目 CPU 数值检查覆盖 Windows/Linux，未新增 macOS 实测。已有兼容 PyTorch 时跳过安装。下面的随机模型直接用项目代码计算，不需要 Transformers、tokenizer、safetensors 或 checkpoint：
+
+```bash
 python -m minideepinfer.pipeline_demo
 ```
 
-这个入口只需要 PyTorch；上面的 extra 同时准备后续真实模型使用的 tokenizer 和 safetensors。已有兼容 PyTorch 时，只安装基础包也能运行随机模型检查。
+真实权重的模型接口依赖放在后面的 Ascend 一节，不用为了跑这个例子提前安装。
 
 程序随机初始化一个小型 Qwen3.5 模型，保留线性注意力和完整注意力。A 的长 prompt 分块计算，B 先结束，C 等待后复用 B 的槽位。最后应看到 `whole-prompt reference outputs match: True` 和 `free slots: 20/20; clean: True`。每轮输出的解释见[A、B、C 演示](WALKTHROUGH.md)。
 
@@ -73,6 +87,20 @@ python -m minideepinfer.spec_demo --draft lookup --hybrid --output outputs/spec-
 ```
 
 三步分别观察候选验证、混合状态回退、独立候选来源。最后一个模式在生成完成后才运行普通 greedy 对照。JSON 应有 `passed: true`，并记录输出、槽位归还和各类计算成本。例子的完整解释与实机范围见[v0.3 说明](RELEASE_v0.3.md)；这里没有计时或性能承诺。
+
+以第三个命令生成的 `outputs/spec-lookup.json` 为例，先看这几项：
+
+| 字段 | 这个 CPU 例子应看到什么 |
+| --- | --- |
+| `passed` | `true`，整体检查通过 |
+| `cases.lookup.matches_greedy` | `true`，生成输出与事后独立 greedy 相同 |
+| `cases.lookup.free_slots` | `12`，请求结束后全部归还 |
+| `cases.lookup.target_forward_calls` | `6`，这次生成实际调用 target 的次数，包含重算 |
+| `baseline.forward_calls` | `10`，事后对照另外计算了十次 |
+| `reference_forward_calls` | `5`，五次提交后的冷缓存检查 |
+| `total_forward_calls` | `21`，上述三部分之和 |
+
+`target_forward_calls` 统计生成路径，`total_forward_calls` 还包含验证例子是否正确的额外计算。这里没有测量耗时，不能把 `10/6` 当作加速倍数。随机小模型在这个 seed 下连续输出相同 token，容易被 lookup 命中；真实权重的 0/5 接受结果另见[独立候选说明](LOOKUP_DRAFT.md#ascend-910c-的真实权重结果)。
 
 ## Ascend 910C：真实权重
 
