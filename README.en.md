@@ -35,6 +35,8 @@ The main example uses FP32. BF16 also passes fixed short trajectories against an
 | Prepare sampler indices earlier | Thirteen full-logit comparisons match exactly. Moving the index upload before forward allows tokenization overlap in all three captured steps; an overall speedup is not established. See [lesson ten](docs/SAMPLER_INPUTS.md) |
 | Cross-round arrivals, stops, and reuse | Existing requests use device tokens; new prompts wait for admission. EOS/cancellation releases cache after its final use. Eight real 2B logit comparisons pass at the existing tolerances. See [lesson thirteen](docs/ARRIVALS.md) |
 
+The latest [cross-round chunk check](docs/CHUNK_PIPELINE.md) passes nine real 2B rounds and fourteen logit comparisons, with maximum difference about `2.67e-5`. Four intermediate chunks produce no sample, and all 24/24 slots are reclaimed. Step construction is shared with BatchEngine; scheduling and in-flight results remain separate.
+
 The English answer from the real 2B run:
 
 ```text
@@ -73,10 +75,10 @@ python -m minideepinfer.verify_deferred_engine --device cpu
 
 [Lesson eleven](docs/DECODE_PIPELINE.md) studies DeepInfer's cross-round order: keep sampled tokens on the device, submit the next forward, then process the previous output. [Lesson twelve](docs/STOPPING_PIPELINE.md) reuses that loop to handle EOS, cancellation, and departing requests.
 
-[Lesson thirteen](docs/ARRIVALS.md) adds arrivals: C waits, reuses A's slots after their final use, and runs prefill in the same batch as B's decode. With PyTorch installed, run the tiny-model comparison:
+[Lesson thirteen](docs/ARRIVALS.md) adds arrivals and slot reuse. [Lesson fourteen](docs/CHUNK_PIPELINE.md) splits prompts across rounds: decode uses the budget first, then prompt chunks use what remains. Explicit issued progress plans the next chunk before the CPU commits the previous result. With PyTorch installed, run the tiny-model comparison:
 
 ```bash
-python -m minideepinfer.verify_arrivals --device cpu
+python -m minideepinfer.verify_chunk_pipeline --device cpu
 ```
 
 Arrivals and cancellation currently use a single-threaded result callback. Performance has not been measured, and the default engine keeps its existing scheduling behavior.
@@ -122,6 +124,7 @@ If you know basic Python and PyTorch, follow these entry points. The project imp
 | How can the next round use a token before the CPU reads it? | [`FixedDecodePipeline`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
 | How does a stopped request drain its already submitted next round? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lesson twelve](docs/STOPPING_PIPELINE.md) |
 | How do fresh prompts and previous device tokens share a batch? | [`submit()` / `_schedule()`](minideepinfer/stopping_pipeline.py) · [lesson thirteen](docs/ARRIVALS.md) |
+| Where does the next chunk start before the CPU commits the previous round? | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [lesson fourteen](docs/CHUNK_PIPELINE.md) |
 
 New to inference engines? [Lesson one](docs/FIRST_REQUEST.md) uses an integer runner so every input, position, and slot can be printed. It needs only Python 3.10+, without model dependencies or weights:
 
@@ -130,11 +133,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-Without model dependencies, 51 engine, state, and interval tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+Without model dependencies, 54 engine, state, and interval tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
 
 ## How this relates to DeepInfer
 
-DeepInfer is the primary technical reference. The implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, models, and engine integration; lessons eleven through thirteen connect device tokens, departing requests, and new arrivals. Full dynamic scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned revision, entry points, and teaching simplifications.
+DeepInfer is the primary technical reference. The implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, models, and engine integration; lessons eleven through fourteen connect device tokens, departing requests, new arrivals, and prompt chunks across rounds. Full dynamic scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned revision, entry points, and teaching simplifications.
 
 **Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 

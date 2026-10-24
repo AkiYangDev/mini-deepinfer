@@ -31,7 +31,7 @@ Qwen3.5 继续使用下面相同的执行职责。新增 [`HybridCache`](../mini
 | [`WorkerStepState` / `MetadataZOS`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py) 与 [`DeferredRelease`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/engine/llm_engine.py#L64) | [`step_state.py`](../minideepinfer/step_state.py)、[`npu_events.py`](../minideepinfer/npu_events.py)、[`PendingBatch`](../minideepinfer/deferred_runner.py) 与 BatchEngine 的在途句柄，第五至八课 | 从整数映射走到真实 NPU、模型与引擎，保存本批张量、事件和取消信息，读取后提交；取消或失败先确认设备完成再清理，仍只允许一批在途，未复现 ZOS/上游资源池 |
 | [`Worker.execute_model_step()` / `_correct_seqlens_qk()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/worker.py) | [`FixedDecodePipeline`](../minideepinfer/decode_pipeline.py)，[第十一课](DECODE_PIPELINE.md) | 保留设备 token 按请求重映射，以及本轮 forward、上一轮处理、本轮采样的顺序；固定成员和长度、关闭 EOS，整批排空才回收。首轮 prefill 也延后收取，与原版不同；不包含动态调度、投机长度修正或完整 ZOS |
 | 同一 Worker 顺序、`WorkerStepState` 的元数据有效期与 `DeferredRelease` 的延后释放 | [`StoppingDecodePipeline`](../minideepinfer/stopping_pipeline.py)，[第十二课](STOPPING_PIPELINE.md) | 复用跨轮循环，加入 EOS/回调取消和缩批；教学版按每请求最后使用事件回收整份缓存，不复现上游完整块管理/状态池/取消机制。请求只退出，暂不加入；没有回滚或性能结论 |
-| `MetadataZOS.remap_cpu` 对新行/前轮行的区分，以及 Worker 的跨轮执行顺序 | 同一类的 `submit()` / `_schedule()`、公共 `_launch()` 与 `ModelRunner.prepare_mixed_batch()`，[第十三课](ARRIVALS.md) | 新 prompt 与旧设备 token 分开准备，禁止把新行的 -1 作为 gather 索引；FIFO/全量预留/混合 prefill-decode 是教学选择。验证最后使用后槽位复用，尚未整合主 BatchEngine、token 预算或分块 prefill |
+| `MetadataZOS.remap_cpu` 对新行/前轮行的区分，以及 Worker 的跨轮执行顺序 | 同一类的 `submit()` / `_schedule()`、公共 `_launch()` 与 `ModelRunner.prepare_mixed_batch()`，[第十三课](ARRIVALS.md) | 新 prompt 与旧设备 token 分开准备，禁止把新行的 -1 作为 gather 索引；FIFO/全量预留/混合 prefill-decode 是教学选择。验证最后使用后槽位复用；本课不含 token 预算和分块，后续见第十四课 |
 
 FIFO、prefill/decode 和槽位分配是推理框架的通用基础，单独实现它们还不足以展示 DeepInfer 的特点。后续每项教学实现都需要给出原版入口、保留的机制、简化理由和相应验证，逐步进入执行/采样分工、在途状态管理、投机提交/回退和 bounded replay。
 
@@ -74,9 +74,11 @@ FIFO、prefill/decode 和槽位分配是推理框架的通用基础，单独实�
 
 mask/compact 对照通过，不能证明近似回放与完整重算严格等价。V4.1 的模型前提也不能直接套用到 V2-Lite。
 
+[第十四课](CHUNK_PIPELINE.md)将 Step 构造提到 [`planning.py`](../minideepinfer/planning.py)，由调用者选择已发出或 CPU 已提交的进度。沿用上面 Worker 的跨轮顺序与 prompt 完成/采样边界，加入输入预算和不采样的中间块。FIFO、整份预留及 decode 优先是教学取舍，尚未统一两套调度器；十四组真实 2B logits 和资源检查通过，没有性能结论。
+
 ## 当前进度与下一项交付
 
-同步执行与真实模型路径已落地：第一课保留 [`Engine.step()`](../minideepinfer/engine.py)，第三课增加 [`BatchEngine`](../minideepinfer/batch_engine.py) 与真正合并计算的多请求 Runner。阅读入口见[第一课](FIRST_REQUEST.md)、[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)，验证范围见[实验记录](VALIDATION.md)。当前没有调度重叠。
+同步执行与真实模型路径已落地：第一课保留 [`Engine.step()`](../minideepinfer/engine.py)，第三课增加 [`BatchEngine`](../minideepinfer/batch_engine.py) 与真正合并计算的多请求 Runner。阅读入口见[第一课](FIRST_REQUEST.md)、[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)，验证范围见[实验记录](VALIDATION.md)。同步对照保留；跨轮实验的顺序与验证边界见第十一至十四课。
 
 Qwen3.5 的 CPU 与 Ascend 910C FP32 路径、BF16 的固定短轨迹参考检查已经记录；原生 BF16 分块与长生成差异继续保留。[第五课](STEP_STATE.md)解释按请求映射旧输出与延迟释放，[第六课](NPU_EVENTS.md)用实际 Ascend 910C 事件和微型张量检查拷贝、读取与复用。
 

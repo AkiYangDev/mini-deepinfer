@@ -99,6 +99,8 @@ minideepinfer/
   stopping_pipeline.py # EOS/回调取消 / 缩批 / 等最后使用事件再回收
   verify_stopping_pipeline.py # 成员退出与已提交后继轮次的数值/资源检查
   verify_arrivals.py # 新prompt/旧设备token合批、等待与槽位复用检查
+  planning.py # 共用Step构造 / 不可变的设备已发出进度
+  verify_chunk_pipeline.py # 跨轮输入预算、分块与整段prompt参考对照
   text_loop.py    # 逐条准备文本 / 在收取前或收取后入队
   benchmark_prepare.py # 相同负载下比较文本准备的位置
   analyze_prepare_trace.py # CPU分词与设备kernel区间求交
@@ -118,6 +120,8 @@ tests/
 ```
 
 逐步阅读见[第一课](FIRST_REQUEST.md)和[第二课](REAL_GENERATION.md)。目前通过基础 PyTorch/torch_npu 运算执行，融合算子后端在有具体需求时加入。
+
+[第十四课](CHUNK_PIPELINE.md)让同步 BatchEngine 和跨轮实验共用 `plan_step()`；调用者明确提供 CPU 已提交或设备已发出的起点。跨轮循环的 `IssuedProgress` 规划输入、`Request` 保存 CPU 提交历史、每请求最后使用事件决定回收。中间 prompt 块不采样，输入预算先服务 decode，再服务已有 prompt 和 FIFO 新请求；两套调度及主引擎单批限制仍分别保留。
 
 ## 与 DeepInfer 的对应关系
 

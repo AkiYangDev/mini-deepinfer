@@ -26,6 +26,7 @@ jobs:
       - run: python -m minideepinfer.verify_decode_pipeline --help
       - run: python -m minideepinfer.verify_stopping_pipeline --help
       - run: python -m minideepinfer.verify_arrivals --help
+      - run: python -m minideepinfer.verify_chunk_pipeline --help
       - run: python -m minideepinfer.benchmark_prepare --help
       - run: python -m minideepinfer.analyze_prepare_trace --help
       - run: python -m examples.profile_prepare --help
@@ -50,4 +51,5 @@ jobs:
       - run: python -m minideepinfer.verify_decode_pipeline --device cpu --output outputs/decode-pipeline-cpu.json
       - run: python -m minideepinfer.verify_stopping_pipeline --device cpu --output outputs/stopping-pipeline-cpu.json
       - run: python -m minideepinfer.verify_arrivals --device cpu --output outputs/arrivals-cpu.json
+      - run: python -m minideepinfer.verify_chunk_pipeline --device cpu --output outputs/chunk-pipeline-cpu.json
       - run: python -m minideepinfer.benchmark_prepare --device cpu --repeats 1 --output outputs/prepare-cpu.json

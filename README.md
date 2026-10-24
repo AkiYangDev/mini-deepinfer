@@ -35,6 +35,8 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | 采样索引提前准备 | 13 组完整 logits 差异为 0；移开 forward 后的索引复制等待，捕获的三步均有分词重叠，整体收益未确定，见[第十课](docs/SAMPLER_INPUTS.md) |
 | 跨轮到达、退出与复用 | 旧请求接设备 token，新请求排队后做 prefill；EOS/取消后等最后使用事件再回收。真实 2B 八组 logits 按原容差通过，见[第十三课](docs/ARRIVALS.md) |
 
+最新的[跨轮分块检查](docs/CHUNK_PIPELINE.md)在真实 2B 上完成九轮、十四组 logits 对照，最大差约 `2.67e-5`，四个中间块不采样，24/24 槽位归还。它与 BatchEngine 共用 Step 构造，调度与在途结果仍分别管理。
+
 真实 2B 运行中的英文回答：
 
 ```text
@@ -73,10 +75,10 @@ python -m minideepinfer.verify_deferred_engine --device cpu
 
 [第十一课](docs/DECODE_PIPELINE.md)开始学习 DeepInfer 的跨轮顺序：token 留在设备上，下一轮 forward 先发出去，再处理上一轮输出。[第十二课](docs/STOPPING_PIPELINE.md)复用这个循环，解释 EOS、取消和成员退出后的收尾。
 
-[第十三课](docs/ARRIVALS.md)加入新请求：C 先排队，等 A 用完后复用它的槽位，再与 B 的 decode 合批计算。已有 PyTorch 就能运行完整的小模型对照：
+[第十三课](docs/ARRIVALS.md)加入排队、到达和槽位复用。[第十四课](docs/CHUNK_PIPELINE.md)继续把 prompt 切块：decode 先用预算，剩下的位置留给 prompt；CPU 还没提交上一轮，下一块已经按设备已发出的进度规划。已有 PyTorch 就能运行完整的小模型对照：
 
 ```bash
-python -m minideepinfer.verify_arrivals --device cpu
+python -m minideepinfer.verify_chunk_pipeline --device cpu
 ```
 
 到达与取消暂由单线程结果回调触发，尚无性能结论；默认引擎保持原来的调度方式。
@@ -122,6 +124,7 @@ python -m minideepinfer.generate \
 | CPU 还没读到 token，下一轮怎样使用它？ | [`FixedDecodePipeline`](minideepinfer/decode_pipeline.py) · [第十一课](docs/DECODE_PIPELINE.md) |
 | 请求已结束，发出去的下一轮如何收尾？ | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十二课](docs/STOPPING_PIPELINE.md) |
 | 新 prompt 如何与旧请求的设备 token 放进同一批？ | [`submit()` / `_schedule()`](minideepinfer/stopping_pipeline.py) · [第十三课](docs/ARRIVALS.md) |
+| CPU 还没提交上一轮，下一块从哪里开始？ | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [第十四课](docs/CHUNK_PIPELINE.md) |
 
 还没接触过推理引擎，可以从[第一课：跟踪一个请求](docs/FIRST_REQUEST.md)开始。整数 Runner 让输入、位置和槽位都能直接打印出来，Python 3.10+ 即可运行，无需模型依赖或权重：
 
@@ -130,11 +133,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-未安装模型依赖时执行 51 项引擎、状态与时间区间测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
+未安装模型依赖时执行 54 项引擎、状态与时间区间测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至八课从整数事件走到真实 NPU、模型和引擎，第十一至十三课继续实现设备 token 接续、请求退出和新请求到达。完整动态调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
+DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至八课从整数事件走到真实 NPU、模型和引擎，第十一至十四课继续实现设备 token 接续、请求退出、新请求到达和跨轮分块。完整动态调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
 **Qwen 小模型承载教学实例，DeepInfer 继续作为引擎设计主线。** 单请求与同步批次保留对照，[第四课](docs/QWEN35.md)展开混合模型的状态管理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 

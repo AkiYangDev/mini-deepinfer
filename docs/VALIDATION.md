@@ -4,6 +4,17 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+
+## 2026-10-24：第十四课的跨轮分块与进度边界
+
+同一 StoppingDecodePipeline 加入 decode 优先的输入预算与分块 prompt；BatchEngine 与它共用无张量的 Step 构造，调度器与单批限制仍分别保留。IssuedProgress 记录已发出输入和采样步骤，Request 记录 CPU 已提交结果，每请求最后使用事件单独控制回收。中间块以 -1/None 占位，只提交缓存进度。
+
+单逻辑 Ascend 910C / Qwen3.5-2B / FP32，HF32 关闭；Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6、CANN 9.1.0。A/B prompt 长度 5/8，各输出 4；C 在第 0 轮回调到达，prompt 长度 5、输出 2。缓存 24、并发 2、输入预算 4、CPU 线程 1。整段 prompt 的独立同步参考不用新增规划函数。
+
+九轮、十四组完整 logits 最大绝对差 `2.6702880859375e-5`，原 `atol=1e-4, rtol=2e-4` 通过；四行中间块不采样，greedy/位置/槽位一致。回调时 A 的 CPU 进度 0、输出 0，已发出输入 5、采样步骤 1；此值不代表设备已完成。C 复用 A 的六个槽位，旧前缀和线性状态清除。分块取消后注入主机异常、排空清理与同 Runner 复用均通过，最终 24/24 槽位归还。一次权重加载、同步参考 6 + 主轨迹 9 + 异常 2 + 复用 1 = 18 次 forward，无下载、新 trace 或性能计时。
+
+[原始报告](results/2026-10-24/qwen35-2b-chunk-pipeline-npu-fp32.json)保留十五份相关源码 SHA，公开文件与收回的原文件逐字节一致。新增十一项 CPU 测试：TF5.12.1 全 134 项通过，TF4.46.3 为 122 通过/12 跳过，标准库为 54 通过/80 跳过。原 arrivals 与 deferred-engine 的 CPU 示例也通过；模型数学、缓存布局与 BF16 边界不变。教程与命令见[第十四课](CHUNK_PIPELINE.md)。
+
 ## 2026-10-24：第十三课的新请求到达与槽位复用
 
 扩展现有 StoppingDecodePipeline，回调submit只创建WAITING请求；FIFO按并发名额和完整占用准入，排队取消不分配资源，运行中请求仍按最后使用事件回收。公共_launch打包混合输入：旧请求从前轮device token gather，新prompt来自主机，新行-1不进入gather；ModelRunner新增受限prepare_mixed_batch，复用原验证/打包逻辑。没有新增pipeline类，默认BatchEngine/DeferredRunner/模型数学/缓存布局不改；纯固定和退出CPU入口仍通过。

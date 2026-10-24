@@ -26,6 +26,8 @@ class _Round:
     logits: tuple = ()
     tokens: torch.Tensor | None = None
     host_tokens: torch.Tensor | None = None
+    sample_rows: tuple = ()
+    sample_indices: torch.Tensor | None = None
 
     @property
     def request_ids(self):
@@ -114,6 +116,8 @@ class FixedDecodePipeline:
             sources = [remap[i] for i in decode_rows]
             if any(row < 0 for row in sources):
                 raise ValueError("a decode request is absent from the previous batch")
+            if any(not previous.steps[row].is_last_prompt_chunk for row in sources):
+                raise ValueError("a decode source has no sampled token")
             rows = torch.tensor(sources, dtype=torch.long, device=self.runner.device)
             current.buffers.extend((previous.tokens, rows))
             selected = previous.tokens.index_select(0, rows)
@@ -135,12 +139,16 @@ class FixedDecodePipeline:
         else:
             inputs = self.runner.prepare_batch(steps, device_input_ids=device_tokens)
         current.buffers.append(inputs)
+        current.sample_rows = tuple(i for i, step in enumerate(steps) if step.is_last_prompt_chunk)
+        if current.sample_rows and len(current.sample_rows) != len(steps):
+            current.sample_indices = torch.tensor(current.sample_rows, dtype=torch.long, device=self.runner.device)
+            current.buffers.append(current.sample_indices)  # Prepare before forward.
         packed = self.runner.execute_main_model(inputs)
         current.buffers.append(packed)
         current.logits = packed.split([len(s.input_ids) for s in steps])
         # Submitted cache writes can be ahead of committed CPU outputs.
         for step in steps:
-            self.runner._prefixes[step.request_id] = PrefixState(step.context_slots, True)
+            self.runner._prefixes[step.request_id] = PrefixState(step.context_slots, step.is_last_prompt_chunk)
         return current
 
     def _step(self, rid, prompt, index):
@@ -151,7 +159,14 @@ class FixedDecodePipeline:
                     tuple(range(start, start + count)), slots[start:start + count], slots[:start + count])
 
     def _sample(self, state):
-        state.tokens = torch.stack([row[-1] for row in state.logits]).argmax(-1)
+        if len(state.sample_rows) == len(state.steps):
+            state.tokens = torch.stack([row[-1] for row in state.logits]).argmax(-1)
+        else:
+            state.tokens = torch.full((len(state.steps),), -1, dtype=torch.long, device=self.runner.device)
+            if state.sample_rows:
+                selected = torch.stack([state.logits[i][-1] for i in state.sample_rows]).argmax(-1)
+                state.buffers.append(selected)
+                state.tokens.index_copy_(0, state.sample_indices, selected)
         state.host_tokens = torch.empty(len(state.steps), dtype=torch.long, pin_memory=self.is_npu)
         state.host_tokens.copy_(state.tokens, non_blocking=self.is_npu)
         state.ready.record(self.stream)

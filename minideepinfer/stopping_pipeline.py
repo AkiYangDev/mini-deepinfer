@@ -12,6 +12,7 @@ import torch
 
 from .decode_pipeline import FixedDecodePipeline
 from .engine import Request, Status, validate_request
+from .planning import IssuedProgress, plan_step
 
 
 class StoppingDecodePipeline(FixedDecodePipeline):
@@ -22,9 +23,11 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         self._in_result = False
         self._waiting = deque()
         self._issued = {}
+        self._last_use = {}
 
     @torch.inference_mode()
-    def run(self, prompts, max_new_tokens, *, eos_token_ids=None, orders=None, on_result=None, max_num_seqs=None):
+    def run(self, prompts, max_new_tokens, *, eos_token_ids=None, orders=None, on_result=None, max_num_seqs=None,
+            max_num_batched_tokens=None, chunked_prefill=False):
         """Queue initial prompts; the result callback may submit or cancel requests.
 
         The callback has the fixed experiment's signature, with None for rows
@@ -41,6 +44,10 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         limit = len(prompts) if max_num_seqs is None else max_num_seqs
         if type(limit) is not int or limit < 1:
             raise ValueError("max_num_seqs must be a positive integer")
+        budget = self.pool.capacity if max_num_batched_tokens is None else max_num_batched_tokens
+        if type(budget) is not int or budget < limit or type(chunked_prefill) is not bool:
+            raise ValueError("token budget must be an integer >= max_num_seqs; chunked_prefill must be boolean")
+        self._budget, self._chunked = budget, chunked_prefill
         eos = dict(eos_token_ids or {})
         if (set(eos) - set(prompts) or any(t is not None and
                 (type(t) is not int or not 0 <= t < self.runner.model.config.vocab_size) for t in eos.values())):
@@ -57,6 +64,7 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         self._retired = {}
         self._waiting = deque(initial)
         self._issued = {}
+        self._last_use = {}
         self._default_max = max_new_tokens
         self._active = True
         previous, index = None, 0
@@ -77,7 +85,9 @@ class StoppingDecodePipeline(FixedDecodePipeline):
                         continue  # Freed slots may admit a waiting prompt.
                     current = self._launch(index, steps, previous)
                     for step in steps:
-                        self._issued[step.request_id] += 1
+                        rid = step.request_id
+                        self._issued[rid] = self._issued[rid].advance(step)
+                        self._last_use[rid] = current.ready
                     if previous is not None:
                         self._finish(previous, None, on_result)
                         self._states.pop(0)
@@ -101,6 +111,8 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         if (any(t >= config.vocab_size for t in prompt) or eos is not None and eos >= config.vocab_size
                 or len(prompt) + count - 1 > config.max_position_embeddings):
             raise ValueError("request exceeds the model vocabulary or position limit")
+        if not self._chunked and len(prompt) > self._budget:
+            raise ValueError("whole prompt exceeds token budget; enable chunked_prefill")
         return Request(rid, prompt, count, eos)
 
     def submit(self, request_id, prompt_ids, max_new_tokens=None, eos_token_id=None):
@@ -118,24 +130,38 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         return request
 
     def _schedule(self, index, orders, limit):
-        while self._waiting:
+        order = orders[index] if index < len(orders) else ()
+        order = order + tuple(rid for rid in self.requests if rid not in order)
+        active = [rid for rid in order if self.requests[rid].status == Status.RUNNING
+                  and self._issued[rid].sampled_tokens < self.requests[rid].max_new_tokens]
+        plans, budget = [], self._budget
+        # Like BatchEngine: decodes first, then existing prompt work, then FIFO admission.
+        for prefill in (False, True):
+            for rid in active:
+                request, progress = self.requests[rid], self._issued[rid]
+                if (progress.cached_tokens < len(request.prompt_ids)) == prefill and budget:
+                    step = plan_step(request, self._slots[rid], progress.cached_tokens, budget)
+                    plans.append(step)
+                    budget -= len(step.input_ids)
+        while self._waiting and budget:
             rid = self._waiting[0]
             request = self.requests[rid]
             if request.status != Status.WAITING:
                 self._waiting.popleft()
                 continue
             need = len(request.prompt_ids) + request.max_new_tokens - 1
-            if len(self._slots) >= limit or need > self.pool.free_count:
+            if (len(self._slots) >= limit or need > self.pool.free_count
+                    or not self._chunked and len(request.prompt_ids) > budget):
                 break
             self._slots[rid] = self.pool.reserve(rid, need)
-            self._issued[rid] = 0
+            self._issued[rid] = IssuedProgress()
             request.status = Status.RUNNING
             self._waiting.popleft()
-        order = orders[index] if index < len(orders) else ()
-        order = order + tuple(rid for rid in self.requests if rid not in order)
-        return tuple(self._step(rid, self.requests[rid].prompt_ids, self._issued[rid]) for rid in order
-                     if self.requests[rid].status == Status.RUNNING
-                     and self._issued[rid] < self.requests[rid].max_new_tokens)
+            step = plan_step(request, self._slots[rid], 0, budget)
+            plans.append(step)
+            budget -= len(step.input_ids)
+        rank = {rid: i for i, rid in enumerate(order)}
+        return tuple(sorted(plans, key=lambda step: (step.phase == "prefill", rank[step.request_id])))
 
     def cancel(self, request_id):
         """Cancel before this result commits; previously committed tokens remain."""
@@ -151,17 +177,16 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         return True
 
     def _retire(self, request_id):
-        # The later forward, if present, is the final cache user for this ID.
-        last = next(s for s in reversed(self._states) if request_id in s.request_ids)
-        self._retired[request_id] = last.ready
+        self._retired[request_id] = self._last_use[request_id]
 
     def _finish(self, state, outputs, on_result):
         state.ready.synchronize()
         tokens = tuple(state.host_tokens.tolist())
-        if any(not 0 <= t < self.runner.model.config.vocab_size for t in tokens):
+        if any((not 0 <= t < self.runner.model.config.vocab_size if step.is_last_prompt_chunk else t != -1)
+               for step, t in zip(state.steps, tokens)):
             raise ValueError("invalid sampled token")
-        visible = tuple(t if self.requests[rid].status == Status.RUNNING else None
-                        for rid, t in zip(state.request_ids, tokens))
+        visible = tuple(t if step.is_last_prompt_chunk and self.requests[step.request_id].status == Status.RUNNING else None
+                        for step, t in zip(state.steps, tokens))
         if on_result is not None:
             self._in_result = True
             try:
@@ -172,8 +197,10 @@ class StoppingDecodePipeline(FixedDecodePipeline):
             request = self.requests[step.request_id]
             if request.status != Status.RUNNING:
                 continue  # Includes a cancellation made by the callback above.
-            request.output_ids.append(token)
             request.num_cached_tokens = len(step.context_slots)
+            if not step.is_last_prompt_chunk:
+                continue
+            request.output_ids.append(token)
             if token == request.eos_token_id:
                 request.finish_reason = "eos"
             elif len(request.output_ids) == request.max_new_tokens:
@@ -189,6 +216,7 @@ class StoppingDecodePipeline(FixedDecodePipeline):
                 self.runner.release(rid)
                 self.pool.release(rid)
                 self._slots.pop(rid)
+                self._last_use.pop(rid)
                 del self._retired[rid]
 
     def close(self):
@@ -198,3 +226,4 @@ class StoppingDecodePipeline(FixedDecodePipeline):
         self._retired.clear()
         self._waiting.clear()
         self._issued.clear()
+        self._last_use.clear()

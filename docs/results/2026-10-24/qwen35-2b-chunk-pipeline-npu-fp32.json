@@ -1,0 +1,807 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "decode-first budget four, chunked prompts, callback arrival; no performance measurement",
+  "reference": "full-prompt AB four rounds and cold C two rounds, direct Steps without shared planner, same read-only weights",
+  "prompt_ids": {
+    "A_C": [
+      760,
+      6511,
+      314,
+      9338,
+      369
+    ],
+    "B": [
+      3710,
+      369,
+      220,
+      16,
+      5346,
+      220,
+      16,
+      30
+    ]
+  },
+  "max_num_batched_tokens": 4,
+  "plans": [
+    [
+      {
+        "request_id": "A",
+        "phase": "prefill",
+        "input_ids": [
+          760,
+          6511,
+          314,
+          9338
+        ],
+        "positions": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "slot_mapping": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "A",
+        "phase": "prefill",
+        "input_ids": [
+          369
+        ],
+        "positions": [
+          4
+        ],
+        "slot_mapping": [
+          4
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "B",
+        "phase": "prefill",
+        "input_ids": [
+          3710,
+          369,
+          220
+        ],
+        "positions": [
+          0,
+          1,
+          2
+        ],
+        "slot_mapping": [
+          8,
+          9,
+          10
+        ],
+        "context_slots": [
+          8,
+          9,
+          10
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "A",
+        "phase": "decode",
+        "input_ids": [
+          0
+        ],
+        "positions": [
+          5
+        ],
+        "slot_mapping": [
+          5
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "B",
+        "phase": "prefill",
+        "input_ids": [
+          16,
+          5346,
+          220
+        ],
+        "positions": [
+          3,
+          4,
+          5
+        ],
+        "slot_mapping": [
+          11,
+          12,
+          13
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "A",
+        "phase": "decode",
+        "input_ids": [
+          0
+        ],
+        "positions": [
+          6
+        ],
+        "slot_mapping": [
+          6
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "B",
+        "phase": "prefill",
+        "input_ids": [
+          16,
+          30
+        ],
+        "positions": [
+          6,
+          7
+        ],
+        "slot_mapping": [
+          14,
+          15
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "A",
+        "phase": "decode",
+        "input_ids": [
+          0
+        ],
+        "positions": [
+          7
+        ],
+        "slot_mapping": [
+          7
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "B",
+        "phase": "decode",
+        "input_ids": [
+          0
+        ],
+        "positions": [
+          8
+        ],
+        "slot_mapping": [
+          16
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "B",
+        "phase": "decode",
+        "input_ids": [
+          0
+        ],
+        "positions": [
+          9
+        ],
+        "slot_mapping": [
+          17
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "B",
+        "phase": "decode",
+        "input_ids": [
+          0
+        ],
+        "positions": [
+          10
+        ],
+        "slot_mapping": [
+          18
+        ],
+        "context_slots": [
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18
+        ],
+        "is_last_prompt_chunk": true
+      },
+      {
+        "request_id": "C",
+        "phase": "prefill",
+        "input_ids": [
+          760,
+          6511,
+          314
+        ],
+        "positions": [
+          0,
+          1,
+          2
+        ],
+        "slot_mapping": [
+          0,
+          1,
+          2
+        ],
+        "context_slots": [
+          0,
+          1,
+          2
+        ],
+        "is_last_prompt_chunk": false
+      }
+    ],
+    [
+      {
+        "request_id": "C",
+        "phase": "prefill",
+        "input_ids": [
+          9338,
+          369
+        ],
+        "positions": [
+          3,
+          4
+        ],
+        "slot_mapping": [
+          3,
+          4
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ],
+    [
+      {
+        "request_id": "C",
+        "phase": "decode",
+        "input_ids": [
+          0
+        ],
+        "positions": [
+          5
+        ],
+        "slot_mapping": [
+          5
+        ],
+        "context_slots": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "is_last_prompt_chunk": true
+      }
+    ]
+  ],
+  "comparisons": [
+    {
+      "round": 0,
+      "request_id": "A",
+      "positions": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "partial": true,
+      "max_abs": 0.0,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 1,
+      "request_id": "A",
+      "positions": [
+        4
+      ],
+      "partial": false,
+      "max_abs": 1.430511474609375e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 1,
+      "request_id": "B",
+      "positions": [
+        0,
+        1,
+        2
+      ],
+      "partial": true,
+      "max_abs": 2.6702880859375e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 2,
+      "request_id": "A",
+      "positions": [
+        5
+      ],
+      "partial": false,
+      "max_abs": 1.621246337890625e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 2,
+      "request_id": "B",
+      "positions": [
+        3,
+        4,
+        5
+      ],
+      "partial": true,
+      "max_abs": 2.002716064453125e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 3,
+      "request_id": "A",
+      "positions": [
+        6
+      ],
+      "partial": false,
+      "max_abs": 1.430511474609375e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 3,
+      "request_id": "B",
+      "positions": [
+        6,
+        7
+      ],
+      "partial": false,
+      "max_abs": 2.288818359375e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 4,
+      "request_id": "A",
+      "positions": [
+        7
+      ],
+      "partial": false,
+      "max_abs": 2.0503997802734375e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 4,
+      "request_id": "B",
+      "positions": [
+        8
+      ],
+      "partial": false,
+      "max_abs": 1.9073486328125e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 5,
+      "request_id": "B",
+      "positions": [
+        9
+      ],
+      "partial": false,
+      "max_abs": 1.621246337890625e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 6,
+      "request_id": "B",
+      "positions": [
+        10
+      ],
+      "partial": false,
+      "max_abs": 2.0384788513183594e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 6,
+      "request_id": "C",
+      "positions": [
+        0,
+        1,
+        2
+      ],
+      "partial": true,
+      "max_abs": 1.9073486328125e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 7,
+      "request_id": "C",
+      "positions": [
+        3,
+        4
+      ],
+      "partial": false,
+      "max_abs": 1.71661376953125e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    },
+    {
+      "round": 8,
+      "request_id": "C",
+      "positions": [
+        5
+      ],
+      "partial": false,
+      "max_abs": 1.621246337890625e-05,
+      "passed": true,
+      "metadata_matches": true,
+      "sample_matches": true
+    }
+  ],
+  "partial_sentinels": [
+    {
+      "round": 0,
+      "request_id": "A",
+      "host_token": -1,
+      "visible_token": null
+    },
+    {
+      "round": 1,
+      "request_id": "B",
+      "host_token": -1,
+      "visible_token": null
+    },
+    {
+      "round": 2,
+      "request_id": "B",
+      "host_token": -1,
+      "visible_token": null
+    },
+    {
+      "round": 6,
+      "request_id": "C",
+      "host_token": -1,
+      "visible_token": null
+    }
+  ],
+  "progress_clocks": [
+    {
+      "cpu_cached": 0,
+      "cpu_outputs": 0,
+      "issued": {
+        "cached_tokens": 5,
+        "sampled_tokens": 1
+      }
+    }
+  ],
+  "sampler_preparation": [
+    {
+      "round": 0,
+      "sample_rows": [],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 1,
+      "sample_rows": [
+        0
+      ],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 2,
+      "sample_rows": [
+        0
+      ],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 3,
+      "sample_rows": [
+        0,
+        1
+      ],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 4,
+      "sample_rows": [
+        0,
+        1
+      ],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 5,
+      "sample_rows": [
+        0
+      ],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 6,
+      "sample_rows": [
+        0
+      ],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 7,
+      "sample_rows": [
+        0
+      ],
+      "indices_prepared_before_forward": true
+    },
+    {
+      "round": 8,
+      "sample_rows": [
+        0
+      ],
+      "indices_prepared_before_forward": true
+    }
+  ],
+  "slot_reuse": [
+    {
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "reused_a_slots": true,
+      "fresh_state": true,
+      "a_prefix_gone": true
+    }
+  ],
+  "releases": [
+    {
+      "request_id": "A",
+      "last_use_ready": true
+    },
+    {
+      "request_id": "B",
+      "last_use_ready": true
+    },
+    {
+      "request_id": "C",
+      "last_use_ready": true
+    }
+  ],
+  "requests": {
+    "A": {
+      "request_id": "A",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": null,
+      "output_ids": [
+        11751,
+        13,
+        198,
+        32
+      ],
+      "status": "finished",
+      "num_cached_tokens": 8,
+      "finish_reason": "length",
+      "error": null
+    },
+    "B": {
+      "request_id": "B",
+      "prompt_ids": [
+        3710,
+        369,
+        220,
+        16,
+        5346,
+        220,
+        16,
+        30
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": null,
+      "output_ids": [
+        271,
+        16,
+        5346,
+        220
+      ],
+      "status": "finished",
+      "num_cached_tokens": 11,
+      "finish_reason": "length",
+      "error": null
+    },
+    "C": {
+      "request_id": "C",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 2,
+      "eos_token_id": null,
+      "output_ids": [
+        11751,
+        13
+      ],
+      "status": "finished",
+      "num_cached_tokens": 6,
+      "finish_reason": "length",
+      "error": null
+    }
+  },
+  "outputs_match": true,
+  "normal_clean": true,
+  "error_held_before_drain": true,
+  "host_error_cleaned": true,
+  "reuse_matches": true,
+  "free_slots": 24,
+  "remaining_prefixes": 0,
+  "remaining_linear_states": 0,
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "passed": true,
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "source_sha256": {
+    "minideepinfer/verify_chunk_pipeline.py": "1107981b39cc4c7bcc920294e381ee15daa8cc6f2515c5326826d1839b7fe46b",
+    "minideepinfer/planning.py": "4e94702014a8110ce4698437b7a75166da73d89a3df3d706c0334c8e6661cca8",
+    "minideepinfer/batch_engine.py": "16f7eb89a11ce2e103884d51508546b6b4823cef4ef0f7222b923e1e40e7e30e",
+    "minideepinfer/stopping_pipeline.py": "6837121b294d94111fa198de40262ee0c19132028d9e82be53f28644e9a47b2c",
+    "minideepinfer/decode_pipeline.py": "13bb8e41dbcf2c2e74768acd08abf56f8039c2566e6afb6ffa5f9990075cd5b9",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/deferred_runner.py": "c14296990ddad9bdd915be1afcaef8cba2c2bcb22477627a5dd4d62b7fbd4422",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  }
+}

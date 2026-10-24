@@ -9,6 +9,7 @@ from typing import Iterator, Protocol
 
 from .engine import Request, Status, Step, StepOutput, validate_request
 from .kv_cache import SlotPool
+from .planning import plan_step
 
 
 class BatchRunner(Protocol):
@@ -124,12 +125,8 @@ class BatchEngine:
 
     def _plan(self, request, slots, budget):
         start = request.num_cached_tokens
-        prefill = start < len(request.prompt_ids)
-        end = min(len(request.prompt_ids), start + budget) if prefill else start + 1
-        inputs = request.prompt_ids[start:end] if prefill else (request.output_ids[-1],)
-        return Step(request.request_id, "prefill" if prefill else "decode", inputs,
-                    tuple(range(start, end)), slots[start:end], slots[:end],
-                    end >= len(request.prompt_ids))
+        token = request.output_ids[-1] if start >= len(request.prompt_ids) else 0
+        return plan_step(request, slots, start, budget, token)
 
     def step(self) -> tuple[StepOutput, ...]:
         if self.deferred:

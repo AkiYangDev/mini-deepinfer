@@ -118,13 +118,12 @@ class ModelRunner:
         return self._pack_batch(steps, device_input_ids)
 
     def prepare_mixed_batch(self, steps, device_input_ids):
-        """Trusted packed IDs: fresh prompt tokens plus prior device samples."""
+        """Trusted packed IDs: prompt chunks plus prior device samples."""
         if ({s.phase for s in steps} != {"prefill", "decode"}
                 or any(s.phase == "decode" and s.input_ids != (0,) for s in steps)
-                or any(not s.is_last_prompt_chunk for s in steps)
                 or device_input_ids.shape != (sum(len(s.input_ids) for s in steps),)
                 or device_input_ids.dtype != torch.long or device_input_ids.device != self.device):
-            raise ValueError("mixed inputs require full prompts and one placeholder per decode row")
+            raise ValueError("mixed inputs require prompt chunks and one placeholder per decode row")
         return self._pack_batch(steps, device_input_ids)
 
     def _pack_batch(self, steps, device_input_ids):
