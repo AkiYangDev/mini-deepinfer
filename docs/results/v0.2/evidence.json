@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/qwen35-2b-pipeline-text-npu-fp32.json",
+      "sha256": "e4dc4178e91ca6f4b6829456ef423c9900e2464caca416af997297a079ada007",
+      "scope": "Shared generate.run_generation frontend with preloaded Qwen3.5-2B weights on Ascend 910C FP32. Sync whole-prompt reference versus eager and staggered pipelines; real chat template and natural EOS. Forty-three full-logit comparisons, including the single discarded EOS lookahead checked against a cold full-prompt recomputation.",
+      "limits": "Single logical device, short prompts, no timing. CLI dispatch is separately tested on CPU. The first hardware program finished computation but its comparison script failed on an unreferenced EOS lookahead, so no passing report was produced. After adding an independent reference and a CPU regression, a second hardware program passed. Resource-guard exits did not load weights. Related source hashes do not imply every branch ran on the device."
+    }
+  ]
+}

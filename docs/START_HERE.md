@@ -98,7 +98,16 @@ python -m minideepinfer.generate \
 
 这个入口走同步 BatchEngine。输出末尾会打印停止原因、输出长度和空闲槽位；示例两个请求都遇 EOS 的[原始输出](results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)已保存。最后一个预测 token 不再送回模型，因此请求预留 `prompt 长度 + 最大输出数 - 1` 个槽位。容量不足时请求被拒绝或排队，不会按设备空闲内存自动扩容。
 
-再学习跨轮顺序时，运行独立的固定短轨迹检查：
+要让自己的文本走跨轮执行，在上面的生成命令末尾加 `--pipeline`。加上 `--stagger-prompts` 后，其余文本每收取一轮结果加入一条；`--trace-rounds` 打印每轮输入和观察到的缓存回收。当前跨轮入口限定 FP32，与 `--deferred`、`--prepare-during-step` 分开选择，详见[运行过程](PIPELINE_TEXT.md)。
+
+无需权重也能先观察同一套文本接入和逐轮输出：
+
+```bash
+python -m minideepinfer.verify_pipeline_text --device cpu --trace-rounds \
+  --output outputs/pipeline-text-cpu.json
+```
+
+原有固定短轨迹检查继续保留：
 
 ```bash
 python -m minideepinfer.verify_chunk_pipeline \

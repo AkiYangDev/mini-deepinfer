@@ -18,6 +18,8 @@ mini-DeepInfer is a teaching inference engine for Ascend 910C, based on ideas fr
 
 The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass and cache management. Fourteen lessons start with integer examples whose state you can print, then move to tiny PyTorch models and real checkpoints. Qwen3.5-0.8B is also used during development, and the earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in the regression checks.
 
+The `main` branch is preparing v0.2 and now connects cross-round execution to text generation. The stable release is [v0.1.0](https://github.com/AkiYangDev/mini-deepinfer/releases/tag/v0.1.0).
+
 ## Start small
 
 With Python 3.10+, run an example that needs no model dependencies, weights, or NPU:
@@ -34,7 +36,7 @@ In this example, A is cancelled while the device still needs its cache. B change
 With PyTorch installed, run a tiny hybrid-attention model without downloading weights:
 
 ```bash
-python -m minideepinfer.verify_chunk_pipeline --device cpu
+python -m minideepinfer.verify_pipeline_text --device cpu --trace-rounds
 ```
 
 The example batches decode with prompt chunks and adds another request during execution. It compares the output against synchronous whole-prompt execution and reports each batch, numerical differences, and cache reclamation. See [setup](docs/START_HERE.en.md) for installation and expected output.
@@ -74,7 +76,7 @@ The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu
 | How do stops, arrivals, and chunks share one loop? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lessons twelve through fourteen](docs/CHUNK_PIPELINE.md) |
 | How do issued progress, CPU commits, and final device use differ? | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [lesson fourteen](docs/CHUNK_PIPELINE.md) |
 
-Default BatchEngine supports synchronous dynamic batching, input budgets, prompt chunks, cancellation, and reclamation. `--deferred` separates launch from commit while keeping one batch in flight. Cross-round device-token handoff and callback arrivals remain a separate teaching experiment through `verify_chunk_pipeline`; they are not integrated into `generate`. Detailed lessons are currently in Chinese, with English code comments. The [learning path](docs/LEARNING_PATH.md) lists all fourteen.
+Default BatchEngine supports synchronous dynamic batching, input budgets, prompt chunks, cancellation, and reclamation. `--deferred` separates launch from commit while keeping one batch in flight. You can now choose cross-round execution with `--pipeline`, then add `--stagger-prompts --trace-rounds` to observe arrivals and cache ownership; see [setup](docs/START_HERE.en.md). Detailed lessons are currently in Chinese, with English code comments. The [learning path](docs/LEARNING_PATH.md) lists all fourteen.
 
 ## What is verified
 
@@ -82,10 +84,11 @@ Default BatchEngine supports synchronous dynamic batching, input budgets, prompt
 | --- | --- |
 | Real 2B / Ascend 910C FP32 | Single-request and two-request comparisons against independent references pass, with top-1 agreement at checked positions |
 | Cross-round chunks, arrivals, and reuse | Nine rounds and fourteen full-logit comparisons pass at existing tolerances; maximum difference about `2.67e-5`. Four intermediate chunks produce no sample, and 24/24 slots are reclaimed |
+| Text generation frontend | Sync, pipeline, and staggered arrivals produce matching output. Real chat reaches EOS; 43 full-logit comparisons include the issued EOS lookahead, with maximum difference about `4.94e-5`. See the [guide](docs/PIPELINE_TEXT.md) |
 | Cancellation and host errors | Release waits for final device use, and the Runner can be reused. Failed-drain ownership is separately checked through CPU fault injection |
 | BF16 | Fixed short trajectories pass a matched recurrent reference with FP32 state. Native chunk-path and longer cross-schedule generation still differ; see the [notes](docs/BF16_REFERENCE.md) |
 
-These checks cover numerical correctness and state handling on short prompts. Timing experiments so far use a few short requests and have not shown a consistent speedup. The [validation record](docs/VALIDATION.md) includes environments, raw output, and source hashes. Run `python scripts/check_evidence.py` to compare a clean v0.1 checkout with the saved device report; it does not launch NPU work.
+These checks cover numerical correctness and state handling on short prompts. Timing experiments so far use a few short requests and have not shown a consistent speedup. The [validation record](docs/VALIDATION.md) keeps the v0.1 and v0.2 development reports separately. Run `python scripts/check_evidence.py --index docs/results/v0.2/evidence.json` to compare the current frontend source with its saved device report without launching NPU work.
 
 ## Why DeepInfer
 

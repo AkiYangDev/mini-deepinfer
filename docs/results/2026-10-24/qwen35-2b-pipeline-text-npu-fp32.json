@@ -1,0 +1,2909 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "shared CLI execution function with preloaded weights; no timing",
+  "reference": "sync frontend, whole prompts, independent cache; one shared read-only model",
+  "texts": [
+    "The capital of France is",
+    "What is 1 plus 1?",
+    "The capital of France is"
+  ],
+  "reference_requests": {
+    "req-0": {
+      "request_id": "req-0",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": 248046,
+      "output_ids": [
+        11751,
+        13,
+        198,
+        32
+      ],
+      "status": "finished",
+      "num_cached_tokens": 8,
+      "finish_reason": "length",
+      "error": null
+    },
+    "req-1": {
+      "request_id": "req-1",
+      "prompt_ids": [
+        3710,
+        369,
+        220,
+        16,
+        5346,
+        220,
+        16,
+        30
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": 248046,
+      "output_ids": [
+        271,
+        16,
+        5346,
+        220
+      ],
+      "status": "finished",
+      "num_cached_tokens": 11,
+      "finish_reason": "length",
+      "error": null
+    },
+    "req-2": {
+      "request_id": "req-2",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": 248046,
+      "output_ids": [
+        11751,
+        13,
+        198,
+        32
+      ],
+      "status": "finished",
+      "num_cached_tokens": 8,
+      "finish_reason": "length",
+      "error": null
+    }
+  },
+  "cases": {
+    "pipeline": {
+      "requests": {
+        "req-0": {
+          "request_id": "req-0",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "max_new_tokens": 4,
+          "eos_token_id": 248046,
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "status": "finished",
+          "num_cached_tokens": 8,
+          "finish_reason": "length",
+          "error": null
+        },
+        "req-1": {
+          "request_id": "req-1",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "max_new_tokens": 4,
+          "eos_token_id": 248046,
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "status": "finished",
+          "num_cached_tokens": 11,
+          "finish_reason": "length",
+          "error": null
+        },
+        "req-2": {
+          "request_id": "req-2",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "max_new_tokens": 4,
+          "eos_token_id": 248046,
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "status": "finished",
+          "num_cached_tokens": 8,
+          "finish_reason": "length",
+          "error": null
+        }
+      },
+      "observations": [
+        {
+          "event": "result",
+          "round": 0,
+          "issued_round": 1,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "prefill",
+              "positions": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "input_tokens": 4,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 1,
+          "issued_round": 2,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "prefill",
+              "positions": [
+                4
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 11751
+            },
+            {
+              "request_id": "req-1",
+              "phase": "prefill",
+              "positions": [
+                0,
+                1,
+                2
+              ],
+              "input_tokens": 3,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 2,
+          "issued_round": 3,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                5
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 13
+            },
+            {
+              "request_id": "req-1",
+              "phase": "prefill",
+              "positions": [
+                3,
+                4,
+                5
+              ],
+              "input_tokens": 3,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 3,
+          "issued_round": 4,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                6
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 198
+            },
+            {
+              "request_id": "req-1",
+              "phase": "prefill",
+              "positions": [
+                6,
+                7
+              ],
+              "input_tokens": 2,
+              "partial": false,
+              "sampled_token": 271
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 4,
+          "issued_round": 5,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                7
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 32
+            },
+            {
+              "request_id": "req-1",
+              "phase": "decode",
+              "positions": [
+                8
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 16
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 5,
+          "issued_round": 6,
+          "steps": [
+            {
+              "request_id": "req-1",
+              "phase": "decode",
+              "positions": [
+                9
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 5346
+            }
+          ],
+          "arrived": [],
+          "released": [
+            "req-0"
+          ],
+          "owners": {
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 6,
+          "issued_round": 7,
+          "steps": [
+            {
+              "request_id": "req-1",
+              "phase": "decode",
+              "positions": [
+                10
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 220
+            },
+            {
+              "request_id": "req-2",
+              "phase": "prefill",
+              "positions": [
+                0,
+                1,
+                2
+              ],
+              "input_tokens": 3,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 7,
+          "issued_round": 8,
+          "steps": [
+            {
+              "request_id": "req-2",
+              "phase": "prefill",
+              "positions": [
+                3,
+                4
+              ],
+              "input_tokens": 2,
+              "partial": false,
+              "sampled_token": 11751
+            }
+          ],
+          "arrived": [],
+          "released": [
+            "req-1"
+          ],
+          "owners": {
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 8,
+          "issued_round": 9,
+          "steps": [
+            {
+              "request_id": "req-2",
+              "phase": "decode",
+              "positions": [
+                5
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 13
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 9,
+          "issued_round": 10,
+          "steps": [
+            {
+              "request_id": "req-2",
+              "phase": "decode",
+              "positions": [
+                6
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 198
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 10,
+          "issued_round": 10,
+          "steps": [
+            {
+              "request_id": "req-2",
+              "phase": "decode",
+              "positions": [
+                7
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 32
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "drained",
+          "released": [
+            "req-2"
+          ],
+          "free_slots": 24,
+          "capacity": 24
+        }
+      ],
+      "clean": true,
+      "forwards": 11,
+      "free_slots": 24,
+      "comparisons": [
+        {
+          "round": 0,
+          "request_id": "req-0",
+          "phase": "prefill",
+          "positions": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "round": 1,
+          "request_id": "req-0",
+          "phase": "prefill",
+          "positions": [
+            4
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.430511474609375e-05,
+          "passed": true
+        },
+        {
+          "round": 1,
+          "request_id": "req-1",
+          "phase": "prefill",
+          "positions": [
+            0,
+            1,
+            2
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.6702880859375e-05,
+          "passed": true
+        },
+        {
+          "round": 2,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            5
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.621246337890625e-05,
+          "passed": true
+        },
+        {
+          "round": 2,
+          "request_id": "req-1",
+          "phase": "prefill",
+          "positions": [
+            3,
+            4,
+            5
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.002716064453125e-05,
+          "passed": true
+        },
+        {
+          "round": 3,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            6
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.430511474609375e-05,
+          "passed": true
+        },
+        {
+          "round": 3,
+          "request_id": "req-1",
+          "phase": "prefill",
+          "positions": [
+            6,
+            7
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.288818359375e-05,
+          "passed": true
+        },
+        {
+          "round": 4,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            7
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.0503997802734375e-05,
+          "passed": true
+        },
+        {
+          "round": 4,
+          "request_id": "req-1",
+          "phase": "decode",
+          "positions": [
+            8
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.9073486328125e-05,
+          "passed": true
+        },
+        {
+          "round": 5,
+          "request_id": "req-1",
+          "phase": "decode",
+          "positions": [
+            9
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.621246337890625e-05,
+          "passed": true
+        },
+        {
+          "round": 6,
+          "request_id": "req-1",
+          "phase": "decode",
+          "positions": [
+            10
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.0384788513183594e-05,
+          "passed": true
+        },
+        {
+          "round": 6,
+          "request_id": "req-2",
+          "phase": "prefill",
+          "positions": [
+            0,
+            1,
+            2
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.9073486328125e-05,
+          "passed": true
+        },
+        {
+          "round": 7,
+          "request_id": "req-2",
+          "phase": "prefill",
+          "positions": [
+            3,
+            4
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.71661376953125e-05,
+          "passed": true
+        },
+        {
+          "round": 8,
+          "request_id": "req-2",
+          "phase": "decode",
+          "positions": [
+            5
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.621246337890625e-05,
+          "passed": true
+        },
+        {
+          "round": 9,
+          "request_id": "req-2",
+          "phase": "decode",
+          "positions": [
+            6
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.3828277587890625e-05,
+          "passed": true
+        },
+        {
+          "round": 10,
+          "request_id": "req-2",
+          "phase": "decode",
+          "positions": [
+            7
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.8596649169921875e-05,
+          "passed": true
+        }
+      ],
+      "outputs_match": true
+    },
+    "staggered": {
+      "requests": {
+        "req-0": {
+          "request_id": "req-0",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "max_new_tokens": 4,
+          "eos_token_id": 248046,
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "status": "finished",
+          "num_cached_tokens": 8,
+          "finish_reason": "length",
+          "error": null
+        },
+        "req-1": {
+          "request_id": "req-1",
+          "prompt_ids": [
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30
+          ],
+          "max_new_tokens": 4,
+          "eos_token_id": 248046,
+          "output_ids": [
+            271,
+            16,
+            5346,
+            220
+          ],
+          "status": "finished",
+          "num_cached_tokens": 11,
+          "finish_reason": "length",
+          "error": null
+        },
+        "req-2": {
+          "request_id": "req-2",
+          "prompt_ids": [
+            760,
+            6511,
+            314,
+            9338,
+            369
+          ],
+          "max_new_tokens": 4,
+          "eos_token_id": 248046,
+          "output_ids": [
+            11751,
+            13,
+            198,
+            32
+          ],
+          "status": "finished",
+          "num_cached_tokens": 8,
+          "finish_reason": "length",
+          "error": null
+        }
+      },
+      "observations": [
+        {
+          "event": "result",
+          "round": 0,
+          "issued_round": 1,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "prefill",
+              "positions": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "input_tokens": 4,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [
+            "req-1"
+          ],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [
+            "req-1"
+          ],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 1,
+          "issued_round": 2,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "prefill",
+              "positions": [
+                4
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 11751
+            }
+          ],
+          "arrived": [
+            "req-2"
+          ],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 2,
+          "issued_round": 3,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                5
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 13
+            },
+            {
+              "request_id": "req-1",
+              "phase": "prefill",
+              "positions": [
+                0,
+                1,
+                2
+              ],
+              "input_tokens": 3,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 3,
+          "issued_round": 4,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                6
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 198
+            },
+            {
+              "request_id": "req-1",
+              "phase": "prefill",
+              "positions": [
+                3,
+                4,
+                5
+              ],
+              "input_tokens": 3,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 4,
+          "issued_round": 5,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                7
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 32
+            },
+            {
+              "request_id": "req-1",
+              "phase": "prefill",
+              "positions": [
+                6,
+                7
+              ],
+              "input_tokens": 2,
+              "partial": false,
+              "sampled_token": 271
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ]
+          },
+          "waiting": [
+            "req-2"
+          ],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 5,
+          "issued_round": 6,
+          "steps": [
+            {
+              "request_id": "req-1",
+              "phase": "decode",
+              "positions": [
+                8
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 16
+            }
+          ],
+          "arrived": [],
+          "released": [
+            "req-0"
+          ],
+          "owners": {
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 6,
+          "issued_round": 7,
+          "steps": [
+            {
+              "request_id": "req-1",
+              "phase": "decode",
+              "positions": [
+                9
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 5346
+            },
+            {
+              "request_id": "req-2",
+              "phase": "prefill",
+              "positions": [
+                0,
+                1,
+                2
+              ],
+              "input_tokens": 3,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 7,
+          "issued_round": 8,
+          "steps": [
+            {
+              "request_id": "req-1",
+              "phase": "decode",
+              "positions": [
+                10
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 220
+            },
+            {
+              "request_id": "req-2",
+              "phase": "prefill",
+              "positions": [
+                3,
+                4
+              ],
+              "input_tokens": 2,
+              "partial": false,
+              "sampled_token": 11751
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-1": [
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18
+            ],
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 5,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 8,
+          "issued_round": 9,
+          "steps": [
+            {
+              "request_id": "req-2",
+              "phase": "decode",
+              "positions": [
+                5
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 13
+            }
+          ],
+          "arrived": [],
+          "released": [
+            "req-1"
+          ],
+          "owners": {
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 9,
+          "issued_round": 10,
+          "steps": [
+            {
+              "request_id": "req-2",
+              "phase": "decode",
+              "positions": [
+                6
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 198
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "result",
+          "round": 10,
+          "issued_round": 10,
+          "steps": [
+            {
+              "request_id": "req-2",
+              "phase": "decode",
+              "positions": [
+                7
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 32
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-2": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ]
+          },
+          "waiting": [],
+          "free_slots": 16,
+          "capacity": 24
+        },
+        {
+          "event": "drained",
+          "released": [
+            "req-2"
+          ],
+          "free_slots": 24,
+          "capacity": 24
+        }
+      ],
+      "clean": true,
+      "forwards": 11,
+      "free_slots": 24,
+      "comparisons": [
+        {
+          "round": 0,
+          "request_id": "req-0",
+          "phase": "prefill",
+          "positions": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "round": 1,
+          "request_id": "req-0",
+          "phase": "prefill",
+          "positions": [
+            4
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "round": 2,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            5
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "round": 2,
+          "request_id": "req-1",
+          "phase": "prefill",
+          "positions": [
+            0,
+            1,
+            2
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.9073486328125e-05,
+          "passed": true
+        },
+        {
+          "round": 3,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            6
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "round": 3,
+          "request_id": "req-1",
+          "phase": "prefill",
+          "positions": [
+            3,
+            4,
+            5
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.811981201171875e-05,
+          "passed": true
+        },
+        {
+          "round": 4,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            7
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.6927719116210938e-05,
+          "passed": true
+        },
+        {
+          "round": 4,
+          "request_id": "req-1",
+          "phase": "prefill",
+          "positions": [
+            6,
+            7
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.09808349609375e-05,
+          "passed": true
+        },
+        {
+          "round": 5,
+          "request_id": "req-1",
+          "phase": "decode",
+          "positions": [
+            8
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.09808349609375e-05,
+          "passed": true
+        },
+        {
+          "round": 6,
+          "request_id": "req-1",
+          "phase": "decode",
+          "positions": [
+            9
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.9073486328125e-05,
+          "passed": true
+        },
+        {
+          "round": 6,
+          "request_id": "req-2",
+          "phase": "prefill",
+          "positions": [
+            0,
+            1,
+            2
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.71661376953125e-05,
+          "passed": true
+        },
+        {
+          "round": 7,
+          "request_id": "req-1",
+          "phase": "decode",
+          "positions": [
+            10
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.288818359375e-05,
+          "passed": true
+        },
+        {
+          "round": 7,
+          "request_id": "req-2",
+          "phase": "prefill",
+          "positions": [
+            3,
+            4
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.71661376953125e-05,
+          "passed": true
+        },
+        {
+          "round": 8,
+          "request_id": "req-2",
+          "phase": "decode",
+          "positions": [
+            5
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.621246337890625e-05,
+          "passed": true
+        },
+        {
+          "round": 9,
+          "request_id": "req-2",
+          "phase": "decode",
+          "positions": [
+            6
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.621246337890625e-05,
+          "passed": true
+        },
+        {
+          "round": 10,
+          "request_id": "req-2",
+          "phase": "decode",
+          "positions": [
+            7
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 1.9073486328125e-05,
+          "passed": true
+        }
+      ],
+      "outputs_match": true
+    },
+    "chat_eos": {
+      "requests": {
+        "req-0": {
+          "request_id": "req-0",
+          "prompt_ids": [
+            248045,
+            846,
+            198,
+            3710,
+            369,
+            220,
+            16,
+            5346,
+            220,
+            16,
+            30,
+            21134,
+            303,
+            799,
+            2716,
+            11316,
+            13,
+            248046,
+            198,
+            248045,
+            74455,
+            198,
+            248068,
+            271,
+            248069,
+            271
+          ],
+          "max_new_tokens": 32,
+          "eos_token_id": 248046,
+          "output_ids": [
+            16,
+            5346,
+            220,
+            16,
+            16327,
+            220,
+            17,
+            13,
+            248046
+          ],
+          "status": "finished",
+          "num_cached_tokens": 34,
+          "finish_reason": "eos",
+          "error": null
+        }
+      },
+      "observations": [
+        {
+          "event": "result",
+          "round": 0,
+          "issued_round": 1,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "prefill",
+              "positions": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15
+              ],
+              "input_tokens": 16,
+              "partial": true,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 1,
+          "issued_round": 2,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "prefill",
+              "positions": [
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25
+              ],
+              "input_tokens": 10,
+              "partial": false,
+              "sampled_token": 16
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 2,
+          "issued_round": 3,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                26
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 5346
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 3,
+          "issued_round": 4,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                27
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 220
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 4,
+          "issued_round": 5,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                28
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 16
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 5,
+          "issued_round": 6,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                29
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 16327
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 6,
+          "issued_round": 7,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                30
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 220
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 7,
+          "issued_round": 8,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                31
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 17
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 8,
+          "issued_round": 9,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                32
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 13
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 9,
+          "issued_round": 10,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                33
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": 248046
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "result",
+          "round": 10,
+          "issued_round": 10,
+          "steps": [
+            {
+              "request_id": "req-0",
+              "phase": "decode",
+              "positions": [
+                34
+              ],
+              "input_tokens": 1,
+              "partial": false,
+              "sampled_token": null
+            }
+          ],
+          "arrived": [],
+          "released": [],
+          "owners": {
+            "req-0": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56
+            ]
+          },
+          "waiting": [],
+          "free_slots": 199,
+          "capacity": 256
+        },
+        {
+          "event": "drained",
+          "released": [
+            "req-0"
+          ],
+          "free_slots": 256,
+          "capacity": 256
+        }
+      ],
+      "clean": true,
+      "forwards": 11,
+      "free_slots": 256,
+      "comparisons": [
+        {
+          "round": 0,
+          "request_id": "req-0",
+          "phase": "prefill",
+          "positions": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 3.951042890548706e-05,
+          "passed": true
+        },
+        {
+          "round": 1,
+          "request_id": "req-0",
+          "phase": "prefill",
+          "positions": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 4.935264587402344e-05,
+          "passed": true
+        },
+        {
+          "round": 2,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            26
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.574920654296875e-05,
+          "passed": true
+        },
+        {
+          "round": 3,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            27
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 3.337860107421875e-05,
+          "passed": true
+        },
+        {
+          "round": 4,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            28
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.574920654296875e-05,
+          "passed": true
+        },
+        {
+          "round": 5,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            29
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.5033950805664062e-05,
+          "passed": true
+        },
+        {
+          "round": 6,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            30
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.193450927734375e-05,
+          "passed": true
+        },
+        {
+          "round": 7,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            31
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.1696090698242188e-05,
+          "passed": true
+        },
+        {
+          "round": 8,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            32
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.765655517578125e-05,
+          "passed": true
+        },
+        {
+          "round": 9,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            33
+          ],
+          "discarded_after_eos": false,
+          "max_abs": 2.86102294921875e-05,
+          "passed": true
+        },
+        {
+          "round": 10,
+          "request_id": "req-0",
+          "phase": "decode",
+          "positions": [
+            34
+          ],
+          "discarded_after_eos": true,
+          "max_abs": 4.4226646423339844e-05,
+          "passed": true
+        }
+      ],
+      "outputs_match": true,
+      "decoded_text": "1 plus 1 equals 2.",
+      "stopped_at_eos": true
+    }
+  },
+  "forward_calls": {
+    "sync": 8,
+    "pipeline": 11,
+    "staggered": 11,
+    "chat_sync": 9,
+    "chat_pipeline": 11,
+    "chat_extra_reference": 1
+  },
+  "total_forward_calls": 51,
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "passed": true,
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "source_sha256": {
+    "minideepinfer/verify_pipeline_text.py": "a3aeac1694ca7c0b3b20624214f3b67c7ee9b8652128f6911bfb8c2215d0e3f9",
+    "minideepinfer/generate.py": "706ce10103cd3917830e02809b4d6e271259c598ee6d5a10719a885decbb132e",
+    "minideepinfer/pipeline_text.py": "98bdae71fb90a6c90077fcc00ffe9da197bec0679a8d57944f98b0a3dddc0b31",
+    "minideepinfer/text_loop.py": "cc5d07d283fd42756d0aeaf31954db83b5a06c9fe2cf6b809ca3553cfa798d03",
+    "minideepinfer/planning.py": "4e94702014a8110ce4698437b7a75166da73d89a3df3d706c0334c8e6661cca8",
+    "minideepinfer/batch_engine.py": "16f7eb89a11ce2e103884d51508546b6b4823cef4ef0f7222b923e1e40e7e30e",
+    "minideepinfer/stopping_pipeline.py": "6837121b294d94111fa198de40262ee0c19132028d9e82be53f28644e9a47b2c",
+    "minideepinfer/decode_pipeline.py": "13bb8e41dbcf2c2e74768acd08abf56f8039c2566e6afb6ffa5f9990075cd5b9",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/deferred_runner.py": "c14296990ddad9bdd915be1afcaef8cba2c2bcb22477627a5dd4d62b7fbd4422",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  }
+}

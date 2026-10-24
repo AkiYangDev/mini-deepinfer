@@ -3,7 +3,7 @@
 import argparse
 
 
-def main():
+def parse_args(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", required=True, help="local checkpoint directory")
     parser.add_argument("--device", default="npu:0")
@@ -16,23 +16,41 @@ def main():
     parser.add_argument("--raw", action="store_true", help="skip the checkpoint's chat template")
     parser.add_argument("--thinking", action="store_true", help="enable thinking if the chat template supports it")
     parser.add_argument("--chunked-prefill", action="store_true", help="split prompts by the batch token budget")
-    parser.add_argument("--deferred", action="store_true", help="launch and collect each batch separately")
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument("--deferred", action="store_true", help="launch and collect each batch separately")
+    modes.add_argument("--pipeline", action="store_true", help="use cross-round device-token execution (FP32)")
     parser.add_argument("--prepare-during-step", action="store_true",
                         help="tokenize one new prompt before collecting a batch; enables --deferred")
-    args = parser.parse_args()
+    parser.add_argument("--stagger-prompts", action="store_true",
+                        help="with --pipeline, submit one more prompt per collected result")
+    parser.add_argument("--trace-rounds", action="store_true",
+                        help="with --pipeline, print result rounds and observed cache ownership")
+    args = parser.parse_args(argv)
+    if args.pipeline and (args.prepare_during_step or args.dtype != 'float32'):
+        parser.error('--pipeline requires float32 and cannot use --prepare-during-step')
+    if not args.pipeline and (args.stagger_prompts or args.trace_rounds):
+        parser.error('--stagger-prompts and --trace-rounds require --pipeline')
     args.deferred = args.deferred or args.prepare_during_step
+    args.prompt = args.prompt or ["Explain what a KV cache does in two sentences."]
+    return args
 
-    import torch
-    from transformers import AutoTokenizer
+
+def run_generation(runner, tokenizer, args, *, on_round=None):
+    """Use the same frontend with a loaded runner in the CLI and numerical checks."""
     from . import BatchEngine, Engine
-    from .model_runner import ModelRunner
     from .text_loop import encode_prompt, run_text_requests
 
-    tokenizer = AutoTokenizer.from_pretrained(args.model, local_files_only=True)
-    prompts = args.prompt or ["Explain what a KV cache does in two sentences."]
-    runner = ModelRunner.from_pretrained(
-        args.model, args.device, getattr(torch, args.dtype), args.cache_capacity
-    )
+    prompts = args.prompt
+    if args.pipeline:
+        from .pipeline_text import run_pipeline_text
+        from .stopping_pipeline import StoppingDecodePipeline
+        pipeline = StoppingDecodePipeline(runner)
+        pairs = run_pipeline_text(pipeline, tokenizer, prompts, max_new_tokens=args.max_new_tokens,
+                                  raw=args.raw, thinking=args.thinking, max_num_seqs=args.max_num_seqs,
+                                  max_num_batched_tokens=args.max_batched_tokens,
+                                  chunked_prefill=args.chunked_prefill, stagger_prompts=args.stagger_prompts,
+                                  on_round=on_round)
+        return pairs, pipeline.pool
     if args.deferred:
         from .deferred_runner import DeferredRunner
         runner = DeferredRunner(runner)
@@ -47,12 +65,27 @@ def main():
                                 args.max_new_tokens, tokenizer.eos_token_id), prompt) for prompt in prompts]
         for _ in engine.run():
             pass
+    return pairs, engine.cache
+
+
+def main(argv=None):
+    args = parse_args(argv)
+    import torch
+    from transformers import AutoTokenizer
+    from .model_runner import ModelRunner
+    from .pipeline_text import print_round
+
+    tokenizer = AutoTokenizer.from_pretrained(args.model, local_files_only=True)
+    runner = ModelRunner.from_pretrained(
+        args.model, args.device, getattr(torch, args.dtype), args.cache_capacity
+    )
+    pairs, pool = run_generation(runner, tokenizer, args, on_round=print_round if args.trace_rounds else None)
     for request, prompt in pairs:
         if len(pairs) > 1:
             print(f"\n{request.request_id}: {prompt}")
         print(tokenizer.decode(request.output_ids, skip_special_tokens=True))
         print(f"\n[{request.finish_reason}; {len(request.output_ids)} output tokens; "
-              f"free KV slots {engine.cache.free_count}/{engine.cache.capacity}]")
+              f"free KV slots {pool.free_count}/{pool.capacity}]")
 
 
 if __name__ == "__main__":

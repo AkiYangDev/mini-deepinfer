@@ -1,5 +1,6 @@
 """Check preserved NPU results against this checkout, without using a device."""
 
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -22,8 +23,11 @@ def verify(root, entry):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--index', type=Path, default=Path('docs/results/v0.1/evidence.json'))
+    args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
-    index = json.loads((root / 'docs/results/v0.1/evidence.json').read_text(encoding='utf-8'))
+    index = json.loads((root / args.index).read_text(encoding='utf-8'))
     for entry in index['reports']:
         count = verify(root, entry)
         print(f"PASS: {entry['path']} ({count} source hashes match)")

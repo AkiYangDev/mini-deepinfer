@@ -76,6 +76,8 @@ mask/compact 对照通过，不能证明近似回放与完整重算严格等价�
 
 [第十四课](CHUNK_PIPELINE.md)将 Step 构造提到 [`planning.py`](../minideepinfer/planning.py)，由调用者选择已发出或 CPU 已提交的进度。沿用上面 Worker 的跨轮顺序与 prompt 完成/采样边界，加入输入预算和不采样的中间块。FIFO、整份预留及 decode 优先是教学取舍，尚未统一两套调度器；十四组真实 2B logits 和资源检查通过，没有性能结论。
 
+当前 main 又把同一个跨轮循环接入 [`generate --pipeline`](../minideepinfer/generate.py)。[`pipeline_text.py`](../minideepinfer/pipeline_text.py)只负责文本编码、单线程回调到达和提交前观察，调度、设备 token 接续与最后使用回收仍沿用原实现。没有新增上游优化或调度类，具体运行与数值条件见[文本入口](PIPELINE_TEXT.md)。
+
 ## 当前进度与下一项交付
 
 同步执行与真实模型路径已落地：第一课保留 [`Engine.step()`](../minideepinfer/engine.py)，第三课增加 [`BatchEngine`](../minideepinfer/batch_engine.py) 与真正合并计算的多请求 Runner。阅读入口见[第一课](FIRST_REQUEST.md)、[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)，验证范围见[实验记录](VALIDATION.md)。同步对照保留；跨轮实验的顺序与验证边界见第十一至十四课。

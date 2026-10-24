@@ -74,7 +74,16 @@ python -m minideepinfer.generate \
 
 This uses synchronous BatchEngine. Each output ends with its stopping reason, generated length, and free-slot count. The preserved [bilingual output](results/2026-10-24/qwen35-2b-generation-npu-fp32.txt) stops both requests at EOS. Each request reserves `prompt length + max_new_tokens - 1` logical slots; cache capacity does not automatically grow with free device memory.
 
-For the independent cross-round teaching experiment:
+To use cross-round execution with your own text, add `--pipeline` to the generation command above. It currently requires FP32 and is separate from `--deferred` and `--prepare-during-step`. Add `--stagger-prompts` to submit one more text per collected result, and `--trace-rounds` to print rounds and observed cache ownership. These observations happen before CPU commit; release messages report when ownership changes are noticed, without device timestamps. Trace output uses English labels.
+
+You can try that frontend without weights:
+
+```bash
+python -m minideepinfer.verify_pipeline_text --device cpu --trace-rounds \
+  --output outputs/pipeline-text-cpu.json
+```
+
+The earlier fixed cross-round checker remains available:
 
 ```bash
 python -m minideepinfer.verify_chunk_pipeline \

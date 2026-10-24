@@ -18,6 +18,8 @@ mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 
 
 目前已用项目自己的前向计算，在 **Ascend 910C 上跑通 Qwen3.5-2B 文本生成**。教程从能直接打印状态的整数例子开始，逐步换成 PyTorch 小模型和真实权重，共十四课。开发时也使用 Qwen3.5-0.8B，原有 DeepSeek-R1-Distill-Qwen-1.5B 示例继续用于回归检查。
 
+当前 `main` 正在准备 v0.2，已把跨轮执行接到文本生成入口；稳定版见 [v0.1.0](https://github.com/AkiYangDev/mini-deepinfer/releases/tag/v0.1.0)。
+
 ## 先跑起来
 
 Python 3.10+，先看一个无需模型依赖、权重或 NPU 的例子：
@@ -34,7 +36,7 @@ python -m minideepinfer.step_demo
 已有 PyTorch 时，接着跑一个无需下载权重的混合注意力小模型：
 
 ```bash
-python -m minideepinfer.verify_chunk_pipeline --device cpu
+python -m minideepinfer.verify_pipeline_text --device cpu --trace-rounds
 ```
 
 这个例子把 decode 和分块 prompt 放进同一批，中途再加入一个新请求，并与整段 prompt 的同步计算比较。报告里可以看到每轮输入、数值误差和缓存回收结果。依赖怎么装、输出怎么看，见[运行指南](docs/START_HERE.md)。
@@ -62,7 +64,7 @@ python -m minideepinfer.generate \
 
 [完整双语输出](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)保留在仓库。默认采用 FP32、eager 和 greedy，适合短上下文教学。没有 NPU 时，可以改用 `--device cpu` 和 0.8B 权重；仍需要加载完整文本模型。
 
-## v0.1 能学到什么
+## 沿着请求读代码
 
 | 你想弄清的问题 | 从这里读 |
 | --- | --- |
@@ -74,7 +76,7 @@ python -m minideepinfer.generate \
 | EOS、新请求、分块 prompt 怎样进入同一个循环？ | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十二至十四课](docs/CHUNK_PIPELINE.md) |
 | 已发出、已提交和设备已用完，有什么区别？ | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [第十四课](docs/CHUNK_PIPELINE.md) |
 
-默认 BatchEngine 支持同步动态批处理、输入预算、分块 prefill、取消和回收；`--deferred` 把发起与结果提交拆开，仍只允许一批在途。跨轮设备 token 接续、回调到达和延迟回收属于独立教学实验，通过 `verify_chunk_pipeline` 运行，尚未接入 `generate`。各章节入口见[学习路线](docs/LEARNING_PATH.md)。
+默认 BatchEngine 支持同步动态批处理、输入预算、分块 prefill、取消和回收；`--deferred` 把发起与结果提交拆开，仍只允许一批在途。现在也可以用 `--pipeline` 选择跨轮执行，配合 `--stagger-prompts --trace-rounds` 观察文本到达和缓存回收，见[自己的文本怎样进入跨轮循环](docs/PIPELINE_TEXT.md)。各章节入口见[学习路线](docs/LEARNING_PATH.md)。
 
 ## 验证到了哪里
 
@@ -82,10 +84,11 @@ python -m minideepinfer.generate \
 | --- | --- |
 | 真实 2B / Ascend 910C FP32 | 单请求、双请求与独立参考对照通过，检查位置 top-1 一致 |
 | 跨轮分块、到达与复用 | 九轮、十四组完整 logits 最大差约 `2.67e-5`，原容差通过；四个中间块不采样，24/24 槽位归还 |
+| 新文本生成入口 | 同步、跨轮与逐条到达输出一致；聊天生成自然遇 EOS，含额外已发出一步的 43 组 logits 对照通过，最大差约 `4.94e-5`；见[运行说明](docs/PIPELINE_TEXT.md) |
 | 取消与主机异常 | 等最后使用完成后清理，Runner 可复用；等待失败保留资源的分支另有 CPU 注入检查 |
 | BF16 | 固定短轨迹通过同扫描方式、FP32 状态参考；原生分块与跨调度长生成仍有差异，见[说明](docs/BF16_REFERENCE.md) |
 
-这些结果验证了短上下文下的数值和状态处理。性能实验目前只覆盖少量短请求，尚未得到稳定提速的结论。[验证记录](docs/VALIDATION.md)保留环境、原始输出和源码 SHA；运行 `python scripts/check_evidence.py` 就能核对 v0.1 源码与实测报告，无需启动 NPU。
+这些结果验证了短上下文下的数值和状态处理。性能实验目前只覆盖少量短请求，尚未得到稳定提速的结论。[验证记录](docs/VALIDATION.md)保留环境、原始输出和源码 SHA；v0.1 与 v0.2 开发版的报告分别保存，核对命令见[文本入口说明](docs/PIPELINE_TEXT.md)。
 
 ## 为什么参考 DeepInfer
 

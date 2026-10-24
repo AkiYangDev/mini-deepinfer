@@ -6,6 +6,8 @@
 
 v0.1 已收敛到单设备文本推理与跨轮执行教学，能力矩阵、边界和发布检查见[v0.1 说明](RELEASE_v0.1.md)。第一次使用按[运行指南](START_HERE.md)，按机制阅读见[十四课索引](LEARNING_PATH.md)。下文记录阶段演进，后续章节不属于 v0.1 的完成条件。
 
+当前 `main` 的下一小版本把已验证的跨轮循环接到 `generate --pipeline`，并提供逐条到达与逐轮观察；运行方式见[文本入口](PIPELINE_TEXT.md)。v0.1 的 tag 与安装包保持原样。
+
 ## 第一阶段：单请求真实生成
 
 当前代码已包含请求循环、逻辑槽位、Qwen2 forward、张量 KV Cache、离线生成与数值对照脚本。保留 DeepSeek-R1-Distill-Qwen-1.5B 回归基线，新增 Qwen3.5-0.8B / 2B 纯文本示例，限定单设备、eager、greedy 和短上下文。混合缓存与运行方法见[第四课](QWEN35.md)。

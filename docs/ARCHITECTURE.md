@@ -109,7 +109,9 @@ minideepinfer/
   hybrid_cache.py # 完整注意力 KV 与请求独占的线性状态
   models/qwen2.py # Qwen2 模型与 safetensors 加载
   models/qwen3_5.py # 纯文本混合注意力与 checkpoint 映射
-  generate.py     # 离线真实生成入口
+  generate.py     # 离线真实生成入口 / 同步或跨轮方式选择
+  pipeline_text.py # 文本编码 / 单线程回调到达 / 提交前观察
+  verify_pipeline_text.py # 共享生成前端的同步、跨轮与EOS对照
   verify.py       # 真实权重 logits 对照
   verify_batch.py # 批次与独立请求的数值对照
 tests/
