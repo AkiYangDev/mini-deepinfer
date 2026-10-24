@@ -23,6 +23,7 @@ jobs:
       - run: python -m minideepinfer.npu_step_demo --help
       - run: python -m minideepinfer.verify_deferred --help
       - run: python -m minideepinfer.verify_deferred_engine --help
+      - run: python -m minideepinfer.verify_decode_pipeline --help
       - run: python -m minideepinfer.benchmark_prepare --help
       - run: python -m minideepinfer.analyze_prepare_trace --help
       - run: python -m examples.profile_prepare --help
@@ -44,4 +45,5 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - run: python -m minideepinfer.verify_deferred --device cpu --output outputs/deferred-cpu.json
       - run: python -m minideepinfer.verify_deferred_engine --device cpu --output outputs/deferred-engine-cpu.json
+      - run: python -m minideepinfer.verify_decode_pipeline --device cpu --output outputs/decode-pipeline-cpu.json
       - run: python -m minideepinfer.benchmark_prepare --device cpu --repeats 1 --output outputs/prepare-cpu.json

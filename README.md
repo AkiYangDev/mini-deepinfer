@@ -33,6 +33,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | BatchEngine 分步执行 | 真实 2B 六轮、十组 logits 与同步路径差异为 0；计算途中取消、动态加入、槽位复用和停止条件通过，见[第八课](docs/DEFERRED_ENGINE.md) |
 | 等待期间准备新文本 | 两种顺序的批次与输出一致；四条短文本未显示提速，三步 trace 仅一步观察到重叠，见[第九课](docs/PREPARE_DURING_STEP.md) |
 | 采样索引提前准备 | 13 组完整 logits 差异为 0；移开 forward 后的索引复制等待，捕获的三步均有分词重叠，整体收益未确定，见[第十课](docs/SAMPLER_INPUTS.md) |
+| 设备 token 跨轮接续 | 固定双请求先提交下一轮 forward，再收取上一轮结果；真实 2B 八组 logits 差异为 0，异常清理和复用通过，见[第十一课](docs/DECODE_PIPELINE.md) |
 
 真实 2B 运行中的英文回答：
 
@@ -69,6 +70,14 @@ python -m minideepinfer.verify_deferred_engine --device cpu
 [第九课](docs/PREPARE_DURING_STEP.md)让 CPU 在等待时为下一条文本分词，提供两种调用顺序的对照和实际时间线。它解释了为什么“可以重叠”仍然不一定更快。
 
 [第十课](docs/SAMPLER_INPUTS.md)沿着这份时间线找到一处采样索引复制：行号已经知道了，为什么还留到 forward 后才准备？改动、数值检查和等待边界都在同一条执行链中展开。
+
+[第十一课](docs/DECODE_PIPELINE.md)开始学习 DeepInfer 的跨轮顺序：token 留在设备上，下一轮 forward 先发出去，再处理上一轮输出。固定批次实验不到 180 行，可用小模型直接运行：
+
+```bash
+python -m minideepinfer.verify_decode_pipeline --device cpu
+```
+
+它暂不处理 EOS、动态加入或取消；还没有性能结论，默认引擎保持原来的调度方式。
 
 ## 运行真实模型
 
@@ -108,6 +117,7 @@ python -m minideepinfer.generate \
 | logits 怎样成为下一个 token？ | [`ModelRunner.execute_sample()`](minideepinfer/model_runner.py) |
 | 请求结束或取消后，谁负责回收？ | [`Engine`](minideepinfer/engine.py) · [`SlotPool`](minideepinfer/kv_cache.py) |
 | 计算途中取消，何时提交进度和归还槽位？ | [`BatchEngine.launch_step()` / `finish_step()`](minideepinfer/batch_engine.py) · [第八课](docs/DEFERRED_ENGINE.md) |
+| CPU 还没读到 token，下一轮怎样使用它？ | [`FixedDecodePipeline`](minideepinfer/decode_pipeline.py) · [第十一课](docs/DECODE_PIPELINE.md) |
 
 还没接触过推理引擎，可以从[第一课：跟踪一个请求](docs/FIRST_REQUEST.md)开始。整数 Runner 让输入、位置和槽位都能直接打印出来，Python 3.10+ 即可运行，无需模型依赖或权重：
 
@@ -120,7 +130,7 @@ python -m unittest discover -s tests -v
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至八课逐步从整数事件走到真实 NPU、模型和引擎，把跨轮状态、批次映射和结果提交讲清楚。调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
+DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至八课从整数事件走到真实 NPU、模型和引擎，第十一课在固定批次中连接设备 token 与下一轮 forward。动态调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
 **Qwen 小模型承载教学实例，DeepInfer 继续作为引擎设计主线。** 单请求与同步批次保留对照，[第四课](docs/QWEN35.md)展开混合模型的状态管理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 

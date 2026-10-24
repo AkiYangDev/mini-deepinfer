@@ -16,6 +16,7 @@
 | [model_runner.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py) | 输入元数据、模型执行与图执行选择 | 显式 StepPlan 和 Runner，逐步接入优化 |
 | [cache_engine.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/cache_engine.py) | 设备缓存布局、分配及模型相关状态 | 区分设备缓存管理与完整服务级缓存系统 |
 | [zos_status.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py) | 步骤状态、事件和批次重映射元数据 | 同步路径验证后，教学化展示在途步骤生命周期 |
+| [worker.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/worker.py) | 本轮 forward、上一轮 post-process、本轮 sample；设备上的前轮 token 经 MetadataZOS 传递 | [固定批次实验](DECODE_PIPELINE.md)先学习设备输入依赖和处理顺序，再扩展动态调度 |
 | [platform.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/platform.py) | 昇腾平台、HCCL、主机内存与 CUDA 风格接口适配 | 优先明确的 NPU 接口，按 Ascend 910C 实测选择后端 |
 | [YoCo 等价性实验](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/examples/yoco/README.md) | 元数据与真实模型输出分层验证 | 保留模型前提，先构造独立等价性实验 |
 

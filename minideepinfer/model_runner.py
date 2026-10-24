@@ -107,7 +107,14 @@ class ModelRunner:
         else:
             raise ValueError("unknown execution phase")
 
-    def prepare_batch(self, steps: tuple[Step, ...]) -> ModelInput:
+    def prepare_batch(self, steps: tuple[Step, ...], *, device_input_ids=None) -> ModelInput:
+        # The fixed decode experiment supplies tokens produced on this device.
+        # Host Step.input_ids are then explicit zero placeholders, never samples.
+        if device_input_ids is not None:
+            if (not steps or any(s.phase != "decode" or s.input_ids != (0,) for s in steps)
+                    or device_input_ids.shape != (len(steps),)
+                    or device_input_ids.dtype != torch.long or device_input_ids.device != self.device):
+                raise ValueError("device inputs require one long token per decode-only placeholder row")
         ids = [step.request_id for step in steps]
         if not steps or len(set(ids)) != len(ids):
             raise ValueError("batch must contain distinct requests")
@@ -125,7 +132,9 @@ class ModelRunner:
         values = (tuple(t for step in steps for t in step.input_ids),
                   tuple(p for step in steps for p in step.positions),
                   tuple(s for step in steps for s in step.slot_mapping), contexts)
-        tensors = tuple(torch.tensor(v, dtype=torch.long, device=self.device) for v in values)
+        tensors = ((device_input_ids if device_input_ids is not None else
+                    torch.tensor(values[0], dtype=torch.long, device=self.device)),
+                   *(torch.tensor(v, dtype=torch.long, device=self.device) for v in values[1:]))
         query_ids = torch.tensor([i for i, step in enumerate(steps) for _ in step.input_ids], device=self.device)
         key_ids = torch.tensor([i for i, step in enumerate(steps) for _ in step.context_slots], device=self.device)
         key_positions = torch.tensor([p for step in steps for p in range(len(step.context_slots))],

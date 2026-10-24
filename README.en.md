@@ -33,6 +33,7 @@ The main example uses FP32. BF16 also passes fixed short trajectories against an
 | Split-step BatchEngine | Six real 2B rounds and ten logit comparisons match the sync path with zero difference, covering in-flight cancellation, arrivals, slot reuse, and stopping; see [lesson eight](docs/DEFERRED_ENGINE.md) |
 | Prepare text while waiting | Both orders produce identical batches and tokens. Four short texts show no speedup; only one of three captured steps overlaps tokenization with device activity. See [lesson nine](docs/PREPARE_DURING_STEP.md) |
 | Prepare sampler indices earlier | Thirteen full-logit comparisons match exactly. Moving the index upload before forward allows tokenization overlap in all three captured steps; an overall speedup is not established. See [lesson ten](docs/SAMPLER_INPUTS.md) |
+| Device-token handoff across rounds | A fixed two-request experiment submits the next forward before collecting the previous result. Eight real 2B logit comparisons match exactly; cleanup and reuse pass. See [lesson eleven](docs/DECODE_PIPELINE.md) |
 
 The English answer from the real 2B run:
 
@@ -69,6 +70,14 @@ python -m minideepinfer.verify_deferred_engine --device cpu
 [Lesson nine](docs/PREPARE_DURING_STEP.md) prepares the next text while waiting, then compares both orders and checks an actual device timeline. It explains why allowing overlap does not automatically make execution faster.
 
 [Lesson ten](docs/SAMPLER_INPUTS.md) follows that trace to a sampler-index copy: if the row numbers are already known, why prepare them after forward? It walks through the small change, numerical checks, and the resulting wait boundary.
+
+[Lesson eleven](docs/DECODE_PIPELINE.md) studies DeepInfer's cross-round order: keep sampled tokens on the device, submit the next forward, then process the previous output. The fixed-batch experiment is under 180 lines and runs with a tiny model:
+
+```bash
+python -m minideepinfer.verify_decode_pipeline --device cpu
+```
+
+It has no EOS handling, arrivals, or cancellation. Performance has not been measured, and the default engine keeps its existing scheduling behavior.
 
 ## Run a real model
 
@@ -108,6 +117,7 @@ If you know basic Python and PyTorch, follow these entry points. The project imp
 | How do logits become the next token? | [`ModelRunner.execute_sample()`](minideepinfer/model_runner.py) |
 | Who releases slots on completion or cancellation? | [`Engine`](minideepinfer/engine.py) · [`SlotPool`](minideepinfer/kv_cache.py) |
 | When can an in-flight cancellation release slots and commit progress? | [`BatchEngine.launch_step()` / `finish_step()`](minideepinfer/batch_engine.py) · [lesson eight](docs/DEFERRED_ENGINE.md) |
+| How can the next round use a token before the CPU reads it? | [`FixedDecodePipeline`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
 
 New to inference engines? [Lesson one](docs/FIRST_REQUEST.md) uses an integer runner so every input, position, and slot can be printed. It needs only Python 3.10+, without model dependencies or weights:
 
@@ -120,7 +130,7 @@ Without model dependencies, 51 engine, state, and interval tests run and model c
 
 ## How this relates to DeepInfer
 
-DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, model execution, and engine integration, explaining state ownership, batch remapping, and result commits. Scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
+DeepInfer is the primary technical reference. The implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, models, and engine integration; lesson eleven connects device tokens to the next forward in a fixed batch. Dynamic scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned revision, entry points, and teaching simplifications.
 
 **Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 

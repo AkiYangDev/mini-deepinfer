@@ -62,6 +62,8 @@ BatchEngine 的可选分步路径用 `launch_step()` 提交，`finish_step()` �
 
 当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。第五、六课解释状态与事件；[第七课](DEFERRED_RUNNER.md)把它们接到真实模型，[第八课](DEFERRED_ENGINE.md)接入现有 BatchEngine。当前仅一批在途，执行重叠和图执行仍需独立验证。扩大范围时，需要重新检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
 
+[第十一课](DECODE_PIPELINE.md)单独实现固定批次的设备 token 接续：下一轮 forward 在上一轮 CPU 输出处理前提交，最多保留两轮状态，整批排空才回收。它独占空闲 Runner，不接入默认生成路径；动态成员、EOS 和取消仍由后续实验处理，没有性能结论。
+
 ## 模型层
 
 入门模型实现 Qwen 架构；V2-Lite 单独实现对应的 MLA、MoE 与权重映射。模型接口尽量共享执行元数据和输出形式，不以过度统一来掩盖缓存布局差异。
@@ -88,6 +90,8 @@ minideepinfer/
   deferred_runner.py # 单批在途模型执行 / 显式读取与提交
   verify_deferred.py # 同步与延后提交的固定轨迹对照
   verify_deferred_engine.py # 同步/分步引擎的请求生命周期对照
+  decode_pipeline.py # 固定成员与长度 / 设备token接续 / 延后一轮处理输出
+  verify_decode_pipeline.py # 同步greedy与固定跨轮执行的数值对照
   text_loop.py    # 逐条准备文本 / 在收取前或收取后入队
   benchmark_prepare.py # 相同负载下比较文本准备的位置
   analyze_prepare_trace.py # CPU分词与设备kernel区间求交

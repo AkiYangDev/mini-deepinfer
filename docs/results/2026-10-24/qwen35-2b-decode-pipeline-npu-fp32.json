@@ -1,0 +1,205 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "fixed membership and length, EOS disabled; no dynamic scheduling or performance claim",
+  "reference": "synchronous greedy execution, shared read-only weights, independent caches",
+  "prompt_ids": {
+    "A": [
+      760,
+      6511,
+      314,
+      9338,
+      369
+    ],
+    "B": [
+      32,
+      81726,
+      6297
+    ]
+  },
+  "max_new_tokens": 4,
+  "steps": [
+    {
+      "index": 0,
+      "request_ids": [
+        "A",
+        "B"
+      ],
+      "same_metadata": true,
+      "tokens": [
+        11751,
+        369
+      ],
+      "expected_tokens": [
+        11751,
+        369
+      ],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "retained_rounds": 2
+    },
+    {
+      "index": 1,
+      "request_ids": [
+        "B",
+        "A"
+      ],
+      "same_metadata": true,
+      "tokens": [
+        264,
+        13
+      ],
+      "expected_tokens": [
+        264,
+        13
+      ],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "retained_rounds": 2
+    },
+    {
+      "index": 2,
+      "request_ids": [
+        "A",
+        "B"
+      ],
+      "same_metadata": true,
+      "tokens": [
+        198,
+        795
+      ],
+      "expected_tokens": [
+        198,
+        795
+      ],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "retained_rounds": 2
+    },
+    {
+      "index": 3,
+      "request_ids": [
+        "B",
+        "A"
+      ],
+      "same_metadata": true,
+      "tokens": [
+        5759,
+        32
+      ],
+      "expected_tokens": [
+        5759,
+        32
+      ],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "retained_rounds": 1
+    }
+  ],
+  "call_order": [
+    "forward",
+    "forward",
+    "result",
+    "forward",
+    "result",
+    "forward",
+    "result",
+    "result"
+  ],
+  "output_ids": {
+    "A": [
+      11751,
+      13,
+      198,
+      32
+    ],
+    "B": [
+      369,
+      264,
+      795,
+      5759
+    ]
+  },
+  "expected_output_ids": {
+    "A": [
+      11751,
+      13,
+      198,
+      32
+    ],
+    "B": [
+      369,
+      264,
+      795,
+      5759
+    ]
+  },
+  "normal_clean": true,
+  "host_error_cleaned": true,
+  "reuse_clean": true,
+  "reuse_output_ids": {
+    "A": [
+      11751
+    ],
+    "B": [
+      369
+    ]
+  },
+  "free_slots": 32,
+  "remaining_prefixes": 0,
+  "remaining_linear_states": 0,
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "passed": true,
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "source_sha256": {
+    "minideepinfer/decode_pipeline.py": "d8e876e92f458a548b1224abf236e32179401ac0d26ad7c751fbf644d94dfe6e",
+    "minideepinfer/verify_decode_pipeline.py": "87ad660e8ca41a4d2ea415bcf15c4e314cdfabd970ffcf0126a39412a9aaebd7",
+    "minideepinfer/model_runner.py": "015a3e6a573db5e2c21a86807588f42f4e7e8b1ed9686fbe0be03f5bf0551b3c",
+    "minideepinfer/deferred_runner.py": "c14296990ddad9bdd915be1afcaef8cba2c2bcb22477627a5dd4d62b7fbd4422",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  }
+}
