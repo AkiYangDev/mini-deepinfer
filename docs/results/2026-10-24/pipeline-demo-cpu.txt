@@ -1,0 +1,82 @@
+A: prompt=9, output=6; B: prompt=2, output=2; C: prompt=4, output=3
+CPU random model; EOS disabled. B arrives at collect 0, C at collect 1.
+Snapshots are BEFORE CPU commit; issued means submitted, not device-complete.
+
+collect 0 | issued through 1
+  A prefill 0..3: partial prompt; no sample
+  arrived: B
+  A: running; cached CPU/issued=0/8; slots=14
+  B: waiting; cached CPU/issued=0/0; slots=0
+  free slots: 6/20
+
+collect 1 | issued through 2
+  A prefill 4..7: partial prompt; no sample
+  arrived: C
+  A: running; cached CPU/issued=4/9; slots=14
+  B: running; cached CPU/issued=0/2; slots=3
+  C: waiting; cached CPU/issued=0/0; slots=0
+  free slots: 3/20
+
+collect 2 | issued through 3
+  A prefill 8..8: sample available
+  B prefill 0..1: sample available
+  A: running; cached CPU/issued=8/10; slots=14
+  B: running; cached CPU/issued=0/3; slots=3
+  C: waiting; cached CPU/issued=0/0; slots=0
+  free slots: 3/20
+
+collect 3 | issued through 4
+  A decode 9..9: sample available
+  B decode 2..2: sample available
+  A: running; cached CPU/issued=9/11; slots=14
+  B: running; cached CPU/issued=2/3; slots=3
+  C: waiting; cached CPU/issued=0/0; slots=0
+  free slots: 3/20
+
+collect 4 | issued through 5
+  A decode 10..10: sample available
+  A: running; cached CPU/issued=10/12; slots=14
+  B: finished; cached CPU/issued=3/3; slots=0
+  C: running; cached CPU/issued=0/3; slots=6
+  observed released: B
+  reused B -> C: slots [14, 15, 16]
+  free slots: 0/20
+
+collect 5 | issued through 6
+  A decode 11..11: sample available
+  C prefill 0..2: partial prompt; no sample
+  A: running; cached CPU/issued=11/13; slots=14
+  B: finished; cached CPU/issued=3/3; slots=0
+  C: running; cached CPU/issued=0/4; slots=6
+  free slots: 0/20
+
+collect 6 | issued through 7
+  A decode 12..12: sample available
+  C prefill 3..3: sample available
+  A: running; cached CPU/issued=12/14; slots=14
+  B: finished; cached CPU/issued=3/3; slots=0
+  C: running; cached CPU/issued=3/5; slots=6
+  free slots: 0/20
+
+collect 7 | issued through 8
+  A decode 13..13: sample available
+  C decode 4..4: sample available
+  A: running; cached CPU/issued=13/14; slots=14
+  B: finished; cached CPU/issued=3/3; slots=0
+  C: running; cached CPU/issued=4/6; slots=6
+  free slots: 0/20
+
+collect 8 | issued through 8
+  C decode 5..5: sample available
+  A: finished; cached CPU/issued=14/14; slots=0
+  B: finished; cached CPU/issued=3/3; slots=0
+  C: running; cached CPU/issued=5/6; slots=6
+  observed released: A
+  free slots: 14/20
+
+drained | observed released: C
+  A: length; 6 output tokens
+  B: length; 2 output tokens
+  C: length; 3 output tokens
+whole-prompt reference outputs match: True
+free slots: 20/20; clean: True

@@ -1,5 +1,5 @@
 {
-  "version": "0.2.0.dev0",
+  "version": "0.2.0",
   "reports": [
     {
       "path": "docs/results/2026-10-24/qwen35-2b-pipeline-text-npu-fp32.json",

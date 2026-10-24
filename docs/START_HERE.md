@@ -45,13 +45,21 @@ python -m minideepinfer.step_demo
 
 ```bash
 python -m pip install -e ".[qwen35]"
-python -m minideepinfer.verify_chunk_pipeline --device cpu \
-  --output outputs/chunk-pipeline-cpu.json
+python -m minideepinfer.pipeline_demo
 ```
 
 这个入口只需要 PyTorch；上面的 extra 同时准备后续真实模型使用的 tokenizer 和 safetensors。已有兼容 PyTorch 时，只安装基础包也能运行随机模型检查。
 
-程序随机初始化一个小型 Qwen3.5 模型，保留线性注意力和完整注意力。它先计算整段 prompt 作为参考，再运行分块、到达、取消和复用的轨迹。完成后应看到 `passed: true`、`free_slots: 24`，剩余前缀和线性状态均为 0。浮点误差会随设备和软件版本略有变化，以报告中的容差检查为准。
+程序随机初始化一个小型 Qwen3.5 模型，保留线性注意力和完整注意力。A 的长 prompt 分块计算，B 先结束，C 等待后复用 B 的槽位。最后应看到 `whole-prompt reference outputs match: True` 和 `free slots: 20/20; clean: True`。每轮输出的解释见[A、B、C 演示](WALKTHROUGH.md)。
+
+接着通过同一个文本前端，检查完整 logits 和两种到达方式：
+
+```bash
+python -m minideepinfer.verify_pipeline_text --device cpu \
+  --output outputs/pipeline-text-cpu.json
+```
+
+随机模型不使用自然 EOS；真实权重模式才增加聊天模板与自然 EOS 对照。浮点误差会随设备和软件版本略有变化，以报告中的容差检查为准。
 
 ## Ascend 910C：真实权重
 

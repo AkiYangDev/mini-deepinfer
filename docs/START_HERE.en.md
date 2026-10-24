@@ -33,13 +33,21 @@ In a regular CPU environment:
 
 ```bash
 python -m pip install -e ".[qwen35]"
-python -m minideepinfer.verify_chunk_pipeline --device cpu \
-  --output outputs/chunk-pipeline-cpu.json
+python -m minideepinfer.pipeline_demo
 ```
 
 The checker itself only needs PyTorch. The extra also installs the tokenizer and safetensors dependencies used by real checkpoints. If compatible PyTorch is already installed, the base package is sufficient for this random-model check.
 
-It compares whole-prompt execution with budgeted cross-round chunks in a tiny hybrid-attention model, including arrivals, host-error cleanup, and reuse. Expect `passed: true`, `free_slots: 24`, and no remaining prefixes or linear states. Floating-point error values need not be identical across environments.
+The tiny hybrid-attention model processes A's long prompt in chunks. B finishes first, and C waits before taking B's slots. Expect `whole-prompt reference outputs match: True` and `free slots: 20/20; clean: True`. The [A/B/C walkthrough](WALKTHROUGH.en.md) explains the observations.
+
+Then compare full logits using the text frontend:
+
+```bash
+python -m minideepinfer.verify_pipeline_text --device cpu \
+  --output outputs/pipeline-text-cpu.json
+```
+
+Random-model mode does not use natural EOS. With a real checkpoint, the verifier also checks chat-template generation and natural EOS. Floating-point error values need not be identical across environments.
 
 ## Real Qwen3.5-2B on Ascend 910C
 

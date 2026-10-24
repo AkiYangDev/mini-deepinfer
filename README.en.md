@@ -10,7 +10,7 @@ Built for learning, targeting Ascend 910C.
 
 [简体中文](README.md) · **English**
 
-[Setup](docs/START_HERE.en.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.1 notes](docs/RELEASE_v0.1.md) · [Validation](docs/VALIDATION.md)
+[Setup](docs/START_HERE.en.md) · [A/B/C walkthrough](docs/WALKTHROUGH.en.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.2 notes](docs/RELEASE_v0.2.md)
 
 </div>
 
@@ -18,7 +18,7 @@ mini-DeepInfer is a teaching inference engine for Ascend 910C, based on ideas fr
 
 The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass and cache management. Fourteen lessons start with integer examples whose state you can print, then move to tiny PyTorch models and real checkpoints. Qwen3.5-0.8B is also used during development, and the earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in the regression checks.
 
-The `main` branch is preparing v0.2 and now connects cross-round execution to text generation. The stable release is [v0.1.0](https://github.com/AkiYangDev/mini-deepinfer/releases/tag/v0.1.0).
+v0.2 connects cross-round execution to text generation and adds a complete scheduling walkthrough without a checkpoint. See the [release notes](docs/RELEASE_v0.2.md) for the new entry points and validation scope.
 
 ## Start small
 
@@ -36,10 +36,20 @@ In this example, A is cancelled while the device still needs its cache. B change
 With PyTorch installed, run a tiny hybrid-attention model without downloading weights:
 
 ```bash
-python -m minideepinfer.verify_pipeline_text --device cpu --trace-rounds
+python -m minideepinfer.pipeline_demo
 ```
 
-The example batches decode with prompt chunks and adds another request during execution. It compares the output against synchronous whole-prompt execution and reports each batch, numerical differences, and cache reclamation. See [setup](docs/START_HERE.en.md) for installation and expected output.
+In this example, A has a chunked prompt, B finishes first, and C waits before taking B's slots. Actual output includes:
+
+```text
+  B: finished; cached CPU/issued=3/3; slots=0
+  C: running; cached CPU/issued=0/3; slots=6
+  observed released: B
+  reused B -> C: slots [14, 15, 16]
+  free slots: 0/20
+```
+
+B has released its slots, yet none are free because C already took them. [Follow this run through the code](docs/WALKTHROUGH.en.md) to understand CPU progress, issued work, and ownership. For dependencies, see [setup](docs/START_HERE.en.md).
 
 ## Run a real model on Ascend 910C
 

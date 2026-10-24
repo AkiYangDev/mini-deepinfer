@@ -4,7 +4,7 @@
 
 前面的跨轮实验使用固定 prompt，便于核对每一步的数值。现在 `generate` 也能选择同一个执行循环，输入自己的文本，观察新请求怎样进入批次。
 
-这项功能位于 `main`，包版本为 `0.2.0.dev0`。已发布的 [v0.1.0](https://github.com/AkiYangDev/mini-deepinfer/releases/tag/v0.1.0) 保持原样。
+这项功能包含在 [v0.2](RELEASE_v0.2.md)。第一次接触跨轮执行，可以先跑[A、B、C 的完整演示](WALKTHROUGH.md)，再换自己的文本。已发布的 [v0.1.0](https://github.com/AkiYangDev/mini-deepinfer/releases/tag/v0.1.0) 保持原样。
 
 ## 先看一个不需要权重的例子
 

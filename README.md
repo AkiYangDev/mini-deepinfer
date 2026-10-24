@@ -10,7 +10,7 @@ A small inference engine for learning DeepInfer, targeting Ascend 910C.
 
 **简体中文** · [English](README.en.md)
 
-[开始运行](docs/START_HERE.md) · [十四课学习路线](docs/LEARNING_PATH.md) · [v0.1 说明](docs/RELEASE_v0.1.md) · [验证记录](docs/VALIDATION.md)
+[开始运行](docs/START_HERE.md) · [A、B、C 演示](docs/WALKTHROUGH.md) · [十四课学习路线](docs/LEARNING_PATH.md) · [v0.2 说明](docs/RELEASE_v0.2.md)
 
 </div>
 
@@ -18,7 +18,7 @@ mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 
 
 目前已用项目自己的前向计算，在 **Ascend 910C 上跑通 Qwen3.5-2B 文本生成**。教程从能直接打印状态的整数例子开始，逐步换成 PyTorch 小模型和真实权重，共十四课。开发时也使用 Qwen3.5-0.8B，原有 DeepSeek-R1-Distill-Qwen-1.5B 示例继续用于回归检查。
 
-当前 `main` 正在准备 v0.2，已把跨轮执行接到文本生成入口；稳定版见 [v0.1.0](https://github.com/AkiYangDev/mini-deepinfer/releases/tag/v0.1.0)。
+v0.2 把跨轮执行接到文本生成入口，并提供一个无需权重的完整调度演示。[版本说明](docs/RELEASE_v0.2.md)列出新增入口和验证范围。
 
 ## 先跑起来
 
@@ -36,10 +36,20 @@ python -m minideepinfer.step_demo
 已有 PyTorch 时，接着跑一个无需下载权重的混合注意力小模型：
 
 ```bash
-python -m minideepinfer.verify_pipeline_text --device cpu --trace-rounds
+python -m minideepinfer.pipeline_demo
 ```
 
-这个例子把 decode 和分块 prompt 放进同一批，中途再加入一个新请求，并与整段 prompt 的同步计算比较。报告里可以看到每轮输入、数值误差和缓存回收结果。依赖怎么装、输出怎么看，见[运行指南](docs/START_HERE.md)。
+这个例子里，A 的长 prompt 分块计算，B 先生成结束，C 排队后复用 B 的槽位。实际输出包括：
+
+```text
+  B: finished; cached CPU/issued=3/3; slots=0
+  C: running; cached CPU/issued=0/3; slots=6
+  observed released: B
+  reused B -> C: slots [14, 15, 16]
+  free slots: 0/20
+```
+
+B 已释放，空闲槽位却变成了 0，因为 C 已经拿走它们。[跟着这次调度读代码](docs/WALKTHROUGH.md)，看清 CPU 进度、已发出计算和缓存归属怎样变化；依赖安装见[运行指南](docs/START_HERE.md)。
 
 ## 在 Ascend 910C 上运行真实模型
 

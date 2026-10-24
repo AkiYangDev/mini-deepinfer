@@ -6,7 +6,7 @@
 
 v0.1 已收敛到单设备文本推理与跨轮执行教学，能力矩阵、边界和发布检查见[v0.1 说明](RELEASE_v0.1.md)。第一次使用按[运行指南](START_HERE.md)，按机制阅读见[十四课索引](LEARNING_PATH.md)。下文记录阶段演进，后续章节不属于 v0.1 的完成条件。
 
-当前 `main` 的下一小版本把已验证的跨轮循环接到 `generate --pipeline`，并提供逐条到达与逐轮观察；运行方式见[文本入口](PIPELINE_TEXT.md)。v0.1 的 tag 与安装包保持原样。
+v0.2 把已验证的跨轮循环接到 `generate --pipeline`，提供逐条到达与逐轮观察，并用[A、B、C 演示](WALKTHROUGH.md)串起分块、等待和缓存交接。运行方式见[文本入口](PIPELINE_TEXT.md)，范围见[版本说明](RELEASE_v0.2.md)。v0.1 的 tag 与安装包保持原样。
 
 ## 第一阶段：单请求真实生成
 
