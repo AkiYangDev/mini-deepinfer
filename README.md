@@ -33,7 +33,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | BatchEngine 分步执行 | 真实 2B 六轮、十组 logits 与同步路径差异为 0；计算途中取消、动态加入、槽位复用和停止条件通过，见[第八课](docs/DEFERRED_ENGINE.md) |
 | 等待期间准备新文本 | 两种顺序的批次与输出一致；四条短文本未显示提速，三步 trace 仅一步观察到重叠，见[第九课](docs/PREPARE_DURING_STEP.md) |
 | 采样索引提前准备 | 13 组完整 logits 差异为 0；移开 forward 后的索引复制等待，捕获的三步均有分词重叠，整体收益未确定，见[第十课](docs/SAMPLER_INPUTS.md) |
-| 跨轮执行与请求退出 | 设备 token 接到下一轮 forward；EOS/取消后丢弃多算的结果，等最后使用事件再回收。真实 2B 九组 logits 按原容差通过，见[第十一](docs/DECODE_PIPELINE.md)、[十二课](docs/STOPPING_PIPELINE.md) |
+| 跨轮到达、退出与复用 | 旧请求接设备 token，新请求排队后做 prefill；EOS/取消后等最后使用事件再回收。真实 2B 八组 logits 按原容差通过，见[第十三课](docs/ARRIVALS.md) |
 
 真实 2B 运行中的英文回答：
 
@@ -71,19 +71,15 @@ python -m minideepinfer.verify_deferred_engine --device cpu
 
 [第十课](docs/SAMPLER_INPUTS.md)沿着这份时间线找到一处采样索引复制：行号已经知道了，为什么还留到 forward 后才准备？改动、数值检查和等待边界都在同一条执行链中展开。
 
-[第十一课](docs/DECODE_PIPELINE.md)开始学习 DeepInfer 的跨轮顺序：token 留在设备上，下一轮 forward 先发出去，再处理上一轮输出。固定批次实验不到 180 行，可用小模型直接运行：
+[第十一课](docs/DECODE_PIPELINE.md)开始学习 DeepInfer 的跨轮顺序：token 留在设备上，下一轮 forward 先发出去，再处理上一轮输出。[第十二课](docs/STOPPING_PIPELINE.md)复用这个循环，解释 EOS、取消和成员退出后的收尾。
+
+[第十三课](docs/ARRIVALS.md)加入新请求：C 先排队，等 A 用完后复用它的槽位，再与 B 的 decode 合批计算。已有 PyTorch 就能运行完整的小模型对照：
 
 ```bash
-python -m minideepinfer.verify_decode_pipeline --device cpu
+python -m minideepinfer.verify_arrivals --device cpu
 ```
 
-它暂不处理 EOS、动态加入或取消；还没有性能结论，默认引擎保持原来的调度方式。
-
-[第十二课](docs/STOPPING_PIPELINE.md)复用这个循环，增加 EOS、取消和成员退出：A 结束，B 取消，C 继续生成。新增逻辑约 110 行，展示已经提交的下一轮如何收尾，以及缓存什么时候才能归还：
-
-```bash
-python -m minideepinfer.verify_stopping_pipeline --device cpu
-```
+到达与取消暂由单线程结果回调触发，尚无性能结论；默认引擎保持原来的调度方式。
 
 ## 运行真实模型
 
@@ -125,6 +121,7 @@ python -m minideepinfer.generate \
 | 计算途中取消，何时提交进度和归还槽位？ | [`BatchEngine.launch_step()` / `finish_step()`](minideepinfer/batch_engine.py) · [第八课](docs/DEFERRED_ENGINE.md) |
 | CPU 还没读到 token，下一轮怎样使用它？ | [`FixedDecodePipeline`](minideepinfer/decode_pipeline.py) · [第十一课](docs/DECODE_PIPELINE.md) |
 | 请求已结束，发出去的下一轮如何收尾？ | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十二课](docs/STOPPING_PIPELINE.md) |
+| 新 prompt 如何与旧请求的设备 token 放进同一批？ | [`submit()` / `_schedule()`](minideepinfer/stopping_pipeline.py) · [第十三课](docs/ARRIVALS.md) |
 
 还没接触过推理引擎，可以从[第一课：跟踪一个请求](docs/FIRST_REQUEST.md)开始。整数 Runner 让输入、位置和槽位都能直接打印出来，Python 3.10+ 即可运行，无需模型依赖或权重：
 
@@ -137,7 +134,7 @@ python -m unittest discover -s tests -v
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至八课从整数事件走到真实 NPU、模型和引擎，第十一、十二课继续实现设备 token 接续和跨轮请求退出。完整动态调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
+DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至八课从整数事件走到真实 NPU、模型和引擎，第十一至十三课继续实现设备 token 接续、请求退出和新请求到达。完整动态调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
 **Qwen 小模型承载教学实例，DeepInfer 继续作为引擎设计主线。** 单请求与同步批次保留对照，[第四课](docs/QWEN35.md)展开混合模型的状态管理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 

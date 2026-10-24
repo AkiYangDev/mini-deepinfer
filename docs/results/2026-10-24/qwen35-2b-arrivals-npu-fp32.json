@@ -1,0 +1,307 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "single-threaded callback arrivals, FIFO full-footprint admission; no performance measurement",
+  "eos_scope": "A uses an observed first token as controlled EOS, not natural text termination",
+  "reference": "AB synchronous four rounds, C separate cold-cache two rounds; shared read-only weights",
+  "prompt_ids": {
+    "A_C_E": [
+      760,
+      6511,
+      314,
+      9338,
+      369
+    ],
+    "B_D": [
+      32,
+      81726,
+      6297
+    ]
+  },
+  "plans": [
+    [
+      [
+        "A",
+        "prefill"
+      ],
+      [
+        "B",
+        "prefill"
+      ]
+    ],
+    [
+      [
+        "A",
+        "decode"
+      ],
+      [
+        "B",
+        "decode"
+      ]
+    ],
+    [
+      [
+        "B",
+        "decode"
+      ]
+    ],
+    [
+      [
+        "B",
+        "decode"
+      ],
+      [
+        "C",
+        "prefill"
+      ]
+    ],
+    [
+      [
+        "C",
+        "decode"
+      ]
+    ]
+  ],
+  "comparisons": [
+    {
+      "round": 0,
+      "request_id": "A",
+      "local_round": 0,
+      "visible_token": 11751,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    },
+    {
+      "round": 0,
+      "request_id": "B",
+      "local_round": 0,
+      "visible_token": 369,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    },
+    {
+      "round": 1,
+      "request_id": "A",
+      "local_round": 1,
+      "visible_token": null,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    },
+    {
+      "round": 1,
+      "request_id": "B",
+      "local_round": 1,
+      "visible_token": 264,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    },
+    {
+      "round": 2,
+      "request_id": "B",
+      "local_round": 2,
+      "visible_token": 795,
+      "max_abs": 1.52587890625e-05,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    },
+    {
+      "round": 3,
+      "request_id": "B",
+      "local_round": 3,
+      "visible_token": 5759,
+      "max_abs": 1.71661376953125e-05,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    },
+    {
+      "round": 3,
+      "request_id": "C",
+      "local_round": 0,
+      "visible_token": 11751,
+      "max_abs": 1.9073486328125e-05,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    },
+    {
+      "round": 4,
+      "request_id": "C",
+      "local_round": 1,
+      "visible_token": 13,
+      "max_abs": 1.430511474609375e-05,
+      "passed": true,
+      "greedy_matches": true,
+      "metadata_matches": true
+    }
+  ],
+  "call_order": [
+    "forward",
+    "forward",
+    "result",
+    "forward",
+    "result",
+    "forward",
+    "result",
+    "forward",
+    "result",
+    "result"
+  ],
+  "arrivals": [
+    {
+      "index": 0,
+      "waiting": true,
+      "no_slots": true
+    },
+    {
+      "index": 1,
+      "waiting": true,
+      "no_slots": true
+    }
+  ],
+  "mixed_inputs": [
+    {
+      "remap": [
+        0,
+        -1
+      ],
+      "slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "old_a_slots": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "reused_a_slots": true,
+      "a_prefix_gone": true,
+      "fresh_linear_state": true
+    }
+  ],
+  "release_checks": [
+    {
+      "request_id": "A",
+      "last_use_ready": true
+    },
+    {
+      "request_id": "B",
+      "last_use_ready": true
+    },
+    {
+      "request_id": "C",
+      "last_use_ready": true
+    }
+  ],
+  "requests": {
+    "A": {
+      "request_id": "A",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": 11751,
+      "output_ids": [
+        11751
+      ],
+      "status": "finished",
+      "num_cached_tokens": 5,
+      "finish_reason": "eos",
+      "error": null
+    },
+    "B": {
+      "request_id": "B",
+      "prompt_ids": [
+        32,
+        81726,
+        6297
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": null,
+      "output_ids": [
+        369,
+        264,
+        795,
+        5759
+      ],
+      "status": "finished",
+      "num_cached_tokens": 6,
+      "finish_reason": "length",
+      "error": null
+    },
+    "C": {
+      "request_id": "C",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 2,
+      "eos_token_id": null,
+      "output_ids": [
+        11751,
+        13
+      ],
+      "status": "finished",
+      "num_cached_tokens": 6,
+      "finish_reason": "length",
+      "error": null
+    }
+  },
+  "outputs_match": true,
+  "mixed_clean": true,
+  "tail_arrival_matches": true,
+  "waiting_error_held": true,
+  "host_error_cleaned": true,
+  "reuse_matches": true,
+  "free_slots": 16,
+  "remaining_prefixes": 0,
+  "remaining_linear_states": 0,
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "passed": true,
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "source_sha256": {
+    "minideepinfer/verify_arrivals.py": "c8966de1e5e05efcbd0cfd214db829a61c1fed81b7a6c3a8405b92b92b89d522",
+    "minideepinfer/stopping_pipeline.py": "e4965be6b0b3586147a721dd7cc4392bd5d8b0cfe3fc67fb3cbe02428cbb9fb3",
+    "minideepinfer/decode_pipeline.py": "2ad1de7d9f25335e46a20d1aa0c1a4bdf65ceb0a91f6a6235d57ff1463f0b176",
+    "minideepinfer/model_runner.py": "0da97d63105d4f57224518b9346015896273f919f40a036f9e32472f3e690fe9",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/deferred_runner.py": "c14296990ddad9bdd915be1afcaef8cba2c2bcb22477627a5dd4d62b7fbd4422",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  }
+}

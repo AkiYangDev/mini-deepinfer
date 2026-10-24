@@ -4,6 +4,16 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+## 2026-10-24：第十三课的新请求到达与槽位复用
+
+扩展现有 StoppingDecodePipeline，回调submit只创建WAITING请求；FIFO按并发名额和完整占用准入，排队取消不分配资源，运行中请求仍按最后使用事件回收。公共_launch打包混合输入：旧请求从前轮device token gather，新prompt来自主机，新行-1不进入gather；ModelRunner新增受限prepare_mixed_batch，复用原验证/打包逻辑。没有新增pipeline类，默认BatchEngine/DeferredRunner/模型数学/缓存布局不改；纯固定和退出CPU入口仍通过。
+
+单逻辑Ascend 910C / Qwen3.5-2B / FP32；Python3.12.13、PyTorch2.10.0+cpu、torch_npu2.10.0.post6、CANN9.1.0。A/B raw prompt5/3token、各max4，C同A prompt/max2，cache16、线程1。A以首token11751作受控EOS，非自然文本终止；C第0轮结果回调入队，等A归还后获得0..5槽位。五轮AB prefill/AB decode/B decode/B decode+C prefill/C decode，混合行映射[0,-1]；C进入时A前缀/线性状态已清，C状态全新。
+
+同步AB四轮和C独立冷缓存两轮先完成，共用只读权重。八组完整logits含A额外行，最大差1.9073486328125e-5，原atol1e-4/rtol2e-4通过；greedy、位置和槽位一致，A/B/C输出1/4/2。A/B/C正常release事件均ready；尾轮加入、排队时主机异常、同Runner复用通过，最后16/16、prefix0/linear0。一次程序一次已有权重加载，基线6/正常5/尾部3/异常2/复用1共17forward，0下载/trace/性能计时。退出后容器仅原保活进程，只读SSH取回[原始JSON](results/2026-10-24/qwen35-2b-arrivals-npu-fp32.json)，13执行源码SHA记录其中，无重跑。
+
+新增9项CPU测试覆盖混合准备禁止读主机样本、prefill在前时的打包偏移、缺失decode来源在gather前拒绝、最后使用后slot复用且线性状态独立、尾部到达延长运行、waiting取消、FIFO不超车、初始总占用超容量时排队、排空失败保留在途/排队引用，以及非法到达可捕获后继续。TF5.12.1全123过；TF4.46.3 111过/12参考跳过；stdlib51过/72模型跳过。仍是同线程回调到达、整prompt prefill，无后台服务/token预算/分块prompt或加速结论，详见[第十三课](ARRIVALS.md)。
+
 ## 2026-10-24：第十二课的 EOS、取消与成员退出
 
 新增 StoppingDecodePipeline 复用固定跨轮循环，只增加成员筛选、结果提交和最后使用事件回收。EOS 后保留结束 token，回调取消则保留旧输出、阻止当前结果提交；已经提交的下一轮仍跑完，其输出丢弃。请求只退出、不加入，默认 BatchEngine 不变。固定实验原有默认行为保留，模型数学、ModelRunner、DeferredRunner和缓存布局未改。

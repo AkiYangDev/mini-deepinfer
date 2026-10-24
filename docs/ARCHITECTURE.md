@@ -64,7 +64,9 @@ BatchEngine 的可选分步路径用 `launch_step()` 提交，`finish_step()` �
 
 [第十一课](DECODE_PIPELINE.md)单独实现固定批次的设备 token 接续：下一轮 forward 在上一轮 CPU 输出处理前提交，最多保留两轮状态，整批排空才回收。它独占空闲 Runner，不接入默认生成路径；动态成员、EOS 和取消仍由后续实验处理，没有性能结论。
 
-[第十二课](STOPPING_PIPELINE.md)在同一循环上增加成员退出：EOS/取消阻止后续选择，已经提交的那一轮输出丢弃，最后使用事件完成后回收请求缓存。只允许结果回调内的单线程取消；请求尚不能动态加入，主引擎的单批限制保留。
+[第十二课](STOPPING_PIPELINE.md)在同一循环上增加成员退出：EOS/取消阻止后续选择，已经提交的那一轮输出丢弃，最后使用事件完成后回收请求缓存。本课只检查结果回调内的单线程取消和退出，主引擎的单批限制保留。
+
+[第十三课](ARRIVALS.md)继续扩展这个类，支持结果回调中的新请求提交、FIFO 准入和混合输入。旧请求读设备 token，新请求上传 prompt，完成事件确认后才复用槽位；按请求记录已提交计算次数，允许新请求延长整体运行。暂不做 token 预算或分块 prefill，尚未并入主 BatchEngine。
 
 ## 模型层
 
@@ -96,6 +98,7 @@ minideepinfer/
   verify_decode_pipeline.py # 同步greedy与固定跨轮执行的数值对照
   stopping_pipeline.py # EOS/回调取消 / 缩批 / 等最后使用事件再回收
   verify_stopping_pipeline.py # 成员退出与已提交后继轮次的数值/资源检查
+  verify_arrivals.py # 新prompt/旧设备token合批、等待与槽位复用检查
   text_loop.py    # 逐条准备文本 / 在收取前或收取后入队
   benchmark_prepare.py # 相同负载下比较文本准备的位置
   analyze_prepare_trace.py # CPU分词与设备kernel区间求交

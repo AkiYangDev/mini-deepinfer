@@ -87,23 +87,7 @@ class FixedDecodePipeline:
                     if not order:
                         break
                     steps = tuple(self._step(rid, prompts[rid], index) for rid in order)
-                    current = _Round(index, steps, self._event())
-                    self._states.append(current)  # Retain ownership before submission.
-                    device_tokens = None
-                    if previous is not None:
-                        remap = batch_remap(previous.request_ids, current.request_ids)
-                        rows = torch.tensor(remap, dtype=torch.long, device=self.runner.device)
-                        current.buffers.extend((previous.tokens, rows))
-                        device_tokens = previous.tokens.index_select(0, rows)
-                        current.buffers.append(device_tokens)
-                    inputs = self.runner.prepare_batch(steps, device_input_ids=device_tokens)
-                    current.buffers.append(inputs)
-                    packed = self.runner.execute_main_model(inputs)
-                    current.buffers.append(packed)
-                    current.logits = packed.split([len(s.input_ids) for s in steps])
-                    # These prefixes describe submitted cache writes, not CPU outputs.
-                    for step in steps:
-                        self.runner._prefixes[step.request_id] = PrefixState(step.context_slots, True)
+                    current = self._launch(index, steps, previous)
                     if previous is not None:
                         self._finish(previous, outputs, on_result)
                         self._states.pop(0)
@@ -117,6 +101,47 @@ class FixedDecodePipeline:
 
     def _select(self, order):
         return order
+
+    def _launch(self, index, steps, previous):
+        current = _Round(index, steps, self._event())
+        self._states.append(current)  # Retain ownership before submission.
+        decode_rows = [i for i, s in enumerate(steps) if s.phase == "decode"]
+        device_tokens = None
+        if decode_rows:
+            if previous is None:
+                raise ValueError("decode needs a previous device result")
+            remap = batch_remap(previous.request_ids, current.request_ids)
+            sources = [remap[i] for i in decode_rows]
+            if any(row < 0 for row in sources):
+                raise ValueError("a decode request is absent from the previous batch")
+            rows = torch.tensor(sources, dtype=torch.long, device=self.runner.device)
+            current.buffers.extend((previous.tokens, rows))
+            selected = previous.tokens.index_select(0, rows)
+            current.buffers.append(selected)
+            device_tokens = selected
+            if len(decode_rows) != len(steps):
+                fresh = tuple(t for step in steps for t in step.input_ids)
+                device_tokens = torch.tensor(fresh, dtype=torch.long, device=self.runner.device)
+                offsets, offset = [], 0
+                for step in steps:
+                    if step.phase == "decode":
+                        offsets.append(offset)
+                    offset += len(step.input_ids)
+                destinations = torch.tensor(offsets, dtype=torch.long, device=self.runner.device)
+                current.buffers.extend((device_tokens, destinations))
+                device_tokens.index_copy_(0, destinations, selected)
+        if decode_rows and len(decode_rows) != len(steps):
+            inputs = self.runner.prepare_mixed_batch(steps, device_tokens)
+        else:
+            inputs = self.runner.prepare_batch(steps, device_input_ids=device_tokens)
+        current.buffers.append(inputs)
+        packed = self.runner.execute_main_model(inputs)
+        current.buffers.append(packed)
+        current.logits = packed.split([len(s.input_ids) for s in steps])
+        # Submitted cache writes can be ahead of committed CPU outputs.
+        for step in steps:
+            self.runner._prefixes[step.request_id] = PrefixState(step.context_slots, True)
+        return current
 
     def _step(self, rid, prompt, index):
         count = len(prompt) if index == 0 else 1

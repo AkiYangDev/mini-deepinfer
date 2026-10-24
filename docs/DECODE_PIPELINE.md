@@ -6,7 +6,7 @@
 
 这次增加一个独立的固定批次实验。两条请求各生成四个 token，成员和长度提前确定，不检查 EOS。上一轮采样结果留在设备上，下一轮按请求 ID 找回自己的那一行，直接作为模型输入。这样，CPU 可以先提交下一轮 forward，再读取上一轮结果。
 
-代码在 [`decode_pipeline.py`](../minideepinfer/decode_pipeline.py)，不到 180 行。现有 BatchEngine 和默认生成入口保持原来的执行方式。
+代码在 [`decode_pipeline.py`](../minideepinfer/decode_pipeline.py)。本课保留固定批次入口，后续章节复用其执行和状态持有方法。现有 BatchEngine 和默认生成入口保持原来的执行方式。
 
 ## DeepInfer 的顺序是什么
 

@@ -4,7 +4,7 @@
 
 上一课让下一轮直接读取设备 token，CPU 随后再处理上一轮输出。固定长度时，顺序很清楚。加入 EOS 后，一个问题就出现了：CPU 刚读到“请求已经结束”，下一轮可能已经把这个 EOS 当作输入，写进了 KV Cache 和 DeltaNet 状态。
 
-本课增加 [`StoppingDecodePipeline`](../minideepinfer/stopping_pipeline.py)，约 110 行，复用上一课的模型执行、采样、设备行映射和两轮状态持有。所有请求仍在开始时一起进入，但可以因 EOS、长度上限或取消而退出。已有 BatchEngine 和默认生成入口保持原样。
+本课增加 [`StoppingDecodePipeline`](../minideepinfer/stopping_pipeline.py)，复用上一课的模型执行、采样、设备行映射和两轮状态持有，先检查一起进入的请求如何因 EOS、长度上限或取消而退出。[第十三课](ARRIVALS.md)继续在这个类中加入排队与到达；下面仍沿着本课的退出场景讲解。已有 BatchEngine 和默认生成入口保持原样。
 
 ## 先分清结果和计算
 
@@ -117,4 +117,4 @@ python -m minideepinfer.verify_stopping_pipeline \
   --output outputs/stopping-pipeline-npu.json
 ```
 
-现在成员可以退出，还不能加入。下一步加入新请求时，需要把“从前轮设备结果取 token”和“用新 prompt 做 prefill”放在同一轮输入准备中，还要证明旧请求归还的槽位已经没有设备使用者。现有 BatchEngine 的单批限制继续保留。
+[第十三课](ARRIVALS.md)继续把“从前轮设备结果取 token”和“用新 prompt 做 prefill”放进同一轮输入准备，并检查结束请求的槽位复用。现有 BatchEngine 的单批限制继续保留。
