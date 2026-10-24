@@ -1,0 +1,302 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "same weights, fixed steps, independent synchronous/deferred caches; no overlap benchmark",
+  "prompt_ids": {
+    "A": [
+      760,
+      6511,
+      314,
+      9338,
+      369
+    ],
+    "B": [
+      32,
+      81726,
+      6297
+    ]
+  },
+  "forced_ids": [
+    11751,
+    13,
+    561,
+    4087
+  ],
+  "steps": [
+    {
+      "iteration": 0,
+      "request_ids": [
+        "A",
+        "B"
+      ],
+      "phases": [
+        "prefill",
+        "prefill"
+      ],
+      "input_lengths": [
+        2,
+        2
+      ],
+      "final_prompt_chunks": [
+        false,
+        false
+      ],
+      "prefix_commit_deferred": true,
+      "outputs": [
+        null,
+        null
+      ],
+      "expected": [
+        null,
+        null
+      ],
+      "cancelled": [],
+      "release_before_result": [],
+      "reclaimed": [],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "iteration": 1,
+      "request_ids": [
+        "B",
+        "A"
+      ],
+      "phases": [
+        "prefill",
+        "prefill"
+      ],
+      "input_lengths": [
+        1,
+        2
+      ],
+      "final_prompt_chunks": [
+        true,
+        false
+      ],
+      "prefix_commit_deferred": true,
+      "outputs": [
+        369,
+        null
+      ],
+      "expected": [
+        369,
+        null
+      ],
+      "cancelled": [],
+      "release_before_result": [],
+      "reclaimed": [],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "request_ids": [
+        "B",
+        "A"
+      ],
+      "phases": [
+        "decode",
+        "prefill"
+      ],
+      "input_lengths": [
+        1,
+        1
+      ],
+      "final_prompt_chunks": [
+        true,
+        true
+      ],
+      "prefix_commit_deferred": true,
+      "outputs": [
+        220,
+        11751
+      ],
+      "expected": [
+        220,
+        11751
+      ],
+      "cancelled": [],
+      "release_before_result": [],
+      "reclaimed": [],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "iteration": 3,
+      "request_ids": [
+        "A",
+        "B"
+      ],
+      "phases": [
+        "decode",
+        "decode"
+      ],
+      "input_lengths": [
+        1,
+        1
+      ],
+      "final_prompt_chunks": [
+        true,
+        true
+      ],
+      "prefix_commit_deferred": true,
+      "outputs": [
+        null,
+        198
+      ],
+      "expected": [
+        null,
+        198
+      ],
+      "cancelled": [
+        "A"
+      ],
+      "release_before_result": [],
+      "reclaimed": [
+        "A"
+      ],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "iteration": 4,
+      "request_ids": [
+        "B",
+        "C"
+      ],
+      "phases": [
+        "decode",
+        "prefill"
+      ],
+      "input_lengths": [
+        1,
+        2
+      ],
+      "final_prompt_chunks": [
+        true,
+        false
+      ],
+      "prefix_commit_deferred": true,
+      "outputs": [
+        81726,
+        null
+      ],
+      "expected": [
+        81726,
+        null
+      ],
+      "cancelled": [],
+      "release_before_result": [],
+      "reclaimed": [],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "iteration": 5,
+      "request_ids": [
+        "C",
+        "B"
+      ],
+      "phases": [
+        "prefill",
+        "decode"
+      ],
+      "input_lengths": [
+        1,
+        1
+      ],
+      "final_prompt_chunks": [
+        true,
+        true
+      ],
+      "prefix_commit_deferred": true,
+      "outputs": [
+        369,
+        369
+      ],
+      "expected": [
+        369,
+        369
+      ],
+      "cancelled": [],
+      "release_before_result": [],
+      "reclaimed": [],
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "cancelled_slots_reused": true,
+  "host_error_drained": true,
+  "free_slots": 32,
+  "remaining_prefixes": 0,
+  "remaining_linear_states": 0,
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "source_sha256": {
+    "minideepinfer/deferred_runner.py": "8b92ad6945a4c321ee6bf72e40b327fbf6a650d56928baaedb49d90202ac81ac",
+    "minideepinfer/verify_deferred.py": "2e1d02beb48a6b6e2f1a58cba1a454d8b8dbc55265da44e330b1473968f3d535",
+    "minideepinfer/model_runner.py": "3c34a7686dc3a14efa1d4f3149e02b8874724b84fbb78d5320482023d205611f",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  },
+  "passed": true
+}

@@ -21,6 +21,7 @@ jobs:
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
       - run: python -m minideepinfer.npu_step_demo --help
+      - run: python -m minideepinfer.verify_deferred --help
 
   numerical:
     runs-on: ubuntu-24.04
@@ -35,3 +36,4 @@ jobs:
       - run: python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
       - run: python -m pip install -e ".[model]" transformers==${{ matrix.transformers }} safetensors==0.5.3
       - run: python -m unittest discover -s tests -v
+      - run: python -m minideepinfer.verify_deferred --device cpu --output outputs/deferred-cpu.json

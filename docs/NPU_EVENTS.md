@@ -86,4 +86,4 @@ Python 强引用保证对象还在，不负责安排设备上的先后顺序；�
 python -m unittest discover -s tests -p test_npu_events.py -v
 ```
 
-下一步才能把模型输入、logits 和设备采样结果放进这样的在途状态，接到真实 Runner。需要先对照同步执行检查数值、分块 prompt 的输出标记和失败清理，再讨论 CPU 准备与 NPU 计算能重叠多少。
+[第七课](DEFERRED_RUNNER.md)把模型输入、logits 和设备采样结果放进在途状态，接到真实 Runner，并对照同步执行检查分块 prompt、取消和失败清理。CPU 准备与 NPU 计算能重叠多少，仍需单独测量。

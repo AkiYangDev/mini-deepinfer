@@ -4,6 +4,14 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+## 2026-10-24：第七课的真实 Runner 结果提交
+
+新增独立的 DeferredRunner / PendingBatch，不修改原同步 Runner 或模型数学。Qwen3.5-2B 在 Ascend 910C FP32 上执行六轮固定轨迹，同步与新接口使用相同权重、不同缓存，12 组 logits 比较的最大绝对差为 0（`atol=1e-4, rtol=2e-4`）。[原始报告](results/2026-10-24/qwen35-2b-deferred-npu-fp32.json)记录每轮输入、采样标记、取消、前缀提交边界和源码 SHA。
+
+两请求先做分块 prefill，再混合 decode 并换序；A 在第四轮取消，它的输出不提交，C 随后复用其槽位，B 继续执行。模型 forward 提交后还注入一次主机异常，真实 NPU 流等待完成后清理成功。最后 32/32 逻辑槽位归还，前缀与线性状态均为 0。这是执行与提交方式对照，不是新的独立模型数学参考，也不是设备故障恢复或性能压测。
+
+现场软件为 Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6、CANN 9.1.0。复用先前已核验的 2B checkpoint，没有重新下载权重或重跑旧生成。本地 67 项模型环境测试全过；无模型依赖时 30 过、37 项模型测试跳过。新增 8 项测试涵盖分块与换序、取消与回收、校验失败保留旧前缀、写缓存后异常、等待失败保留所有权、放弃整批和无效结果不部分提交。详见[第七课](DEFERRED_RUNNER.md)。
+
 ## 2026-10-24：第六课的实际 NPU 事件
 
 [第六课](NPU_EVENTS.md)在 Ascend 910C 上使用真实 Stream/Event、固定主机内存和微型整数张量，复用第五课的 DeferredRelease；不加载权重，不执行模型 forward。Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6，实际安装的事件源码与执行源码 SHA256 见[原始报告](results/2026-10-24/npu-step-events.json)。

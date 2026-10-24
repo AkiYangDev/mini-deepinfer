@@ -29,6 +29,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | Qwen3.5 BF16 递推对照 | 0.8B、2B 与 2B 双请求的固定短轨迹，在同扫描方式与状态精度下最大差异 **0**，零容差通过 |
 | 2B 双请求生成 | 中文解释与英文问答均遇 EOS 结束，512/512 逻辑槽位回收 |
 | Ascend 910C 事件实验 | 微型张量的跨流读取、CPU 结果拷贝与延迟回收通过；[第六课](docs/NPU_EVENTS.md)保留实际输出 |
+| 2B 结果延后提交实验 | 六轮真实权重 FP32 轨迹与同步 Runner 的 logits 差异为 0；覆盖分块、取消和异常清理，见[第七课](docs/DEFERRED_RUNNER.md) |
 
 真实 2B 运行中的英文回答：
 
@@ -53,6 +54,8 @@ python -m minideepinfer.step_demo
 它跟着 A、B、C 三个请求，展示 B 换了行怎样接上自己的结果，以及 A 取消后为什么还不能立刻归还缓存。讲解见[第五课：请求结束了，缓存为什么还不能还？](docs/STEP_STATE.md)。这是手动事件驱动的 CPU 实验，真实模型路径仍按下面的方法运行。
 
 有 Ascend 环境后，可以接着读[第六课：NPU 算完了，CPU 就能读吗？](docs/NPU_EVENTS.md)，用真实事件和小张量检查同样的顺序，无需加载权重。
+
+[第七课](docs/DEFERRED_RUNNER.md)把这套顺序接到真实模型：先提交计算，结果回来后再更新进度。它也提供无需权重的 PyTorch 小模型示例，当前只允许一批在途。
 
 ## 运行真实模型
 
@@ -99,7 +102,7 @@ python -m unittest discover -s tests -v
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；[第五课](docs/STEP_STATE.md)用独立实验解释跨轮状态、批次映射与延迟释放，[第六课](docs/NPU_EVENTS.md)换成 NPU 事件和微型张量。真实模型的调度重叠随后验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
+DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至七课逐步从整数事件走到真实 NPU 与模型，把跨轮状态、批次映射和结果提交讲清楚。调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
 **Qwen 小模型承载教学实例，DeepInfer 继续作为引擎设计主线。** 单请求与同步批次保留对照，[第四课](docs/QWEN35.md)展开混合模型的状态管理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 

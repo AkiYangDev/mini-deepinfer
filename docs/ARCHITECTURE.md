@@ -16,6 +16,8 @@
 | HybridCache | 管理 Qwen3.5 两类设备缓存 | 完整注意力的 KV；每个请求、每个线性层的卷积窗口与 FP32 递推矩阵 |
 | Engine | FIFO 调度、准备元数据、提交结果与终止 | 等待队列、一个运行请求、该请求的预留槽位 |
 | BatchEngine | 按轮准入与整批结果提交 | 等待队列、运行请求及各自槽位、请求数与 token 预算 |
+| DeferredRunner | 独立实验：提交真实模型计算，读取后再更新主机前缀 | 独占的 ModelRunner、专用流、最多一批在途结果、取消记录 |
+| PendingBatch | 持有本批张量与结果拷贝事件，控制读取、取消和放弃 | Step 元组、CPU token 缓冲区、logits、完成与清理状态 |
 
 调度在 Engine / BatchEngine 内。Runner 将输入准备、主模型与 greedy 选择分开；批次计算后按照同样的请求顺序返回 token，Engine 才提交请求状态。批次版本维护每个请求独立的已计算前缀，并在请求结束后删除对应记录。
 
@@ -34,7 +36,7 @@ prefill 计算一段输入；decode 通常消费上一轮选出的 token 并预�
 
 当前准入规则：请求最多需要 `len(prompt) + max_new_tokens - 1` 个槽位；超过总容量时在提交阶段拒绝。运行前一次性预留最大需求，排队请求尚不占用槽位。第一课逐个运行，BatchEngine 在空闲槽位、请求数和本轮 token 预算允许时接纳多个请求，详见[第三课](BATCHING.md)。抢占、重计算及共享前缀的引用计数后续再加入。
 
-Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回或抛错前完成本轮工作，Engine 才能立即释放槽位；NPU Runner 显式同步。`num_cached_tokens` 保留已成功提交的计算进度，请求终止后它是历史计数。当前没有异步执行或在途引用。
+Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回或抛错前完成本轮工作，Engine 才能立即释放槽位；NPU Runner 显式同步。`num_cached_tokens` 保留已成功提交的计算进度，请求终止后它是历史计数。主引擎仍采用这个同步约定；第七课的 DeferredRunner 独立持有一批在途结果，尚未接到 Engine / BatchEngine。
 
 当前与后续缓存实现需要满足以下条件，其中在途计算、投机与共享规则仅适用于相应能力加入后：
 
@@ -52,7 +54,7 @@ Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回�
 
 参考路径用基础运算表达数学含义；优化路径逐项替换归一化、attention、专家计算或缓存写入。每个算子记录输入形状、布局、dtype、版本和数值对照。
 
-当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。[第五课](STEP_STATE.md)用独立 CPU 实验解释在途步骤状态、批次映射与延迟释放；[第六课](NPU_EVENTS.md)检查实际 NPU 事件、微型张量与主机缓冲区的生命周期。真实 Runner 重叠和图执行分别验证后再接入。需要特别检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
+当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。第五、六课解释状态与事件；[第七课](DEFERRED_RUNNER.md)把它们接到真实模型，分开计算、结果读取和主机前缀提交。当前仅一批在途，执行重叠和图执行仍需独立验证。扩大范围时，需要重新检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
 
 ## 模型层
 
@@ -77,6 +79,8 @@ minideepinfer/
   step_demo.py    # 手动事件：提前读取与提前回收为什么不行
   npu_events.py   # 未记录事件保护 / 等待结果拷贝 / 持有缓冲区
   npu_step_demo.py # 微型张量的实际 NPU 跨流与回收实验
+  deferred_runner.py # 单批在途模型执行 / 显式读取与提交
+  verify_deferred.py # 同步与延后提交的固定轨迹对照
   model_runner.py # 输入准备 / forward / greedy
   tensor_cache.py # 真实 K/V 张量与槽位读写
   hybrid_cache.py # 完整注意力 KV 与请求独占的线性状态
