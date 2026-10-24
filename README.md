@@ -20,6 +20,8 @@ mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 
 
 v0.3 围绕“候选猜错后，怎样继续生成”增加一条[三步学习路线](docs/RELEASE_v0.3.md)：可控 greedy 验证 → Qwen3.5 状态恢复 → 不读取答案的 lookup draft。CPU 例子无需权重，真实 2B 的 Ascend 910C 输出与缓存对照已通过。lookup 的实机短例子接受 0/5、增加了计算，这个结果和全部成本一同保留。独立同步实验没有接入跨轮文本入口，也没有提速结论。
 
+main 的 `0.4.0.dev0` 新增[双模型 draft](docs/MODEL_DRAFT.md)：Qwen3.5-0.8B 提候选，2B 验证。真实短输入接受 4/5，但宽度 1 的三组配对 whole 中位数从 412.485 ms 增至 541.096 ms。输出和状态检查通过，完整成本保留；该入口不在 v0.3.0 安装包中。
+
 ## 先跑起来
 
 Python 3.10+，先看一个无需模型依赖、权重或 NPU 的例子：
@@ -85,6 +87,7 @@ python -m minideepinfer.generate \
 | CPU 没读到 token，下一轮怎样接着算？ | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [第十一课](docs/DECODE_PIPELINE.md) |
 | EOS、新请求、分块 prompt 怎样进入同一个循环？ | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十二至十四课](docs/CHUNK_PIPELINE.md) |
 | 已发出、已提交和设备已用完，有什么区别？ | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [第十四课](docs/CHUNK_PIPELINE.md) |
+| 小模型提候选后，两边状态怎样接续？ | [`ModelDraft`](minideepinfer/model_draft.py) · [双模型参考](docs/MODEL_DRAFT.md) |
 | 不预先知道答案，draft 怎样提出候选？ | [`LookupDraft`](minideepinfer/lookup_draft.py) · [独立候选](docs/LOOKUP_DRAFT.md) |
 | draft 猜错后，哪些输出和缓存能保留？ | [`verify_greedy()` / `CachedTarget`](minideepinfer/speculative.py) · [投机实验](docs/SPECULATIVE.md) |
 

@@ -20,6 +20,8 @@ The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass 
 
 v0.3 adds a [three-step walkthrough](docs/RELEASE_v0.3.md#english-release-notes): controlled greedy verification → Qwen3.5 state recovery → an independent lookup draft. CPU examples need no checkpoint, and real 2B output and cache checks passed on Ascend 910C. The lookup short example accepted 0/5 candidates and increased work; that result and its costs are preserved. This synchronous lesson is separate from the cross-round text frontend, with no speedup claim.
 
+The `0.4.0.dev0` main branch adds a [separate model draft](docs/MODEL_DRAFT.md#english-summary): Qwen3.5-0.8B proposes, and 2B verifies. The real short input accepted 4/5 candidates, yet median whole latency rose from 412.485 to 541.096 ms across three pairs. Output and state checks passed; all costs are preserved. This entry point is absent from v0.3.0 assets.
+
 ## Start small
 
 With Python 3.10+, run an example that needs no model dependencies, weights, or NPU:
@@ -85,6 +87,7 @@ The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu
 | How can the next forward use a token before the CPU reads it? | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
 | How do stops, arrivals, and chunks share one loop? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lessons twelve through fourteen](docs/CHUNK_PIPELINE.md) |
 | How do issued progress, CPU commits, and final device use differ? | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [lesson fourteen](docs/CHUNK_PIPELINE.md) |
+| How do draft and target states reconnect after verification? | [`ModelDraft`](minideepinfer/model_draft.py) · [dual-model reference](docs/MODEL_DRAFT.md#english-summary) |
 | Where do candidates come from without knowing the answer? | [`LookupDraft`](minideepinfer/lookup_draft.py) · [independent draft](docs/LOOKUP_DRAFT.md#english-summary) |
 | What can be committed when a draft token is wrong? | [`verify_greedy()` / `CachedTarget`](minideepinfer/speculative.py) · [speculation lesson](docs/SPECULATIVE.md#english-summary) |
 

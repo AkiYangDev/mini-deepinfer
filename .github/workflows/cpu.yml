@@ -28,11 +28,13 @@ jobs:
       - run: python scripts/check_evidence.py --index docs/results/hybrid-rollback/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/lookup-draft/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/v0.3/evidence.json
+      - run: python scripts/check_evidence.py --index docs/results/model-draft/evidence.json
       - run: python -m minideepinfer
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
       - run: python -m minideepinfer.pipeline_demo --help
       - run: python -m minideepinfer.spec_demo --help
+      - run: python -m minideepinfer.model_draft_demo --help
       - run: python -m minideepinfer.npu_step_demo --help
       - run: python -m minideepinfer.verify_deferred --help
       - run: python -m minideepinfer.verify_deferred_engine --help
@@ -67,6 +69,7 @@ jobs:
       - run: python -m minideepinfer.spec_demo --output outputs/spec-demo.json
       - run: python -m minideepinfer.spec_demo --hybrid --output outputs/hybrid-rollback.json
       - run: python -m minideepinfer.spec_demo --draft lookup --hybrid --output outputs/lookup-draft.json
+      - run: python -m minideepinfer.model_draft_demo --output outputs/model-draft.json
       - run: python -m minideepinfer.verify_deferred --device cpu --output outputs/deferred-cpu.json
       - run: python -m minideepinfer.verify_deferred_engine --device cpu --output outputs/deferred-engine-cpu.json
       - run: python -m minideepinfer.verify_decode_pipeline --device cpu --output outputs/decode-pipeline-cpu.json
@@ -90,6 +93,8 @@ jobs:
         working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.spec_demo --draft lookup --hybrid --output installed-lookup-draft.json
         working-directory: ${{ runner.temp }}
+      - run: python -I -m minideepinfer.model_draft_demo --output installed-model-draft.json
+        working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.benchmark_pipeline --repeats 1 --output installed-pipeline-benchmark.json
         working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.benchmark_pipeline --compare-admission --repeats 1 --output installed-admission.json
@@ -110,11 +115,12 @@ jobs:
       - name: Run the installed package outside the checkout
         working-directory: ${{ runner.temp }}
         run: |
-          "$RUNNER_TEMP/mini-install/bin/python" -I -c "from importlib.metadata import version; assert version('mini-deepinfer') == '0.3.0'"
+          "$RUNNER_TEMP/mini-install/bin/python" -I -c "from importlib.metadata import version; assert version('mini-deepinfer') == '0.4.0.dev0'"
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.batch_demo
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.step_demo
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.generate --help
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.pipeline_demo --help
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.spec_demo --help
+          "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.model_draft_demo --help
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.verify_chunk_pipeline --help

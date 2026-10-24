@@ -131,12 +131,13 @@ class CachedTarget:
 
 
 def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=None,
-             cache_capacity=None, on_round=None, on_cache=None):
+             cache_capacity=None, on_round=None, on_cache=None, on_commit=None):
     """draft(committed_prefix, limit) supplies up to limit candidates after pending.
 
     The last committed output is pending: it has not yet been consumed by target.
     Each verify forward consumes pending+draft, then keeps only the valid prefix.
     This synchronous function owns its cache and slots for the duration of one call.
+    on_commit receives each CPU-visible group of committed output tokens.
     """
     from .engine import validate_request
     from .kv_cache import SlotPool
@@ -161,6 +162,8 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
         target = CachedTarget(model,slots,capacity)
         output.append(int(target.forward(prompt)[-1].argmax()))
         reason = 'eos' if output[-1]==eos_token_id else 'length' if max_new_tokens==1 else None
+        if on_commit is not None:
+            on_commit(tuple(output))
         while reason is None:
             remaining = max_new_tokens-len(output)
             count = min(width,remaining-1)
@@ -194,6 +197,8 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
                           replay_tokens=target.replay_tokens-replay_tokens_before,
                           finish_reason=decision.finish_reason)
             rounds.append(record)
+            if on_commit is not None:
+                on_commit(decision.tokens)
             if on_cache is not None:
                 on_cache(target)
             if on_round is not None:

@@ -1,0 +1,17 @@
+{
+  "version": "0.4.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-24/model-draft-cpu.json",
+      "sha256": "8d0ef03258e55ba81462fe08831b44f38346d076824f7436c305da6e052bb9e2",
+      "scope": "CPU FP32 two random Qwen3.5 sizes; widths 1/3, independent greedy, 14 cold-cache checks, 44 total model calls. No timing.",
+      "limits": "Single request, short fixed raw input, greedy FP32 eager reference; not MTP, probability sampling or a production speedup. Width 3 has no timing samples. CPU commits group accepted tokens at one timestamp. Real draft truncation was not triggered; it is covered by CPU tests. Cold reference uses this project model, not Transformers. Snapshot bytes are cloned tensors, not measured peak memory."
+    },
+    {
+      "path": "docs/results/2026-10-24/qwen35-08b-2b-model-draft.json",
+      "sha256": "fa56e196aacd75f107bd2549dae0a252c9974b15b8250c4baaf3dd63144058cb",
+      "scope": "Ascend 910C FP32 Qwen3.5-0.8B to 2B; accepted 4/5 and 6/7 at widths 1/3, 16 cold-cache checks. Width 1: 3 paired trials after warmup, median whole 412.485 ms baseline versus 541.096 ms dual, 0 failed formal requests; 138 model calls in the full program.",
+      "limits": "Single request, short fixed raw input, greedy FP32 eager reference; not MTP, probability sampling or a production speedup. Width 3 has no timing samples. CPU commits group accepted tokens at one timestamp. Real draft truncation was not triggered; it is covered by CPU tests. Cold reference uses this project model, not Transformers. Snapshot bytes are cloned tensors, not measured peak memory."
+    }
+  ]
+}

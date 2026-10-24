@@ -18,7 +18,9 @@
 
 ## 核心对象
 
-v0.3 的[投机教学实验](SPECULATIVE.md)是独立同步单请求路径：`verify_greedy` 决定输出，`CachedTarget` 管理有效 KV 前缀，以及 Qwen3.5 的线性状态快照与有效输入重算，`generate` 负责提交和回退。新增 `LookupDraft` 只根据已提交 token 查找续文，可返回少于上限甚至零个候选；独立 greedy 对照在其生成结束后运行。它不复用或改变下表的跨轮调度，；主文本生成路径仍按前面的三种入口运行。
+v0.3 的[投机教学实验](SPECULATIVE.md)是独立同步单请求路径：`verify_greedy` 决定输出，`CachedTarget` 管理有效 KV 前缀，以及 Qwen3.5 的线性状态快照与有效输入重算，`generate` 负责提交和回退。新增 `LookupDraft` 只根据已提交 token 查找续文，可返回少于上限甚至零个候选；独立 greedy 对照在其生成结束后运行。它不复用或改变下表的跨轮调度；主文本生成路径仍按前面的三种入口运行。
+
+main 的 v0.4 开发入口另有[双模型参考](MODEL_DRAFT.md)：`ModelDraft` 复用 `CachedTarget` 保存独立缓存，下一次候选回调先对齐 target 已提交前缀。target 的接受、提交和回退继续由原 `generate` 完成；新增 `on_commit` 只观察 CPU 可见的输出组。数值检查与计时分别运行，未接入跨轮引擎。
 
 | 对象 | 职责 | 主要状态 |
 | --- | --- | --- |
