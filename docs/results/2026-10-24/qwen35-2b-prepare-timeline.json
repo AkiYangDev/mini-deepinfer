@@ -1,0 +1,86 @@
+{
+  "scope": "profiled interval intersections, not unprofiled performance or causality",
+  "time_unit": "us",
+  "kernel_rows": 8609,
+  "matching_device_events": 8609,
+  "max_export_duration_difference_us": 0.001,
+  "steps": [
+    {
+      "step": 0,
+      "launch_us": 63009.79,
+      "tokenize_us": 191.59,
+      "finish_us": 1379.94,
+      "kernel_overlap_us": 191.59,
+      "launch_start_us": 0.0,
+      "launch_end_us": 63009.79,
+      "tokenize_start_us": 63024.12,
+      "tokenize_end_us": 63215.71,
+      "finish_start_us": 63241.57,
+      "finish_end_us": 64621.51,
+      "nearby_device_busy_us": [
+        [
+          62774.12,
+          63465.71
+        ]
+      ]
+    },
+    {
+      "step": 1,
+      "launch_us": 72008.9,
+      "tokenize_us": 190.57,
+      "finish_us": 194.92,
+      "kernel_overlap_us": 0.0,
+      "launch_start_us": 64749.58,
+      "launch_end_us": 136758.48,
+      "tokenize_start_us": 136772.45,
+      "tokenize_end_us": 136963.02,
+      "finish_start_us": 136986.2,
+      "finish_end_us": 137181.12,
+      "nearby_device_busy_us": [
+        [
+          136647.622,
+          136649.922
+        ]
+      ]
+    },
+    {
+      "step": 2,
+      "launch_us": 64231.29,
+      "tokenize_us": 186.19,
+      "finish_us": 198.99,
+      "kernel_overlap_us": 0.0,
+      "launch_start_us": 137288.51,
+      "launch_end_us": 201519.8,
+      "tokenize_start_us": 201533.53,
+      "tokenize_end_us": 201719.72,
+      "finish_start_us": 201743.15,
+      "finish_end_us": 201942.14,
+      "nearby_device_busy_us": [
+        [
+          201434.532,
+          201436.972
+        ]
+      ]
+    }
+  ],
+  "window_us": 201942.14,
+  "kernel_busy_union_us": 61303.436,
+  "trace_sha256": "361c9476676d400e1c217d1b6f26670dc9e57eaa6d3bdc76b24bc2ea9eb55990",
+  "kernel_table_sha256": "29552ddce90688846e06a03992ef6190db37a94e7799c1787ae5289b910535ec",
+  "analyzer_sha256": "23b8038e360f025ad45563a68bf5f200f0cae4cc54cd2c9cc7e9b8365bb01bc6",
+  "representation": "summary and +/-250 us device intervals around tokenization; times relative to first launch",
+  "full_analysis_sha256": "b125f8f8a6018a22ca82fb4851e46cd7b20fb4f17d2adae3287f1fd53be3d49b",
+  "collection": {
+    "scope": "three warmed steps; profiler overhead excluded from benchmark report",
+    "python_wrapper_sha256": "a95dd24a1cc0509f6f72d5a5fca5e45a0e95687ef2fb899131a9430edab408f6",
+    "active_steps": 3,
+    "level": 0,
+    "cpu": true,
+    "npu": true,
+    "shapes": false,
+    "stacks": false,
+    "passed": true,
+    "plans_match_warmup": true,
+    "output_tokens": 16
+  }
+}

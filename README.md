@@ -31,6 +31,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | Ascend 910C 事件实验 | 微型张量的跨流读取、CPU 结果拷贝与延迟回收通过；[第六课](docs/NPU_EVENTS.md)保留实际输出 |
 | 2B 结果延后提交实验 | 六轮真实权重 FP32 轨迹与同步 Runner 的 logits 差异为 0；覆盖分块、取消和异常清理，见[第七课](docs/DEFERRED_RUNNER.md) |
 | BatchEngine 分步执行 | 真实 2B 六轮、十组 logits 与同步路径差异为 0；计算途中取消、动态加入、槽位复用和停止条件通过，见[第八课](docs/DEFERRED_ENGINE.md) |
+| 等待期间准备新文本 | 两种顺序的批次与输出一致；四条短文本未显示提速，三步 trace 仅一步观察到重叠，见[第九课](docs/PREPARE_DURING_STEP.md) |
 
 真实 2B 运行中的英文回答：
 
@@ -40,7 +41,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 [eos; 9 output tokens; free KV slots 512/512]
 ```
 
-[完整双语输出](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)、输入、环境、逐步误差和 BF16 失败记录均见[验证记录](docs/VALIDATION.md)。这些是短上下文正确性检查，没有吞吐或延迟结论。
+[完整双语输出](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)、输入、环境、逐步误差和 BF16 失败记录均见[验证记录](docs/VALIDATION.md)。模型对照是短上下文正确性检查；第九课另外记录了有限负载的计时，没有通用性能结论。
 
 ## 先跑一个小例子
 
@@ -63,6 +64,8 @@ python -m minideepinfer.step_demo
 ```bash
 python -m minideepinfer.verify_deferred_engine --device cpu
 ```
+
+[第九课](docs/PREPARE_DURING_STEP.md)让 CPU 在等待时为下一条文本分词，提供两种调用顺序的对照和实际时间线。它解释了为什么“可以重叠”仍然不一定更快。
 
 ## 运行真实模型
 
@@ -87,6 +90,8 @@ python -m minideepinfer.generate \
 
 加上 `--deferred` 可使用第八课的分步执行路径。离线循环仍逐批等待，不代表已经获得调度重叠或性能收益。
 
+`--prepare-during-step` 则会逐条准备新文本，并自动启用分步执行；默认生成方式不变。运行方法和效果边界见[第九课](docs/PREPARE_DURING_STEP.md)。
+
 ## 沿着一个请求读代码
 
 如果你熟悉基本的 Python / PyTorch，可以按下面的顺序读。模型计算由本项目实现，Transformers 提供 tokenizer 和数值对照。
@@ -108,7 +113,7 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-未安装模型依赖时执行 40 项引擎与状态测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
+未安装模型依赖时执行 50 项引擎、状态与时间区间测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
 
 ## 为什么参考 DeepInfer
 

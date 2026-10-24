@@ -31,6 +31,7 @@ The main example uses FP32. BF16 also passes fixed short trajectories against an
 | Ascend 910C event experiment | Cross-stream reads, host result copies, and deferred release pass on tiny tensors; [lesson six](docs/NPU_EVENTS.md) preserves the actual output |
 | 2B deferred-result experiment | Six real-weight FP32 batches match synchronous Runner logits with zero difference, covering chunks, cancellation, and host-error cleanup; see [lesson seven](docs/DEFERRED_RUNNER.md) |
 | Split-step BatchEngine | Six real 2B rounds and ten logit comparisons match the sync path with zero difference, covering in-flight cancellation, arrivals, slot reuse, and stopping; see [lesson eight](docs/DEFERRED_ENGINE.md) |
+| Prepare text while waiting | Both orders produce identical batches and tokens. Four short texts show no speedup; only one of three captured steps overlaps tokenization with device activity. See [lesson nine](docs/PREPARE_DURING_STEP.md) |
 
 The English answer from the real 2B run:
 
@@ -40,7 +41,7 @@ The English answer from the real 2B run:
 [eos; 9 output tokens; free KV slots 512/512]
 ```
 
-The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt), inputs, environment, errors, and failed BF16 checks are preserved in the [validation record](docs/VALIDATION.md). These are short-context correctness checks, without throughput or latency claims.
+The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt), inputs, environment, errors, and failed BF16 checks are preserved in the [validation record](docs/VALIDATION.md). Model comparisons check short-context correctness. Lesson nine separately records timing for a small workload, without a general performance claim.
 
 ## Start with a small example
 
@@ -63,6 +64,8 @@ With an Ascend environment, [lesson six](docs/NPU_EVENTS.md) checks those bounda
 ```bash
 python -m minideepinfer.verify_deferred_engine --device cpu
 ```
+
+[Lesson nine](docs/PREPARE_DURING_STEP.md) prepares the next text while waiting, then compares both orders and checks an actual device timeline. It explains why allowing overlap does not automatically make execution faster.
 
 ## Run a real model
 
@@ -87,6 +90,8 @@ Without an NPU, use `--device cpu --dtype float32` and start with 0.8B. This imp
 
 Add `--deferred` to use lesson eight's split-step path. The offline loop still waits for each batch; it does not demonstrate scheduling overlap or a speedup.
 
+`--prepare-during-step` prepares new texts one at a time and enables split-step execution automatically. Default generation is unchanged; see [lesson nine](docs/PREPARE_DURING_STEP.md) for commands and measured limits.
+
 ## Follow a request through the code
 
 If you know basic Python and PyTorch, follow these entry points. The project implements the model computation; Transformers supplies the tokenizer and numerical reference.
@@ -108,7 +113,7 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-Without model dependencies, 40 engine and state tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+Without model dependencies, 50 engine, state, and interval tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
 
 ## How this relates to DeepInfer
 

@@ -260,6 +260,18 @@ class DeferredRunnerTests(unittest.TestCase):
         self.assertEqual(deferred.runner._prefixes, {})
         self.assertEqual(deferred.runner.cache.linear_states, {})
 
+    def test_text_preparation_orders_match_with_real_model_and_hybrid_cache(self):
+        from minideepinfer.benchmark_prepare import run_trial, TinyTokenizer
+        model = self.runner().model
+        after = run_trial(model, TinyTokenizer(), False)
+        before = run_trial(model, TinyTokenizer(), True)
+        self.assertEqual(after['plans'], before['plans'])
+        for a, b in zip(after['requests'], before['requests']):
+            self.assertEqual(a['output_ids'], b['output_ids'])
+            self.assertEqual(a['finish_reason'], b['finish_reason'])
+        self.assertTrue(after['clean'] and before['clean'])
+        self.assertEqual(after['output_tokens'], 16)
+
 
 if __name__ == '__main__':
     unittest.main()

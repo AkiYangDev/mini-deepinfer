@@ -40,6 +40,8 @@ Engine 接口只在一个线程中顺序调用。同步路径要求 Runner 在�
 
 BatchEngine 的可选分步路径用 `launch_step()` 提交，`finish_step()` 等待、校验并提交。两者之间可以接收请求或取消请求；取消中的运行请求保留槽位，确认本批结束后才清理。等待失败时，即使请求已经标成 failed，也继续持有资源并拒绝下一批；`abort_step()` 只有在排空设备工作成功后才能清理。详见[第八课](DEFERRED_ENGINE.md)。
 
+第九课的 `text_loop` 每轮只读取并准备一条新文本，可在本批结果收取前完成分词和入队；请求仍由下一轮的同一调度器准入。它不提前构造依赖当前结果的 decode，也不增加线程。若新文本准备失败，先收取已经发出的本批结果，再把前端错误交还调用方；设备等待失败则继续保留资源。实际重叠和计时见[第九课](PREPARE_DURING_STEP.md)。
+
 当前与后续缓存实现需要满足以下条件，其中在途计算、投机与共享规则仅适用于相应能力加入后：
 
 1. 活跃请求拥有的块与空闲块不重叠。
@@ -84,6 +86,9 @@ minideepinfer/
   deferred_runner.py # 单批在途模型执行 / 显式读取与提交
   verify_deferred.py # 同步与延后提交的固定轨迹对照
   verify_deferred_engine.py # 同步/分步引擎的请求生命周期对照
+  text_loop.py    # 逐条准备文本 / 在收取前或收取后入队
+  benchmark_prepare.py # 相同负载下比较文本准备的位置
+  analyze_prepare_trace.py # CPU分词与设备kernel区间求交
   model_runner.py # 输入准备 / forward / greedy
   tensor_cache.py # 真实 K/V 张量与槽位读写
   hybrid_cache.py # 完整注意力 KV 与请求独占的线性状态
