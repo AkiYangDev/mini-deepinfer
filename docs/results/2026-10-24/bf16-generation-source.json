@@ -1,0 +1,9 @@
+{
+  "driver": "docs/results/2026-10-24/check_generation_bf16.py",
+  "execution_driver_sha256": "d10ec2e06aae33aa91f51b652a25cbd29329f336f8e97a763630f399189fa25f",
+  "repository_driver_sha256": "a3b18452db7b094f901adca6c30fc7762d67a25fcc2b08873ba30bb1a9a10703",
+  "difference": "Git normalizes CRLF to LF; Python executable AST is identical",
+  "line_endings_only": true,
+  "executable_ast_equal": true,
+  "report": "qwen35-2b-generation-npu-bf16.json"
+}
