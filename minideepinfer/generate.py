@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--raw", action="store_true", help="skip the checkpoint's chat template")
     parser.add_argument("--thinking", action="store_true", help="enable thinking if the chat template supports it")
     parser.add_argument("--chunked-prefill", action="store_true", help="split prompts by the batch token budget")
+    parser.add_argument("--deferred", action="store_true", help="launch and collect each batch separately")
     args = parser.parse_args()
 
     import torch
@@ -28,9 +29,12 @@ def main():
     runner = ModelRunner.from_pretrained(
         args.model, args.device, getattr(torch, args.dtype), args.cache_capacity
     )
-    engine = (Engine(runner, args.cache_capacity) if len(prompts) == 1 and not args.chunked_prefill else
+    if args.deferred:
+        from .deferred_runner import DeferredRunner
+        runner = DeferredRunner(runner)
+    engine = (Engine(runner, args.cache_capacity) if len(prompts) == 1 and not args.chunked_prefill and not args.deferred else
               BatchEngine(runner, args.cache_capacity, args.max_num_seqs,
-                          args.max_batched_tokens, args.chunked_prefill))
+                          args.max_batched_tokens, args.chunked_prefill, deferred=args.deferred))
     requests = []
     for prompt in prompts:
         tokens = (tokenizer.encode(prompt) if args.raw else tokenizer.apply_chat_template(

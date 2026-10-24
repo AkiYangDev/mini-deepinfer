@@ -4,6 +4,16 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+## 2026-10-24：第八课的 BatchEngine 分步执行
+
+现有 BatchEngine 新增可选的发起/收取接口，原同步路径保留。Qwen3.5-2B 在 Ascend 910C FP32 执行六轮请求轨迹，同步与分步路径使用相同调度计划、共享只读权重和独立缓存，十组 logits 最大绝对差为 0，沿用 `atol=1e-4, rtol=2e-4`。[原始报告](results/2026-10-24/qwen35-2b-deferred-engine-npu-fp32.json)保留每轮完整 Step、输出、请求进度、停止原因和执行源码 SHA。
+
+A 分块 prefill 后与 B 一起 decode，在收取前取消；本轮 A 输出丢弃，已提交进度不变，槽位保留到结果处理结束。C 随后复用 A 的槽位，B、C 输出与同步路径逐轮一致并按长度停止。另一个相同 prompt 请求以 B 已观测的首个 token 作为 EOS，检查首次采样后的停止与回收，并非自然文本结束。主机异常在真实 forward 提交后注入，等待流结束后清理成功，32/32 槽位归还，前缀与线性状态均为 0。
+
+环境为 Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6、CANN 9.1.0。模型运行成功退出后，SFTP 收集报告两次断线；通过只读 SSH 取回原文件，没有重跑模型。末次检查项目容器仅保留原有 sleep 进程。
+
+本地 Transformers 5.12.1 环境 80 项测试全过；4.46.3 环境 68 项通过、12 项独立 Qwen3.5 参考检查跳过；标准库环境 40 项通过、40 项模型测试跳过。新增 13 项测试涵盖请求进度提交、在途取消、等待请求取消、EOS、整批校验、放弃结果，以及等待/排空失败时保留资源；其中包括 20 组固定 seed、共 800 次循环的随机请求到达与途中取消检查。真实设备故障恢复未测，没有调度重叠或性能结论。详见[第八课](DEFERRED_ENGINE.md)。
+
 ## 2026-10-24：第七课的真实 Runner 结果提交
 
 新增独立的 DeferredRunner / PendingBatch，不修改原同步 Runner 或模型数学。Qwen3.5-2B 在 Ascend 910C FP32 上执行六轮固定轨迹，同步与新接口使用相同权重、不同缓存，12 组 logits 比较的最大绝对差为 0（`atol=1e-4, rtol=2e-4`）。[原始报告](results/2026-10-24/qwen35-2b-deferred-npu-fp32.json)记录每轮输入、采样标记、取消、前缀提交边界和源码 SHA。
@@ -135,7 +145,7 @@ python -m unittest discover -s tests -v
 python -m minideepinfer
 ```
 
-当前共 36 项测试：`test_engine.py` 的 8 项与 `test_batch_engine.py` 的 11 项仅依赖标准库；`test_model.py` 的 8 项与 `test_batch_model.py` 的 9 项需要模型依赖，未安装时明确跳过。真实权重的单请求与批次数值对照命令见[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)。
+当前共 80 项测试：40 项调度、事件与生命周期检查仅依赖标准库，其余模型检查需要相应依赖，未安装时明确跳过。独立 Qwen3.5 参考检查需要 Transformers 5.12.1。真实权重的单请求与批次数值对照命令见[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)；新增分步引擎检查见[第八课](DEFERRED_ENGINE.md)。
 
 本轮本地检查环境为 Python 3.14.5；Python 3.10—3.13 与 3.14 的标准库检查由仓库 CI 配置覆盖，执行结果以对应 Actions 记录为准。
 

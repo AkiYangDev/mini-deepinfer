@@ -1,0 +1,571 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "same BatchEngine scheduler, same read-only weights, independent caches; no overlap benchmark",
+  "cancellation_reference": "sync finishes then cancels A; deferred cancels before commit and discards that row",
+  "prompt_ids": {
+    "A": [
+      760,
+      6511,
+      314,
+      9338,
+      369
+    ],
+    "B_C_EOS": [
+      32,
+      81726,
+      6297
+    ]
+  },
+  "steps": [
+    {
+      "iteration": 0,
+      "plans": [
+        {
+          "request_id": "req-0",
+          "phase": "prefill",
+          "input_ids": [
+            760,
+            6511,
+            314,
+            9338
+          ],
+          "positions": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "slot_mapping": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "context_slots": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "is_last_prompt_chunk": false
+        }
+      ],
+      "same_plans": true,
+      "progress_deferred": true,
+      "outputs": [
+        {
+          "request_id": "req-0",
+          "phase": "prefill",
+          "token_id": null,
+          "num_cached_tokens": 4,
+          "finish_reason": null
+        }
+      ],
+      "expected_tokens": [
+        null
+      ],
+      "progress_matches": true,
+      "cancelled_progress_unchanged": true,
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "free_slots": 24
+    },
+    {
+      "iteration": 1,
+      "plans": [
+        {
+          "request_id": "req-0",
+          "phase": "prefill",
+          "input_ids": [
+            369
+          ],
+          "positions": [
+            4
+          ],
+          "slot_mapping": [
+            4
+          ],
+          "context_slots": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "is_last_prompt_chunk": true
+        },
+        {
+          "request_id": "req-1",
+          "phase": "prefill",
+          "input_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "positions": [
+            0,
+            1,
+            2
+          ],
+          "slot_mapping": [
+            8,
+            9,
+            10
+          ],
+          "context_slots": [
+            8,
+            9,
+            10
+          ],
+          "is_last_prompt_chunk": true
+        }
+      ],
+      "same_plans": true,
+      "progress_deferred": true,
+      "outputs": [
+        {
+          "request_id": "req-0",
+          "phase": "prefill",
+          "token_id": 11751,
+          "num_cached_tokens": 5,
+          "finish_reason": null
+        },
+        {
+          "request_id": "req-1",
+          "phase": "prefill",
+          "token_id": 369,
+          "num_cached_tokens": 3,
+          "finish_reason": null
+        }
+      ],
+      "expected_tokens": [
+        11751,
+        369
+      ],
+      "progress_matches": true,
+      "cancelled_progress_unchanged": true,
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "free_slots": 18
+    },
+    {
+      "iteration": 2,
+      "plans": [
+        {
+          "request_id": "req-0",
+          "phase": "decode",
+          "input_ids": [
+            11751
+          ],
+          "positions": [
+            5
+          ],
+          "slot_mapping": [
+            5
+          ],
+          "context_slots": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "is_last_prompt_chunk": true
+        },
+        {
+          "request_id": "req-1",
+          "phase": "decode",
+          "input_ids": [
+            369
+          ],
+          "positions": [
+            3
+          ],
+          "slot_mapping": [
+            11
+          ],
+          "context_slots": [
+            8,
+            9,
+            10,
+            11
+          ],
+          "is_last_prompt_chunk": true
+        }
+      ],
+      "same_plans": true,
+      "progress_deferred": true,
+      "outputs": [
+        {
+          "request_id": "req-0",
+          "phase": "decode",
+          "token_id": null,
+          "num_cached_tokens": 5,
+          "finish_reason": "cancelled"
+        },
+        {
+          "request_id": "req-1",
+          "phase": "decode",
+          "token_id": 264,
+          "num_cached_tokens": 4,
+          "finish_reason": null
+        }
+      ],
+      "expected_tokens": [
+        null,
+        264
+      ],
+      "progress_matches": true,
+      "cancelled_progress_unchanged": true,
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "free_slots": 26
+    },
+    {
+      "iteration": 3,
+      "plans": [
+        {
+          "request_id": "req-1",
+          "phase": "decode",
+          "input_ids": [
+            264
+          ],
+          "positions": [
+            4
+          ],
+          "slot_mapping": [
+            12
+          ],
+          "context_slots": [
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "is_last_prompt_chunk": true
+        },
+        {
+          "request_id": "req-2",
+          "phase": "prefill",
+          "input_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "positions": [
+            0,
+            1,
+            2
+          ],
+          "slot_mapping": [
+            0,
+            1,
+            2
+          ],
+          "context_slots": [
+            0,
+            1,
+            2
+          ],
+          "is_last_prompt_chunk": true
+        }
+      ],
+      "same_plans": true,
+      "progress_deferred": true,
+      "outputs": [
+        {
+          "request_id": "req-1",
+          "phase": "decode",
+          "token_id": 795,
+          "num_cached_tokens": 5,
+          "finish_reason": null
+        },
+        {
+          "request_id": "req-2",
+          "phase": "prefill",
+          "token_id": 369,
+          "num_cached_tokens": 3,
+          "finish_reason": null
+        }
+      ],
+      "expected_tokens": [
+        795,
+        369
+      ],
+      "progress_matches": true,
+      "cancelled_progress_unchanged": true,
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "free_slots": 22
+    },
+    {
+      "iteration": 4,
+      "plans": [
+        {
+          "request_id": "req-1",
+          "phase": "decode",
+          "input_ids": [
+            795
+          ],
+          "positions": [
+            5
+          ],
+          "slot_mapping": [
+            13
+          ],
+          "context_slots": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            13
+          ],
+          "is_last_prompt_chunk": true
+        },
+        {
+          "request_id": "req-2",
+          "phase": "decode",
+          "input_ids": [
+            369
+          ],
+          "positions": [
+            3
+          ],
+          "slot_mapping": [
+            3
+          ],
+          "context_slots": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "is_last_prompt_chunk": true
+        }
+      ],
+      "same_plans": true,
+      "progress_deferred": true,
+      "outputs": [
+        {
+          "request_id": "req-1",
+          "phase": "decode",
+          "token_id": 5759,
+          "num_cached_tokens": 6,
+          "finish_reason": "length"
+        },
+        {
+          "request_id": "req-2",
+          "phase": "decode",
+          "token_id": 264,
+          "num_cached_tokens": 4,
+          "finish_reason": "length"
+        }
+      ],
+      "expected_tokens": [
+        5759,
+        264
+      ],
+      "progress_matches": true,
+      "cancelled_progress_unchanged": true,
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        },
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "free_slots": 32
+    },
+    {
+      "iteration": 5,
+      "plans": [
+        {
+          "request_id": "req-3",
+          "phase": "prefill",
+          "input_ids": [
+            32,
+            81726,
+            6297
+          ],
+          "positions": [
+            0,
+            1,
+            2
+          ],
+          "slot_mapping": [
+            0,
+            1,
+            2
+          ],
+          "context_slots": [
+            0,
+            1,
+            2
+          ],
+          "is_last_prompt_chunk": true
+        }
+      ],
+      "same_plans": true,
+      "progress_deferred": true,
+      "outputs": [
+        {
+          "request_id": "req-3",
+          "phase": "prefill",
+          "token_id": 369,
+          "num_cached_tokens": 3,
+          "finish_reason": "eos"
+        }
+      ],
+      "expected_tokens": [
+        369
+      ],
+      "progress_matches": true,
+      "cancelled_progress_unchanged": true,
+      "comparisons": [
+        {
+          "max_abs": 0.0,
+          "passed": true
+        }
+      ],
+      "free_slots": 32
+    }
+  ],
+  "cancelled_slots_held": true,
+  "cancelled_slots_reused": true,
+  "requests": [
+    {
+      "request_id": "req-0",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": null,
+      "output_ids": [
+        11751
+      ],
+      "status": "cancelled",
+      "num_cached_tokens": 5,
+      "finish_reason": "cancelled",
+      "error": null
+    },
+    {
+      "request_id": "req-1",
+      "prompt_ids": [
+        32,
+        81726,
+        6297
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": null,
+      "output_ids": [
+        369,
+        264,
+        795,
+        5759
+      ],
+      "status": "finished",
+      "num_cached_tokens": 6,
+      "finish_reason": "length",
+      "error": null
+    },
+    {
+      "request_id": "req-2",
+      "prompt_ids": [
+        32,
+        81726,
+        6297
+      ],
+      "max_new_tokens": 2,
+      "eos_token_id": null,
+      "output_ids": [
+        369,
+        264
+      ],
+      "status": "finished",
+      "num_cached_tokens": 4,
+      "finish_reason": "length",
+      "error": null
+    },
+    {
+      "request_id": "req-3",
+      "prompt_ids": [
+        32,
+        81726,
+        6297
+      ],
+      "max_new_tokens": 3,
+      "eos_token_id": 369,
+      "output_ids": [
+        369
+      ],
+      "status": "finished",
+      "num_cached_tokens": 3,
+      "finish_reason": "eos",
+      "error": null
+    }
+  ],
+  "host_error_cleaned": true,
+  "free_slots": 32,
+  "remaining_prefixes": 0,
+  "remaining_linear_states": 0,
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "source_sha256": {
+    "minideepinfer/batch_engine.py": "99fc155d31b2030af01c2e6f65721262fa0b0a63e414173f83d143ada77decac",
+    "minideepinfer/deferred_runner.py": "f5a747a9b30df5b7a2802d43f7a42a60ea4020efea1aa3f37438de1feabcbf10",
+    "minideepinfer/verify_deferred_engine.py": "7f0ea4c7d23197864b58a8910b6e06a09988f242980f88f0e4eb7f4ae0c79fee",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/model_runner.py": "3c34a7686dc3a14efa1d4f3149e02b8874724b84fbb78d5320482023d205611f",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  },
+  "passed": true
+}

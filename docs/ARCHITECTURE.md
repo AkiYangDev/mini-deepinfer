@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [实施路线](ROADMAP.md)
 
-第一课保留同步 FIFO 单请求 Engine，第三课增加按轮调度的 BatchEngine。Runner 可以执行 Qwen2，或第四课的纯文本 Qwen3.5。批次通过 mask 隔开完整注意力，通过请求边界隔开 DeltaNet 递推，仍等待本轮计算结束再提交。
+第一课保留同步 FIFO 单请求 Engine，第三课增加按轮调度的 BatchEngine。Runner 可以执行 Qwen2，或第四课的纯文本 Qwen3.5。批次通过 mask 隔开完整注意力，通过请求边界隔开 DeltaNet 递推。第八课可选地分开发起计算与收取结果，仍确认本轮计算完成后再提交。
 
 ## 核心对象
 
@@ -15,8 +15,8 @@
 | TensorKVCache | 存放真实 K/V 张量 | 按 layer / slot / KV head / head dimension 分配 |
 | HybridCache | 管理 Qwen3.5 两类设备缓存 | 完整注意力的 KV；每个请求、每个线性层的卷积窗口与 FP32 递推矩阵 |
 | Engine | FIFO 调度、准备元数据、提交结果与终止 | 等待队列、一个运行请求、该请求的预留槽位 |
-| BatchEngine | 按轮准入与整批结果提交 | 等待队列、运行请求及各自槽位、请求数与 token 预算 |
-| DeferredRunner | 独立实验：提交真实模型计算，读取后再更新主机前缀 | 独占的 ModelRunner、专用流、最多一批在途结果、取消记录 |
+| BatchEngine | 按轮准入与整批结果提交；可选分步执行 | 等待队列、运行请求及各自槽位、请求数与 token 预算、本批计划与结果句柄 |
+| DeferredRunner | 提交真实模型计算，读取后再更新主机前缀 | 独占的 ModelRunner、专用流、最多一批在途结果、取消记录 |
 | PendingBatch | 持有本批张量与结果拷贝事件，控制读取、取消和放弃 | Step 元组、CPU token 缓冲区、logits、完成与清理状态 |
 
 调度在 Engine / BatchEngine 内。Runner 将输入准备、主模型与 greedy 选择分开；批次计算后按照同样的请求顺序返回 token，Engine 才提交请求状态。批次版本维护每个请求独立的已计算前缀，并在请求结束后删除对应记录。
@@ -36,7 +36,9 @@ prefill 计算一段输入；decode 通常消费上一轮选出的 token 并预�
 
 当前准入规则：请求最多需要 `len(prompt) + max_new_tokens - 1` 个槽位；超过总容量时在提交阶段拒绝。运行前一次性预留最大需求，排队请求尚不占用槽位。第一课逐个运行，BatchEngine 在空闲槽位、请求数和本轮 token 预算允许时接纳多个请求，详见[第三课](BATCHING.md)。抢占、重计算及共享前缀的引用计数后续再加入。
 
-Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回或抛错前完成本轮工作，Engine 才能立即释放槽位；NPU Runner 显式同步。`num_cached_tokens` 保留已成功提交的计算进度，请求终止后它是历史计数。主引擎仍采用这个同步约定；第七课的 DeferredRunner 独立持有一批在途结果，尚未接到 Engine / BatchEngine。
+Engine 接口只在一个线程中顺序调用。同步路径要求 Runner 在返回或抛错前完成本轮工作；NPU Runner 显式同步。`num_cached_tokens` 保留已成功提交的计算进度，请求终止后它是历史计数。
+
+BatchEngine 的可选分步路径用 `launch_step()` 提交，`finish_step()` 等待、校验并提交。两者之间可以接收请求或取消请求；取消中的运行请求保留槽位，确认本批结束后才清理。等待失败时，即使请求已经标成 failed，也继续持有资源并拒绝下一批；`abort_step()` 只有在排空设备工作成功后才能清理。详见[第八课](DEFERRED_ENGINE.md)。
 
 当前与后续缓存实现需要满足以下条件，其中在途计算、投机与共享规则仅适用于相应能力加入后：
 
@@ -54,7 +56,7 @@ Engine 接口只在一个线程中顺序调用。`Runner.run()` 必须在返回�
 
 参考路径用基础运算表达数学含义；优化路径逐项替换归一化、attention、专家计算或缓存写入。每个算子记录输入形状、布局、dtype、版本和数值对照。
 
-当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。第五、六课解释状态与事件；[第七课](DEFERRED_RUNNER.md)把它们接到真实模型，分开计算、结果读取和主机前缀提交。当前仅一批在途，执行重叠和图执行仍需独立验证。扩大范围时，需要重新检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
+当前真实示例使用 FP32 与 eager，BF16 的已验证范围见[对照说明](BF16_REFERENCE.md)。第五、六课解释状态与事件；[第七课](DEFERRED_RUNNER.md)把它们接到真实模型，[第八课](DEFERRED_ENGINE.md)接入现有 BatchEngine。当前仅一批在途，执行重叠和图执行仍需独立验证。扩大范围时，需要重新检查上一轮输出尚未被主机读取时，下一轮批次如何更新，以及取消请求如何安全退出。
 
 ## 模型层
 
@@ -81,6 +83,7 @@ minideepinfer/
   npu_step_demo.py # 微型张量的实际 NPU 跨流与回收实验
   deferred_runner.py # 单批在途模型执行 / 显式读取与提交
   verify_deferred.py # 同步与延后提交的固定轨迹对照
+  verify_deferred_engine.py # 同步/分步引擎的请求生命周期对照
   model_runner.py # 输入准备 / forward / greedy
   tensor_cache.py # 真实 K/V 张量与槽位读写
   hybrid_cache.py # 完整注意力 KV 与请求独占的线性状态

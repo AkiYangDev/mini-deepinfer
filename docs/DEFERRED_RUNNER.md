@@ -1,6 +1,6 @@
 # 第七课：模型已经在算，为什么进度还没更新？
 
-[返回首页](../README.md) · [第六课：NPU 事件](NPU_EVENTS.md) · [源码对应](SOURCE_MAP.md)
+[返回首页](../README.md) · [第六课：NPU 事件](NPU_EVENTS.md) · [第八课：引擎接入](DEFERRED_ENGINE.md) · [源码对应](SOURCE_MAP.md)
 
 前两课用整数把事件和回收顺序讲清楚了。这次换成项目自己的 Qwen3.5 forward，让模型计算、混合缓存和采样真正走一遍。
 
@@ -31,7 +31,7 @@ tokens = pending.result()
 
 `wait()` 等 CPU 结果缓冲区可读，`result()` 才读取并校验整批 token，再提交每个请求的已计算前缀。即使 CPU 路径早已算完，不调用 `result()`，主机进度也不会自动更新。
 
-这里更新的是 Runner 保存的前缀位置和“prompt 是否完成”。Engine 中的 `Request.num_cached_tokens`、`output_ids` 和等待队列仍由原同步引擎管理；本课没有替它们提交结果，验证程序直接构造 Step 来检查这层接口。
+这里更新的是 Runner 保存的前缀位置和“prompt 是否完成”。本课的验证程序直接构造 Step 来检查这层接口，不处理 Engine 中的 `Request.num_cached_tokens`、`output_ids` 和等待队列；它们在[第八课](DEFERRED_ENGINE.md)接入同一份结果。
 
 ## 缓存写了，进度却没提交，这会不会矛盾？
 
@@ -101,10 +101,10 @@ python -m minideepinfer.verify_deferred \
 
 完整输入 token、每轮比较和源码 SHA 见[原始报告](results/2026-10-24/qwen35-2b-deferred-npu-fp32.json)。这次对照专门检查执行与提交方式的变化，参考方是本项目原有同步 Runner；模型数学对独立 Transformers 的验证沿用[之前的记录](VALIDATION.md)，两种检查回答不同的问题。
 
-主机异常是有意在真实 forward 提交后抛出的，不是 NPU 故障。当前只有一批在途，验证程序每轮等待并比较，没有测量调度重叠或性能收益。当前入口为独立实验，生成命令和 BatchEngine 仍走同步接口。
+主机异常是有意在真实 forward 提交后抛出的，不是 NPU 故障。当前只有一批在途，验证程序每轮等待并比较，没有测量调度重叠或性能收益。这份验证保留为 Runner 层实验；BatchEngine 与生成入口的接入见[第八课](DEFERRED_ENGINE.md)。
 
 ## 回到 DeepInfer 的主线
 
 DeepInfer 的 [`ModelRunner`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/model_runner.py)区分输入准备、主模型执行与采样，[`WorkerStepState`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py)保存跨轮仍需使用的状态。本课把这些职责放进现有计算路径，让“设备已经执行”和“主机可以提交”在代码里分开。单批限制、Python 句柄和异常清理策略是本项目的教学选择，没有复现上游 ZOS。
 
-下一步再决定调度器怎样保存这份结果、在等待期间准备哪些不依赖新 token 的工作。需要扩大并行范围时，还要重新检查张量使用者与释放事件，不能简单删掉单批限制。
+接着读[第八课](DEFERRED_ENGINE.md)，看调度器怎样保存这份结果，并处理计算途中到来的请求和取消。需要扩大并行范围时，还要重新检查张量使用者与释放事件，不能简单删掉单批限制。

@@ -1,7 +1,7 @@
 """One in-flight batch: launch now, read and commit after the result copy.
 
-Wrap an exclusively owned ModelRunner. This is an eager execution experiment,
-not an asynchronous scheduler. Model math and cache layouts are unchanged.
+Wrap an exclusively owned ModelRunner. The BatchEngine owns scheduling and
+request progress; this adapter owns device completion and host prefixes.
 """
 
 from contextlib import nullcontext
@@ -80,6 +80,11 @@ class DeferredRunner:
         self._pending = None
         self._poisoned = False
         self._cancelled = set()
+
+    @property
+    def pending(self):
+        """Keep the handle reachable if launch fails before device work can drain."""
+        return self._pending
 
     def _synchronize(self):
         if self.is_npu:

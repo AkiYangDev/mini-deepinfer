@@ -18,7 +18,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 
 现在可以用项目自己的前向计算，在 **Ascend 910C 上运行 Qwen3.5-2B 的纯文本推理**。Qwen3.5-0.8B 用于开发验证，已有 DeepSeek-R1-Distill-Qwen-1.5B 保留为回归基线。完整注意力保存 KV，DeltaNet 保存每个请求的卷积和递推状态。
 
-当前主要示例使用 FP32。BF16 已通过固定短轨迹的逐 token / FP32 状态参考检查，原生分块与跨调度生成的差异见[对照说明](docs/BF16_REFERENCE.md)。支持同步动态批处理、分块 prefill、请求取消和缓存回收。
+当前主要示例使用 FP32。BF16 已通过固定短轨迹的逐 token / FP32 状态参考检查，原生分块与跨调度生成的差异见[对照说明](docs/BF16_REFERENCE.md)。支持动态批处理、分块 prefill、请求取消和缓存回收；默认同步执行，也可以分开发起计算与提交结果。
 
 ## 已经跑通什么
 
@@ -30,6 +30,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | 2B 双请求生成 | 中文解释与英文问答均遇 EOS 结束，512/512 逻辑槽位回收 |
 | Ascend 910C 事件实验 | 微型张量的跨流读取、CPU 结果拷贝与延迟回收通过；[第六课](docs/NPU_EVENTS.md)保留实际输出 |
 | 2B 结果延后提交实验 | 六轮真实权重 FP32 轨迹与同步 Runner 的 logits 差异为 0；覆盖分块、取消和异常清理，见[第七课](docs/DEFERRED_RUNNER.md) |
+| BatchEngine 分步执行 | 真实 2B 六轮、十组 logits 与同步路径差异为 0；计算途中取消、动态加入、槽位复用和停止条件通过，见[第八课](docs/DEFERRED_ENGINE.md) |
 
 真实 2B 运行中的英文回答：
 
@@ -57,6 +58,12 @@ python -m minideepinfer.step_demo
 
 [第七课](docs/DEFERRED_RUNNER.md)把这套顺序接到真实模型：先提交计算，结果回来后再更新进度。它也提供无需权重的 PyTorch 小模型示例，当前只允许一批在途。
 
+[第八课](docs/DEFERRED_ENGINE.md)接着把这份结果交给 BatchEngine：计算途中收到取消，先丢弃输出，等本批结束后再归还缓存。已有 PyTorch 时可以直接运行，无需权重：
+
+```bash
+python -m minideepinfer.verify_deferred_engine --device cpu
+```
+
 ## 运行真实模型
 
 在仓库目录安装模型依赖：
@@ -78,6 +85,8 @@ python -m minideepinfer.generate \
 
 没有 NPU 时，可改成 `--device cpu --dtype float32`，先用 0.8B 跟读和调试。本实现适合短上下文教学，CPU 也需要加载完整文本模型。
 
+加上 `--deferred` 可使用第八课的分步执行路径。离线循环仍逐批等待，不代表已经获得调度重叠或性能收益。
+
 ## 沿着一个请求读代码
 
 如果你熟悉基本的 Python / PyTorch，可以按下面的顺序读。模型计算由本项目实现，Transformers 提供 tokenizer 和数值对照。
@@ -90,6 +99,7 @@ python -m minideepinfer.generate \
 | 线性注意力怎样记住历史，又怎样隔开请求？ | [`qwen3_5.py`](minideepinfer/models/qwen3_5.py) · [`HybridCache`](minideepinfer/hybrid_cache.py) |
 | logits 怎样成为下一个 token？ | [`ModelRunner.execute_sample()`](minideepinfer/model_runner.py) |
 | 请求结束或取消后，谁负责回收？ | [`Engine`](minideepinfer/engine.py) · [`SlotPool`](minideepinfer/kv_cache.py) |
+| 计算途中取消，何时提交进度和归还槽位？ | [`BatchEngine.launch_step()` / `finish_step()`](minideepinfer/batch_engine.py) · [第八课](docs/DEFERRED_ENGINE.md) |
 
 还没接触过推理引擎，可以从[第一课：跟踪一个请求](docs/FIRST_REQUEST.md)开始。整数 Runner 让输入、位置和槽位都能直接打印出来，Python 3.10+ 即可运行，无需模型依赖或权重：
 
@@ -98,11 +108,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-未安装模型依赖时执行 30 项引擎与状态测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
+未安装模型依赖时执行 40 项引擎与状态测试，模型对照明确跳过。[第二课：真实权重与 KV Cache](docs/REAL_GENERATION.md)再把同一条执行路径换成真实模型。
 
 ## 为什么参考 DeepInfer
 
-DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至七课逐步从整数事件走到真实 NPU 与模型，把跨轮状态、批次映射和结果提交讲清楚。调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
+DeepInfer 是技术主线。当前按照它的职责划分，展开输入准备、主模型执行、采样和结果提交；第五至八课逐步从整数事件走到真实 NPU、模型和引擎，把跨轮状态、批次映射和结果提交讲清楚。调度重叠仍需后续验证。[源码映射](docs/SOURCE_MAP.md)列出上游固定版本、对应入口和教学简化。
 
 **Qwen 小模型承载教学实例，DeepInfer 继续作为引擎设计主线。** 单请求与同步批次保留对照，[第四课](docs/QWEN35.md)展开混合模型的状态管理。MLA、MoE、投机解码与 bounded replay 留在后续独立章节，范围见[开发路线](docs/ROADMAP.md)。
 

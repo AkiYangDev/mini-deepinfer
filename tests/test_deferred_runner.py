@@ -7,7 +7,7 @@ from unittest.mock import patch
 AVAILABLE = importlib.util.find_spec('torch') is not None
 if AVAILABLE:
     import torch
-    from minideepinfer import Step
+    from minideepinfer import BatchEngine, Status, Step
     from minideepinfer.deferred_runner import DeferredRunner
     from minideepinfer.kv_cache import SlotPool
     from minideepinfer.model_runner import ModelRunner
@@ -201,6 +201,64 @@ class DeferredRunnerTests(unittest.TestCase):
             self.assertEqual(deferred.runner.cache.linear_states, {})
         with self.assertRaises(ValueError):
             deferred.launch(())
+
+    def test_engine_lifecycle_matches_sync_with_real_hybrid_cache(self):
+        from minideepinfer.verify_deferred_engine import run
+        report = run(None, 'cpu')
+        self.assertTrue(report['passed'])
+        self.assertEqual(len(report['steps']), 6)
+        self.assertEqual(report['free_slots'], 32)
+        self.assertEqual(max(c['max_abs'] for row in report['steps']
+                             for c in row['comparisons']), 0)
+
+    def test_engine_retains_failed_launch_and_wait_until_safe_abort(self):
+        for stage in ('launch', 'wait'):
+            with self.subTest(stage=stage):
+                runner = self.runner()
+                deferred = DeferredRunner(runner)
+                engine = BatchEngine(deferred, 8, 2, 2, chunked_prefill=True, deferred=True)
+                request = engine.submit([2, 3, 4], 2)
+                if stage == 'launch':
+                    original = runner.execute_main_model
+                    def fail(inputs):
+                        original(inputs)
+                        raise RuntimeError('host forward failure')
+                    with patch.object(runner, 'execute_main_model', fail), patch.object(
+                            deferred, '_synchronize', side_effect=RuntimeError('drain failed')):
+                        with self.assertRaisesRegex(RuntimeError, 'drain failed'):
+                            engine.launch_step()
+                else:
+                    engine.launch_step()
+                    with patch.object(deferred.pending.ready, 'synchronize',
+                                      side_effect=RuntimeError('wait failed')):
+                        with self.assertRaisesRegex(RuntimeError, 'wait failed'):
+                            engine.finish_step()
+                self.assertEqual(request.status, Status.FAILED)
+                self.assertEqual(engine.cache.free_count, 4)
+                self.assertTrue(runner.cache.linear_states)
+                self.assertIsNotNone(deferred.pending)
+                with self.assertRaises(RuntimeError):
+                    engine.step()
+                engine.abort_step()  # Controlled CPU failures removed; no device fault recovery claim.
+                self.assertEqual(engine.cache.free_count, 8)
+                self.assertEqual(runner.cache.linear_states, {})
+                self.assertEqual(runner._prefixes, {})
+                self.assertIsNone(deferred.pending)
+
+    def test_engine_invalid_device_results_do_not_commit_any_request(self):
+        deferred = DeferredRunner(self.runner())
+        engine = BatchEngine(deferred, 8, 2, 4, deferred=True)
+        a, b = [engine.submit([i], 2) for i in (2, 3)]
+        engine.launch_step()
+        deferred.pending.host_tokens = torch.tensor([1, -2], dtype=torch.long)
+        with self.assertRaises(ValueError):
+            engine.finish_step()
+        self.assertEqual([a.output_ids, b.output_ids], [[], []])
+        self.assertEqual([a.num_cached_tokens, b.num_cached_tokens], [0, 0])
+        self.assertEqual([a.status, b.status], [Status.FAILED, Status.FAILED])
+        self.assertEqual(engine.cache.free_count, 8)
+        self.assertEqual(deferred.runner._prefixes, {})
+        self.assertEqual(deferred.runner.cache.linear_states, {})
 
 
 if __name__ == '__main__':

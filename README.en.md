@@ -18,7 +18,7 @@ mini-DeepInfer studies the design of [DeepInfer](https://github.com/deepseek-ai/
 
 The project now runs **text-only Qwen3.5-2B on Ascend 910C** using its own forward pass and cache management. Qwen3.5-0.8B is the smaller development model; DeepSeek-R1-Distill-Qwen-1.5B remains a regression baseline. Full attention stores token KV, while DeltaNet keeps convolution and recurrent state for each request.
 
-The main example uses FP32. BF16 also passes fixed short trajectories against an independent recurrent reference with FP32 state storage; native chunk-path and cross-schedule generation differences are documented in the [reference notes](docs/BF16_REFERENCE.md). The engine supports synchronous dynamic batching, chunked prefill, cancellation, and cache reclamation.
+The main example uses FP32. BF16 also passes fixed short trajectories against an independent recurrent reference with FP32 state storage; native chunk-path and cross-schedule generation differences are documented in the [reference notes](docs/BF16_REFERENCE.md). The engine supports dynamic batching, chunked prefill, cancellation, and cache reclamation. Execution is synchronous by default, with an optional path that separates launch from result commit.
 
 ## What runs today
 
@@ -30,6 +30,7 @@ The main example uses FP32. BF16 also passes fixed short trajectories against an
 | 2B, two concurrent requests | Chinese explanation and English answer both stop at EOS; 512/512 logical slots reclaimed |
 | Ascend 910C event experiment | Cross-stream reads, host result copies, and deferred release pass on tiny tensors; [lesson six](docs/NPU_EVENTS.md) preserves the actual output |
 | 2B deferred-result experiment | Six real-weight FP32 batches match synchronous Runner logits with zero difference, covering chunks, cancellation, and host-error cleanup; see [lesson seven](docs/DEFERRED_RUNNER.md) |
+| Split-step BatchEngine | Six real 2B rounds and ten logit comparisons match the sync path with zero difference, covering in-flight cancellation, arrivals, slot reuse, and stopping; see [lesson eight](docs/DEFERRED_ENGINE.md) |
 
 The English answer from the real 2B run:
 
@@ -51,11 +52,17 @@ cd mini-deepinfer
 python -m minideepinfer.step_demo
 ```
 
-Follow requests A, B, and C: B changes batch rows but keeps its own result; A is cancelled but its slots stay protected until all users finish. [Lesson five](docs/STEP_STATE.md) explains the code in Chinese. The demo prints Chinese explanations and advances events by hand; the real-model engine remains synchronous.
+Follow requests A, B, and C: B changes batch rows but keeps its own result; A is cancelled but its slots stay protected until all users finish. [Lesson five](docs/STEP_STATE.md) explains the code in Chinese. The demo prints Chinese explanations and advances events by hand; it does not execute a model.
 
 With an Ascend environment, [lesson six](docs/NPU_EVENTS.md) checks those boundaries using real NPU events and tiny tensors, without loading weights.
 
 [Lesson seven](docs/DEFERRED_RUNNER.md) applies the same ordering to model execution: launch computation, then commit progress after reading the result. It also includes a tiny PyTorch model requiring no weights. Only one batch may be in flight.
+
+[Lesson eight](docs/DEFERRED_ENGINE.md) brings that result into BatchEngine. An in-flight cancellation drops the output but retains cache slots until the batch is complete. With PyTorch installed, try it without downloading weights:
+
+```bash
+python -m minideepinfer.verify_deferred_engine --device cpu
+```
 
 ## Run a real model
 
@@ -78,6 +85,8 @@ python -m minideepinfer.generate \
 
 Without an NPU, use `--device cpu --dtype float32` and start with 0.8B. This implementation targets short teaching examples; CPU execution still loads the full text model.
 
+Add `--deferred` to use lesson eight's split-step path. The offline loop still waits for each batch; it does not demonstrate scheduling overlap or a speedup.
+
 ## Follow a request through the code
 
 If you know basic Python and PyTorch, follow these entry points. The project implements the model computation; Transformers supplies the tokenizer and numerical reference.
@@ -90,6 +99,7 @@ If you know basic Python and PyTorch, follow these entry points. The project imp
 | How does linear attention remember history without mixing requests? | [`qwen3_5.py`](minideepinfer/models/qwen3_5.py) · [`HybridCache`](minideepinfer/hybrid_cache.py) |
 | How do logits become the next token? | [`ModelRunner.execute_sample()`](minideepinfer/model_runner.py) |
 | Who releases slots on completion or cancellation? | [`Engine`](minideepinfer/engine.py) · [`SlotPool`](minideepinfer/kv_cache.py) |
+| When can an in-flight cancellation release slots and commit progress? | [`BatchEngine.launch_step()` / `finish_step()`](minideepinfer/batch_engine.py) · [lesson eight](docs/DEFERRED_ENGINE.md) |
 
 New to inference engines? [Lesson one](docs/FIRST_REQUEST.md) uses an integer runner so every input, position, and slot can be printed. It needs only Python 3.10+, without model dependencies or weights:
 
@@ -98,11 +108,11 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-Without model dependencies, 30 engine and state tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+Without model dependencies, 40 engine and state tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
 
 ## How this relates to DeepInfer
 
-DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through seven move from integer events to real NPU operations and model execution, explaining state ownership, batch remapping, and result commits. Scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
+DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, model execution, and engine integration, explaining state ownership, batch remapping, and result commits. Scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
 
 **Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 
