@@ -33,7 +33,7 @@ The main example uses FP32. BF16 also passes fixed short trajectories against an
 | Split-step BatchEngine | Six real 2B rounds and ten logit comparisons match the sync path with zero difference, covering in-flight cancellation, arrivals, slot reuse, and stopping; see [lesson eight](docs/DEFERRED_ENGINE.md) |
 | Prepare text while waiting | Both orders produce identical batches and tokens. Four short texts show no speedup; only one of three captured steps overlaps tokenization with device activity. See [lesson nine](docs/PREPARE_DURING_STEP.md) |
 | Prepare sampler indices earlier | Thirteen full-logit comparisons match exactly. Moving the index upload before forward allows tokenization overlap in all three captured steps; an overall speedup is not established. See [lesson ten](docs/SAMPLER_INPUTS.md) |
-| Device-token handoff across rounds | A fixed two-request experiment submits the next forward before collecting the previous result. Eight real 2B logit comparisons match exactly; cleanup and reuse pass. See [lesson eleven](docs/DECODE_PIPELINE.md) |
+| Cross-round execution and request stops | Device tokens feed the next forward. EOS/cancellation discards unwanted results and releases cache after its last-use event. Nine real 2B logit comparisons pass at the existing tolerances. See [lessons eleven](docs/DECODE_PIPELINE.md) and [twelve](docs/STOPPING_PIPELINE.md) |
 
 The English answer from the real 2B run:
 
@@ -79,6 +79,12 @@ python -m minideepinfer.verify_decode_pipeline --device cpu
 
 It has no EOS handling, arrivals, or cancellation. Performance has not been measured, and the default engine keeps its existing scheduling behavior.
 
+[Lesson twelve](docs/STOPPING_PIPELINE.md) reuses that loop to handle EOS, cancellation, and departing requests: A finishes, B is cancelled, and C keeps generating. About 110 added lines show how to discard an already submitted result and wait for the final cache user before releasing slots:
+
+```bash
+python -m minideepinfer.verify_stopping_pipeline --device cpu
+```
+
 ## Run a real model
 
 Install the model dependencies from the repository directory:
@@ -118,6 +124,7 @@ If you know basic Python and PyTorch, follow these entry points. The project imp
 | Who releases slots on completion or cancellation? | [`Engine`](minideepinfer/engine.py) · [`SlotPool`](minideepinfer/kv_cache.py) |
 | When can an in-flight cancellation release slots and commit progress? | [`BatchEngine.launch_step()` / `finish_step()`](minideepinfer/batch_engine.py) · [lesson eight](docs/DEFERRED_ENGINE.md) |
 | How can the next round use a token before the CPU reads it? | [`FixedDecodePipeline`](minideepinfer/decode_pipeline.py) · [lesson eleven](docs/DECODE_PIPELINE.md) |
+| How does a stopped request drain its already submitted next round? | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [lesson twelve](docs/STOPPING_PIPELINE.md) |
 
 New to inference engines? [Lesson one](docs/FIRST_REQUEST.md) uses an integer runner so every input, position, and slot can be printed. It needs only Python 3.10+, without model dependencies or weights:
 
@@ -130,7 +137,7 @@ Without model dependencies, 51 engine, state, and interval tests run and model c
 
 ## How this relates to DeepInfer
 
-DeepInfer is the primary technical reference. The implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, models, and engine integration; lesson eleven connects device tokens to the next forward in a fixed batch. Dynamic scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned revision, entry points, and teaching simplifications.
+DeepInfer is the primary technical reference. The implementation separates input preparation, main-model execution, sampling, and result handling. Lessons five through eight move from integer events to real NPU operations, models, and engine integration; lessons eleven and twelve connect device tokens to the next forward and handle departing requests. Full dynamic scheduling overlap still needs separate validation. The [source map](docs/SOURCE_MAP.md) identifies the pinned revision, entry points, and teaching simplifications.
 
 **Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 

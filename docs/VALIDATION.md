@@ -4,6 +4,16 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+## 2026-10-24：第十二课的 EOS、取消与成员退出
+
+新增 StoppingDecodePipeline 复用固定跨轮循环，只增加成员筛选、结果提交和最后使用事件回收。EOS 后保留结束 token，回调取消则保留旧输出、阻止当前结果提交；已经提交的下一轮仍跑完，其输出丢弃。请求只退出、不加入，默认 BatchEngine 不变。固定实验原有默认行为保留，模型数学、ModelRunner、DeferredRunner和缓存布局未改。
+
+单逻辑 Ascend 910C / Qwen3.5-2B / FP32，Python3.12.13、PyTorch2.10.0+cpu、torch_npu2.10.0.post6、CANN9.1.0。三个raw prompt5/3/8token、各最多4输出，cache64、线程1。A以同步基线首token11751作为设定EOS（非自然终止），B在第1轮结果提交前取消，C继续到长度；批次ABC/CBA/BC/C。九组完整logits含多算的停止行，最大绝对差2.09808349609375e-5，沿用atol1e-4/rtol2e-4；greedy、位置和槽位对照一致，A/B/C最终输出数1/1/4。
+
+A、B的后继轮次事件未记录时，槽位/前缀仍持有；三次正常释放的最后使用事件均已记录且完成。全部首轮EOS只执行两次forward，尾轮输出全丢弃，无第三轮。取消后再注入CPU回调异常时，两轮与槽位先保留，真实stream排空后清理，同Runner复用通过；最终64/64、prefix0/linear0。[原始JSON](results/2026-10-24/qwen35-2b-stopping-pipeline-npu-fp32.json)保留13执行源码SHA及逐组误差/释放状态。一次程序一次已有权重加载，基线4/混合退出4/全EOS2/异常2/复用1共13forward，0下载/trace/性能计时。结束后容器仅保活进程，报告只读SSH收回，无重跑。
+
+新增11项CPU测试，涵盖逐步缩批、EOS/长度边界、首次提交前/较晚取消、旧输出保留、尾部排空、回调异常、排空失败保留两轮/最后使用事件/槽位、未完成回收推迟至最终排空、非法EOS及回调重入拒绝。TF5.12.1全114过；TF4.46.3 102过/12参考跳过；stdlib51过/63模型跳过。排空失败为CPU控制流程注入，非真实设备故障恢复；无完整动态调度或性能结论。详见[第十二课](STOPPING_PIPELINE.md)。
+
 ## 2026-10-24：第十一课的设备 token 跨轮接续
 
 独立 FixedDecodePipeline 保留固定成员和输出长度，上一轮采样 token 留在设备上，按请求 ID 重映射后送入下一轮 decode。执行顺序为本轮 forward、上一轮结果处理、本轮采样；尾轮单独收取。ModelRunner 新增受限的设备输入参数，现有同步和 DeferredRunner 路径不变，BatchEngine 的单批限制保留。模型数学和缓存布局未修改。

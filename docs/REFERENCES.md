@@ -2,7 +2,7 @@
 
 [返回首页](../README.md)
 
-更新时间：2026-10-20。本文记录设计与代码来源。引擎为原创教学实现，未直接引入上游 DeepInfer 或 SGLang 引擎源码；Qwen2 数学实现的参考与改写另列如下。
+更新时间：2026-10-24。本文记录设计与代码来源。引擎为原创教学实现，未直接引入上游 DeepInfer 或 SGLang 引擎源码；Qwen2 数学实现的参考与改写另列如下。
 
 ## DeepInfer
 
@@ -17,6 +17,7 @@
 | [cache_engine.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/cache_engine.py) | 设备缓存布局、分配及模型相关状态 | 区分设备缓存管理与完整服务级缓存系统 |
 | [zos_status.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/zos_status.py) | 步骤状态、事件和批次重映射元数据 | 同步路径验证后，教学化展示在途步骤生命周期 |
 | [worker.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/worker/worker.py) | 本轮 forward、上一轮 post-process、本轮 sample；设备上的前轮 token 经 MetadataZOS 传递 | [固定批次实验](DECODE_PIPELINE.md)先学习设备输入依赖和处理顺序，再扩展动态调度 |
+| 同一 Worker / WorkerStepState 与 llm_engine.py 的 DeferredRelease | 结果与资源释放分开，步骤对象有效期覆盖后继使用者 | [成员退出实验](STOPPING_PIPELINE.md)使用每请求最后使用事件，学习 EOS/取消后的丢弃与回收；不是原版完整取消实现 |
 | [platform.py](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/platform.py) | 昇腾平台、HCCL、主机内存与 CUDA 风格接口适配 | 优先明确的 NPU 接口，按 Ascend 910C 实测选择后端 |
 | [YoCo 等价性实验](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/examples/yoco/README.md) | 元数据与真实模型输出分层验证 | 保留模型前提，先构造独立等价性实验 |
 

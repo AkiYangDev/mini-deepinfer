@@ -108,4 +108,4 @@ python -m minideepinfer.verify_decode_pipeline \
   --output outputs/decode-pipeline-npu.json
 ```
 
-接下来需要解决成员变化和停止条件。CPU 收到 EOS 或取消时，下一轮可能已经在读取这个请求的状态；需要决定哪份结果丢弃、哪份缓存仍有人使用，再考虑何时归还槽位。固定批次先让输入依赖变得可见，现有 BatchEngine 的单批限制还不能直接删除。
+[第十二课](STOPPING_PIPELINE.md)在这个循环上增加 EOS、回调取消和成员退出：多算的结果丢弃，缓存等最后使用事件完成后归还。本课仍保留固定成员、固定长度的原始对照；现有 BatchEngine 的单批限制继续保留。

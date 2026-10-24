@@ -1,0 +1,333 @@
+{
+  "model": "Qwen3.5-2B",
+  "device": "npu:0",
+  "dtype": "float32",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "scope": "admit once, shrinking membership; no new arrivals, rollback, or performance measurement",
+  "eos_scope": "A uses its observed first greedy token as controlled EOS; this is not natural text termination",
+  "cancellation_scope": "B cancelled in round-one result callback before commit; its first token remains",
+  "reference": "four full synchronous greedy rounds completed first, shared read-only weights and independent caches",
+  "prompt_ids": {
+    "A": [
+      760,
+      6511,
+      314,
+      9338,
+      369
+    ],
+    "B": [
+      32,
+      81726,
+      6297
+    ],
+    "C": [
+      3710,
+      369,
+      220,
+      16,
+      5346,
+      220,
+      16,
+      30
+    ]
+  },
+  "max_new_tokens": 4,
+  "plans": [
+    [
+      "A",
+      "B",
+      "C"
+    ],
+    [
+      "C",
+      "B",
+      "A"
+    ],
+    [
+      "B",
+      "C"
+    ],
+    [
+      "C"
+    ]
+  ],
+  "call_order": [
+    "forward",
+    "forward",
+    "result",
+    "forward",
+    "result",
+    "forward",
+    "result",
+    "result"
+  ],
+  "comparisons": [
+    {
+      "index": 0,
+      "request_id": "A",
+      "visible_token": 11751,
+      "expected_token": 11751,
+      "metadata_matches": true,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 0,
+      "request_id": "B",
+      "visible_token": 369,
+      "expected_token": 369,
+      "metadata_matches": true,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 0,
+      "request_id": "C",
+      "visible_token": 271,
+      "expected_token": 271,
+      "metadata_matches": true,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 1,
+      "request_id": "C",
+      "visible_token": 16,
+      "expected_token": 16,
+      "metadata_matches": true,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 1,
+      "request_id": "B",
+      "visible_token": 264,
+      "expected_token": 264,
+      "metadata_matches": true,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 1,
+      "request_id": "A",
+      "visible_token": null,
+      "expected_token": 13,
+      "metadata_matches": true,
+      "max_abs": 0.0,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 2,
+      "request_id": "B",
+      "visible_token": null,
+      "expected_token": 795,
+      "metadata_matches": true,
+      "max_abs": 1.71661376953125e-05,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 2,
+      "request_id": "C",
+      "visible_token": 5346,
+      "expected_token": 5346,
+      "metadata_matches": true,
+      "max_abs": 1.621246337890625e-05,
+      "passed": true,
+      "greedy_matches": true
+    },
+    {
+      "index": 3,
+      "request_id": "C",
+      "visible_token": 220,
+      "expected_token": 220,
+      "metadata_matches": true,
+      "max_abs": 2.09808349609375e-05,
+      "passed": true,
+      "greedy_matches": true
+    }
+  ],
+  "requests": {
+    "A": {
+      "request_id": "A",
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": 11751,
+      "output_ids": [
+        11751
+      ],
+      "status": "finished",
+      "num_cached_tokens": 5,
+      "finish_reason": "eos",
+      "error": null
+    },
+    "B": {
+      "request_id": "B",
+      "prompt_ids": [
+        32,
+        81726,
+        6297
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": null,
+      "output_ids": [
+        369
+      ],
+      "status": "cancelled",
+      "num_cached_tokens": 3,
+      "finish_reason": "cancelled",
+      "error": null
+    },
+    "C": {
+      "request_id": "C",
+      "prompt_ids": [
+        3710,
+        369,
+        220,
+        16,
+        5346,
+        220,
+        16,
+        30
+      ],
+      "max_new_tokens": 4,
+      "eos_token_id": null,
+      "output_ids": [
+        271,
+        16,
+        5346,
+        220
+      ],
+      "status": "finished",
+      "num_cached_tokens": 11,
+      "finish_reason": "length",
+      "error": null
+    }
+  },
+  "expected_output_ids": {
+    "A": [
+      11751
+    ],
+    "B": [
+      369
+    ],
+    "C": [
+      271,
+      16,
+      5346,
+      220
+    ]
+  },
+  "mixed_matches": true,
+  "mixed_clean": true,
+  "releases": [
+    {
+      "request_id": "A",
+      "last_use_recorded": true,
+      "last_use_ready": true,
+      "live_rounds": [
+        1,
+        2
+      ]
+    },
+    {
+      "request_id": "B",
+      "last_use_recorded": true,
+      "last_use_ready": true,
+      "live_rounds": [
+        2,
+        3
+      ]
+    },
+    {
+      "request_id": "C",
+      "last_use_recorded": true,
+      "last_use_ready": true,
+      "live_rounds": [
+        3
+      ]
+    }
+  ],
+  "unrecorded_last_use_guards": [
+    {
+      "request_id": "A",
+      "slots_held": true,
+      "prefix_held": true,
+      "free_slots_before": 39,
+      "free_slots_after": 39
+    },
+    {
+      "request_id": "B",
+      "slots_held": true,
+      "prefix_held": true,
+      "free_slots_before": 39,
+      "free_slots_after": 47
+    }
+  ],
+  "all_eos": {
+    "plans": [
+      [
+        "A",
+        "B",
+        "C"
+      ],
+      [
+        "A",
+        "B",
+        "C"
+      ]
+    ],
+    "visible_tokens": [
+      [
+        11751,
+        369,
+        271
+      ],
+      [
+        null,
+        null,
+        null
+      ]
+    ],
+    "passed": true
+  },
+  "error_slots_held_before_drain": true,
+  "host_error_cleaned": true,
+  "reuse_matches": true,
+  "free_slots": 64,
+  "remaining_prefixes": 0,
+  "remaining_linear_states": 0,
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "passed": true,
+  "torch_npu": "2.10.0.post6",
+  "checkpoint_config_sha256": "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4",
+  "source_sha256": {
+    "minideepinfer/stopping_pipeline.py": "98de0b7badc8ae108984b17a18e11ddeb44d679318dcf69ad7e37e6ba0f89ae6",
+    "minideepinfer/verify_stopping_pipeline.py": "42f7bd2eef46301781f3f572c3e3c7fa0f66aebaa339df52794786bfda71931d",
+    "minideepinfer/decode_pipeline.py": "272320b99c2034363255a3c85454c4d440609fbb5f705762e3178f102c0374ec",
+    "minideepinfer/model_runner.py": "015a3e6a573db5e2c21a86807588f42f4e7e8b1ed9686fbe0be03f5bf0551b3c",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/step_state.py": "d5fd5f47d0ab94a996ed7fbdd9306719ad4ba33ab6a52b3d383d704c9b18da05",
+    "minideepinfer/npu_events.py": "669a89efd1390f197d20f7e9e4ee5bfef35173d1fba8779094ef51f750fab0b1",
+    "minideepinfer/deferred_runner.py": "c14296990ddad9bdd915be1afcaef8cba2c2bcb22477627a5dd4d62b7fbd4422",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af"
+  }
+}

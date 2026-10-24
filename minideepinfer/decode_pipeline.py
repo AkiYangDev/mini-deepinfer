@@ -83,6 +83,9 @@ class FixedDecodePipeline:
                 self.stream.wait_stream(torch.npu.current_stream(self.runner.device))
             with torch.npu.stream(self.stream) if self.is_npu else nullcontext():
                 for index, order in enumerate(orders):
+                    order = self._select(order)
+                    if not order:
+                        break
                     steps = tuple(self._step(rid, prompts[rid], index) for rid in order)
                     current = _Round(index, steps, self._event())
                     self._states.append(current)  # Retain ownership before submission.
@@ -106,10 +109,14 @@ class FixedDecodePipeline:
                         self._states.pop(0)
                     self._sample(current)
                     previous = current
-                self._finish(previous, outputs, on_result)  # No next forward: drain the tail.
+                if previous is not None:
+                    self._finish(previous, outputs, on_result)  # No next forward: drain the tail.
             return outputs
         finally:
             self.close()
+
+    def _select(self, order):
+        return order
 
     def _step(self, rid, prompt, index):
         count = len(prompt) if index == 0 else 1
