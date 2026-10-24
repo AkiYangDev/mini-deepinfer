@@ -1,0 +1,10 @@
+
+req-0: 用两句话解释 KV Cache 的作用。
+KV Cache 存储了模型在处理当前序列时所需的上下文信息（Key 和 Value），从而避免重复计算相同的注意力机制。它通过复用这些预计算的数据，显著减少了后续迭代中重复的矩阵运算开销。
+
+[eos; 47 output tokens; free KV slots 512/512]
+
+req-1: What is 1 plus 1? Answer in one short sentence.
+1 plus 1 equals 2.
+
+[eos; 9 output tokens; free KV slots 512/512]

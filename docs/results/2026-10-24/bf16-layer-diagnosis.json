@@ -1,0 +1,245 @@
+{
+  "layers": [
+    {
+      "layer": 0,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 1,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 2,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 3,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 4,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 5,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 6,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 7,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 8,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 9,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 10,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 11,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 12,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 13,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 14,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 15,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 16,
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "layer": 17,
+      "max_abs": 0.0009765625,
+      "rms": 6.498295260826126e-05,
+      "different": 110
+    },
+    {
+      "layer": 18,
+      "max_abs": 0.001953125,
+      "rms": 0.000401613098802045,
+      "different": 881
+    },
+    {
+      "layer": 19,
+      "max_abs": 0.00390625,
+      "rms": 0.0006265488918870687,
+      "different": 1203
+    },
+    {
+      "layer": 20,
+      "max_abs": 0.015625,
+      "rms": 0.0009800735861063004,
+      "different": 1356
+    },
+    {
+      "layer": 21,
+      "max_abs": 0.03125,
+      "rms": 0.0013307464541867375,
+      "different": 1471
+    },
+    {
+      "layer": 22,
+      "max_abs": 0.03125,
+      "rms": 0.0016824828926473856,
+      "different": 1501
+    },
+    {
+      "layer": 23,
+      "max_abs": 0.0625,
+      "rms": 0.002658434910699725,
+      "different": 1578
+    }
+  ],
+  "convolutions": [
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    },
+    {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "different": 0
+    }
+  ],
+  "logits": {
+    "max_abs": 0.109375,
+    "rms": 0.021081607788801193,
+    "different": 350339
+  }
+}

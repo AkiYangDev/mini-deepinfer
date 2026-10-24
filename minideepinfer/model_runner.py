@@ -4,12 +4,15 @@ See docs/SOURCE_MAP.md for the upstream revision and the omitted mechanisms.
 """
 
 from dataclasses import dataclass
+import json
+from pathlib import Path
 
 import torch
 
 from .engine import Step
 from .models.qwen2 import Qwen2ForCausalLM
 from .tensor_cache import TensorKVCache
+from .hybrid_cache import HybridCache
 
 
 def select_device(name):
@@ -19,6 +22,9 @@ def select_device(name):
         if not torch.npu.is_available():
             raise RuntimeError("the requested NPU is unavailable")
         torch.npu.set_device(name)
+        # Reference execution: FP32 checks must not silently use HF32 kernels.
+        torch.npu.matmul.allow_hf32 = False
+        torch.npu.conv.allow_hf32 = False
     elif name != "cpu":
         raise ValueError("choose cpu or an explicit npu device, such as npu:0")
     return torch.device(name)
@@ -31,6 +37,7 @@ class ModelInput:
     slot_mapping: torch.Tensor
     context_slots: torch.Tensor
     attention_mask: torch.Tensor | None = None  # True blocks a query/key pair.
+    steps: tuple[Step, ...] = ()  # Host metadata: boundaries and state owners.
 
 
 @dataclass(frozen=True)
@@ -44,7 +51,8 @@ class ModelRunner:
         self.model = model.eval()
         weight = next(model.parameters())
         self.device = weight.device
-        self.cache = TensorKVCache(model.config, cache_capacity, self.device, weight.dtype)
+        cache_type = HybridCache if hasattr(model.config, "layer_types") else TensorKVCache
+        self.cache = cache_type(model.config, cache_capacity, self.device, weight.dtype)
         self._request_id = None
         self._cached_slots = ()
         self._prefixes: dict[str, PrefixState] = {}
@@ -52,14 +60,22 @@ class ModelRunner:
     @classmethod
     def from_pretrained(cls, directory, device="npu:0", dtype=torch.bfloat16, cache_capacity=512):
         target = select_device(device)
-        model = Qwen2ForCausalLM.from_pretrained(directory, dtype=dtype).to(target)
+        data = json.loads((Path(directory) / "config.json").read_text(encoding="utf-8"))
+        model_type = data.get("model_type", "qwen2")
+        if model_type in ("qwen3_5", "qwen3_5_text"):
+            from .models.qwen3_5 import Qwen3_5ForCausalLM
+            implementation = Qwen3_5ForCausalLM
+        else:
+            implementation = Qwen2ForCausalLM
+        model = implementation.from_pretrained(directory, dtype=dtype).to(target)
         return cls(model, cache_capacity)
 
     def prepare_input(self, step: Step) -> ModelInput:
         prefix = self._cached_slots if step.request_id == self._request_id else None
         self._validate_step(step, prefix)
         return ModelInput(*(torch.tensor(value, dtype=torch.long, device=self.device)
-                            for value in (step.input_ids, step.positions, step.slot_mapping, step.context_slots)))
+                            for value in (step.input_ids, step.positions, step.slot_mapping, step.context_slots)),
+                          steps=(step,))
 
     def _validate_step(self, step, prefix, allow_chunks=False):
         count = len(step.input_ids)
@@ -117,7 +133,7 @@ class ModelRunner:
         # Packed reference attention: isolate sequences, then apply each one's causal mask.
         mask = ((query_ids[:, None] != key_ids[None, :])
                 | (tensors[1][:, None] < key_positions[None, :]))
-        return ModelInput(*tensors, mask)
+        return ModelInput(*tensors, mask, steps)
 
     def execute_main_model(self, inputs):
         return self.model(inputs, self.cache)
@@ -133,6 +149,10 @@ class ModelRunner:
     def forward(self, step: Step):
         """Expose logits for fixed-token numerical comparisons."""
         inputs = self.prepare_input(step)
+        if isinstance(self.cache, HybridCache) and step.phase == "prefill":
+            if self._request_id is not None:
+                self.cache.release(self._request_id)
+            self.cache.release(step.request_id)
         logits = self.execute_main_model(inputs)
         self._request_id, self._cached_slots = step.request_id, step.context_slots
         return logits
@@ -166,3 +186,7 @@ class ModelRunner:
 
     def release(self, request_id: str) -> None:
         self._prefixes.pop(request_id, None)
+        if isinstance(self.cache, HybridCache):
+            self.cache.release(request_id)
+        if request_id == self._request_id:
+            self._request_id, self._cached_slots = None, ()

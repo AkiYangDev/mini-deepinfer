@@ -1,0 +1,263 @@
+{
+  "passed": true,
+  "device": "cpu",
+  "dtype": "float32",
+  "atol": 0.0001,
+  "rtol": 0.0002,
+  "packages": {
+    "torch": "2.10.0+cpu",
+    "torch-npu": "2.10.0.post6",
+    "transformers": "5.12.1",
+    "safetensors": "0.8.0"
+  },
+  "steps": [
+    {
+      "phase": "prefill",
+      "context_tokens": 2,
+      "input_ids": [
+        760,
+        6511
+      ],
+      "is_last_prompt_chunk": false,
+      "reference": {
+        "passed": true,
+        "max_abs": 3.3855438232421875e-05,
+        "rms": 5.9231588238617405e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 3.3855438232421875e-05,
+        "rms": 5.9231588238617405e-06,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "prefill",
+      "context_tokens": 4,
+      "input_ids": [
+        314,
+        9338
+      ],
+      "is_last_prompt_chunk": false,
+      "reference": {
+        "passed": true,
+        "max_abs": 2.765655517578125e-05,
+        "rms": 4.939519385516178e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.6702880859375e-05,
+        "rms": 5.111789050715743e-06,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 2.574920654296875e-05,
+        "rms": 4.925494522467488e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "prefill",
+      "context_tokens": 5,
+      "input_ids": [
+        369
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 3.337860107421875e-05,
+        "rms": 6.20892978986376e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 3.0994415283203125e-05,
+        "rms": 5.629301540466258e-06,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 3.24249267578125e-05,
+        "rms": 5.765879450336797e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 3.337860107421875e-05,
+        "rms": 5.4469064707518555e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 6,
+      "input_ids": [
+        11751
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 2.6226043701171875e-05,
+        "rms": 5.7618926803115755e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.574920654296875e-05,
+        "rms": 4.660199920181185e-06,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 2.47955322265625e-05,
+        "rms": 4.605819867720129e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 3.0994415283203125e-05,
+        "rms": 5.78486651647836e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 7,
+      "input_ids": [
+        13
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 3.0040740966796875e-05,
+        "rms": 6.98725398251554e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.9087066650390625e-05,
+        "rms": 5.179515937925316e-06,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 3.4332275390625e-05,
+        "rms": 6.470068001362961e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 3.0994415283203125e-05,
+        "rms": 5.515128577826545e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 8,
+      "input_ids": [
+        561
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 2.6226043701171875e-05,
+        "rms": 5.1221313697169535e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.6226043701171875e-05,
+        "rms": 5.732522367907222e-06,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 2.6702880859375e-05,
+        "rms": 5.262464128463762e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 2.384185791015625e-05,
+        "rms": 4.7992384679673705e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 9,
+      "input_ids": [
+        4087
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 3.0517578125e-05,
+        "rms": 5.168984898773488e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.765655517578125e-05,
+        "rms": 5.644482371280901e-06,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 2.6702880859375e-05,
+        "rms": 4.995095878257416e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 2.6226043701171875e-05,
+        "rms": 5.308215804689098e-06,
+        "top1_agreement": 1.0
+      }
+    }
+  ],
+  "prompt_ids": [
+    760,
+    6511,
+    314,
+    9338,
+    369
+  ],
+  "forced_ids": [
+    11751,
+    13,
+    561,
+    4087
+  ],
+  "prefill_chunk_size": 2,
+  "source_sha256": {
+    "minideepinfer/model_runner.py": "37465e4106894697eb9a84ad66f6b68f8075aa0ab1746225f46052a126e66299",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/verify.py": "75008dc377d62244733d0ed9a14cc901b04a3a622c7b0ab756d438510e31b537",
+    "minideepinfer/models/qwen3_5.py": "38cd6c1c15164151b35b6d1b3d0b49c16996d22ce0d9537867dc24db2744edde",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32"
+  }
+}

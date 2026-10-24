@@ -16,6 +16,8 @@ mini-sglang 继续作为紧凑实现和教学组织的参考。mini-DeepInfer �
 
 ## DeepInfer 主线与当前骨架
 
+Qwen3.5 继续使用下面相同的执行职责。新增 [`HybridCache`](../minideepinfer/hybrid_cache.py) 将完整注意力 KV 与线性层状态分开，状态由请求拥有并在同步执行完成后回收。[第四课](QWEN35.md) 对照 Qwen / Transformers 的模型计算，不把 DeltaNet 当成 DeepInfer 独有机制。
+
 技术设计以固定版本 DeepInfer 为主要参考。下面是概念与职责映射，当前骨架为原创实现，不是对原版的逐行缩写，也尚未复现其特色优化。
 
 | DeepInfer 源码入口 | 当前教学版落点 | 保留与简化 |

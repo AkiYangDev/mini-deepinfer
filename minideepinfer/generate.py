@@ -1,4 +1,4 @@
-"""Offline generation with local DeepSeek-R1-Distill-Qwen-1.5B weights."""
+"""Offline greedy text generation with local Qwen3.5 or Qwen2 weights."""
 
 import argparse
 
@@ -7,13 +7,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", required=True, help="local checkpoint directory")
     parser.add_argument("--device", default="npu:0")
-    parser.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
+    parser.add_argument("--dtype", choices=("float32", "bfloat16"), default="float32")
     parser.add_argument("--prompt", action="append", help="repeat to batch multiple prompts")
     parser.add_argument("--max-new-tokens", type=int, default=32)
     parser.add_argument("--cache-capacity", type=int, default=512)
     parser.add_argument("--max-num-seqs", type=int, default=4, help="active requests in a batch")
     parser.add_argument("--max-batched-tokens", type=int, default=None, help="whole-prompt + decode budget")
     parser.add_argument("--raw", action="store_true", help="skip the checkpoint's chat template")
+    parser.add_argument("--thinking", action="store_true", help="enable thinking if the chat template supports it")
     parser.add_argument("--chunked-prefill", action="store_true", help="split prompts by the batch token budget")
     args = parser.parse_args()
 
@@ -34,7 +35,7 @@ def main():
     for prompt in prompts:
         tokens = (tokenizer.encode(prompt) if args.raw else tokenizer.apply_chat_template(
             [{"role": "user", "content": prompt}], tokenize=True,
-            add_generation_prompt=True, return_dict=False,
+            add_generation_prompt=True, return_dict=False, enable_thinking=args.thinking,
         ))
         requests.append(engine.submit(tokens, args.max_new_tokens, tokenizer.eos_token_id))
     for _ in engine.run():

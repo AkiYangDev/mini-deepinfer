@@ -1,0 +1,351 @@
+{
+  "passed": true,
+  "device": "npu:0",
+  "dtype": "float32",
+  "atol": 0.0002,
+  "packed_atol": 0.0001,
+  "rtol": 0.0002,
+  "packages": {
+    "torch": "2.10.0+cpu",
+    "torch-npu": "2.10.0.post6",
+    "transformers": "5.12.1",
+    "safetensors": "0.8.0"
+  },
+  "prompts": [
+    "The capital of France is",
+    "A KV cache"
+  ],
+  "prompt_ids": [
+    [
+      760,
+      6511,
+      314,
+      9338,
+      369
+    ],
+    [
+      32,
+      81726,
+      6297
+    ]
+  ],
+  "forced_ids": [
+    11751,
+    13,
+    561,
+    4087
+  ],
+  "source_sha256": {
+    "minideepinfer/model_runner.py": "3c34a7686dc3a14efa1d4f3149e02b8874724b84fbb78d5320482023d205611f",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/verify_batch.py": "a3ad42e782abaa415dea6b7c70df841bae74652598c386b819189f6b1425a663",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32"
+  },
+  "steps": [
+    {
+      "iteration": 0,
+      "request_id": "0",
+      "phase": "prefill",
+      "context_tokens": 5,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.71661376953125e-05,
+        "rms": 1.6730509742046706e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.288818359375e-05,
+        "rms": 3.2143682346941205e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 2.288818359375e-05,
+        "rms": 3.2143682346941205e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 0,
+      "request_id": "1",
+      "phase": "prefill",
+      "context_tokens": 3,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 2.09808349609375e-05,
+        "rms": 1.7602486650503124e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.09808349609375e-05,
+        "rms": 3.1792642403161153e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 2.09808349609375e-05,
+        "rms": 3.1792642403161153e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 1,
+      "request_id": "0",
+      "phase": "decode",
+      "context_tokens": 6,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.621246337890625e-05,
+        "rms": 2.4890216536732623e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 1.4781951904296875e-05,
+        "rms": 2.4652051706652856e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 2.09808349609375e-05,
+        "rms": 2.6108139081770787e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 1.7642974853515625e-05,
+        "rms": 2.524412138882326e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 1,
+      "request_id": "1",
+      "phase": "decode",
+      "context_tokens": 4,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.430511474609375e-05,
+        "rms": 2.597723550934461e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 1.811981201171875e-05,
+        "rms": 3.309522071504034e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 1.5735626220703125e-05,
+        "rms": 3.524186240611016e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 1.6689300537109375e-05,
+        "rms": 2.8892611680930713e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 2,
+      "request_id": "0",
+      "phase": "decode",
+      "context_tokens": 7,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.52587890625e-05,
+        "rms": 2.646020675456384e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 1.430511474609375e-05,
+        "rms": 2.586883056210354e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 1.4543533325195312e-05,
+        "rms": 3.051688963751076e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 1.8358230590820312e-05,
+        "rms": 2.744605581028736e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 2,
+      "request_id": "1",
+      "phase": "decode",
+      "context_tokens": 5,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.52587890625e-05,
+        "rms": 2.8460347039072076e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 1.5974044799804688e-05,
+        "rms": 3.269130729677272e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 1.8835067749023438e-05,
+        "rms": 2.883781235141214e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 1.4781951904296875e-05,
+        "rms": 2.913738853749237e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 3,
+      "request_id": "0",
+      "phase": "decode",
+      "context_tokens": 8,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.621246337890625e-05,
+        "rms": 2.134327360181487e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 1.811981201171875e-05,
+        "rms": 2.3316681563301245e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 1.5974044799804688e-05,
+        "rms": 2.480818693584297e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 1.52587890625e-05,
+        "rms": 2.343677579119685e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 3,
+      "request_id": "1",
+      "phase": "decode",
+      "context_tokens": 6,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.52587890625e-05,
+        "rms": 2.0634877273550956e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 1.8358230590820312e-05,
+        "rms": 2.5881304281938355e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 1.6450881958007812e-05,
+        "rms": 2.7829357804876054e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 1.71661376953125e-05,
+        "rms": 2.2835338313598186e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 4,
+      "request_id": "0",
+      "phase": "decode",
+      "context_tokens": 9,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.621246337890625e-05,
+        "rms": 2.6837835775950225e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 2.002716064453125e-05,
+        "rms": 3.3365511171723483e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 1.71661376953125e-05,
+        "rms": 3.34203082275053e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 2.002716064453125e-05,
+        "rms": 2.881835371226771e-06,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "iteration": 4,
+      "request_id": "1",
+      "phase": "decode",
+      "context_tokens": 7,
+      "single_vs_batch": {
+        "passed": true,
+        "max_abs": 1.430511474609375e-05,
+        "rms": 2.6114375941688195e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 1.52587890625e-05,
+        "rms": 2.566001285231323e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_full": {
+        "passed": true,
+        "max_abs": 1.811981201171875e-05,
+        "rms": 2.769824050119496e-06,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 1.52587890625e-05,
+        "rms": 2.496755314496113e-06,
+        "top1_agreement": 1.0
+      }
+    }
+  ],
+  "remaining_prefixes": 0,
+  "reference_layout": "independent requests; no packed HF DeltaNet oracle",
+  "remaining_linear_states": 0
+}

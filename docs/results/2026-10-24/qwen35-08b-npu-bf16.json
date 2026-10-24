@@ -1,0 +1,263 @@
+{
+  "passed": false,
+  "device": "npu:0",
+  "dtype": "bfloat16",
+  "atol": 0.125,
+  "rtol": 0.01,
+  "packages": {
+    "torch": "2.10.0+cpu",
+    "torch-npu": "2.10.0.post6",
+    "transformers": "5.12.1",
+    "safetensors": "0.8.0"
+  },
+  "steps": [
+    {
+      "phase": "prefill",
+      "context_tokens": 2,
+      "input_ids": [
+        760,
+        6511
+      ],
+      "is_last_prompt_chunk": false,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.109375,
+        "rms": 0.021081607788801193,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 0.109375,
+        "rms": 0.021081607788801193,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "prefill",
+      "context_tokens": 4,
+      "input_ids": [
+        314,
+        9338
+      ],
+      "is_last_prompt_chunk": false,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.125,
+        "rms": 0.02371172234416008,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": false,
+        "max_abs": 0.18359375,
+        "rms": 0.03215793892741203,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": false,
+        "max_abs": 0.15625,
+        "rms": 0.03440825641155243,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "prefill",
+      "context_tokens": 5,
+      "input_ids": [
+        369
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.125,
+        "rms": 0.027271246537566185,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": false,
+        "max_abs": 0.15625,
+        "rms": 0.03317755460739136,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": false,
+        "max_abs": 0.15625,
+        "rms": 0.03204752504825592,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 6,
+      "input_ids": [
+        11751
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.125,
+        "rms": 0.025415411219000816,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": false,
+        "max_abs": 0.1875,
+        "rms": 0.03244604542851448,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": false,
+        "max_abs": 0.203125,
+        "rms": 0.03740996867418289,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 7,
+      "input_ids": [
+        13
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.140625,
+        "rms": 0.02712259255349636,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": false,
+        "max_abs": 0.1484375,
+        "rms": 0.02787291258573532,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": false,
+        "max_abs": 0.14453125,
+        "rms": 0.02834923565387726,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 8,
+      "input_ids": [
+        561
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": true,
+        "max_abs": 0.125,
+        "rms": 0.025050079450011253,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": true,
+        "max_abs": 0.125,
+        "rms": 0.02917371317744255,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": false,
+        "max_abs": 0.140625,
+        "rms": 0.026669269427657127,
+        "top1_agreement": 1.0
+      }
+    },
+    {
+      "phase": "decode",
+      "context_tokens": 9,
+      "input_ids": [
+        4087
+      ],
+      "is_last_prompt_chunk": true,
+      "reference": {
+        "passed": false,
+        "max_abs": 0.142578125,
+        "rms": 0.028325287625193596,
+        "top1_agreement": 1.0
+      },
+      "reference_cached": {
+        "passed": false,
+        "max_abs": 0.25,
+        "rms": 0.03759140893816948,
+        "top1_agreement": 1.0
+      },
+      "full_recompute": {
+        "passed": true,
+        "max_abs": 0.0,
+        "rms": 0.0,
+        "top1_agreement": 1.0
+      },
+      "reference_cache_recompute": {
+        "passed": false,
+        "max_abs": 0.1875,
+        "rms": 0.033872030675411224,
+        "top1_agreement": 1.0
+      }
+    }
+  ],
+  "prompt_ids": [
+    760,
+    6511,
+    314,
+    9338,
+    369
+  ],
+  "forced_ids": [
+    11751,
+    13,
+    561,
+    4087
+  ],
+  "prefill_chunk_size": 2,
+  "source_sha256": {
+    "minideepinfer/model_runner.py": "37465e4106894697eb9a84ad66f6b68f8075aa0ab1746225f46052a126e66299",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/verify.py": "75008dc377d62244733d0ed9a14cc901b04a3a622c7b0ab756d438510e31b537",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32"
+  }
+}

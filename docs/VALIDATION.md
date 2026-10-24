@@ -2,7 +2,39 @@
 
 [返回首页](../README.md)
 
-本文记录当前结果，并说明后续实现需要留下的证据。目前已完成单请求和同步批次的真实权重 CPU 数值对照；完整模型的 Ascend 910C 验证尚未完成。
+本文记录实际结果和对应的模型、输入及源码版本。当前 Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 数值检查；BF16 仍有未通过的对照。此前 Qwen2 记录按各自历史版本保留。
+
+## 2026-10-24：Qwen3.5 纯文本与混合缓存
+
+0.8B 用于开发验证，2B 为主要示例。两个模型的 revision、文件大小与完整 SHA256 见[权重记录](results/2026-10-24/weights.json)。权重通过镜像传输，下载后与固定 Hugging Face revision 的 LFS SHA256 逐字节哈希核对，两者均一致。
+
+环境为 Atlas 800I A3 / Ascend 910C，Python 3.12.13、PyTorch 2.10.0+cpu、torch_npu 2.10.0.post6、CANN 9.1.0、Transformers 5.12.1、safetensors 0.8.0。单个逻辑设备、eager、FP32，CPU 计算线程为 8。参考检查显式关闭 NPU matmul / convolution 的 HF32 近似模式。[依赖记录](results/2026-10-24/environment.json)与每份报告的源码 SHA 分开保存。
+
+固定 prompt 为 `The capital of France is`，实际 5 token 按 `[2, 2, 1]` 分块，再执行 4 步固定 token decode。每步同时比较独立 Transformers 缓存、完整重算，以及项目自身完整重算。
+
+| 模型与设备 | 各项检查的最大绝对误差 | 结果 |
+| --- | --- | --- |
+| 0.8B / CPU FP32 | `3.4332275390625e-5` | [通过](results/2026-10-24/qwen35-0.8B-cpu-fp32-final.json) |
+| 2B / CPU FP32 | `3.910064697265625e-5` | [通过](results/2026-10-24/qwen35-2B-cpu-fp32-final.json) |
+| 0.8B / Ascend 910C FP32 | `2.002716064453125e-5` | [通过](results/2026-10-24/qwen35-0.8B-npu-fp32.json) |
+| 2B / Ascend 910C FP32 | `2.288818359375e-5` | [通过](results/2026-10-24/qwen35-2B-npu-fp32.json) |
+| 2B 双请求 / Ascend 910C FP32 | `2.288818359375e-5` | [通过](results/2026-10-24/qwen35-2b-batch-npu-fp32.json)，结束后前缀记录与线性状态均为 0 |
+
+检查位置的 top-1 全部一致。单请求沿用 `atol=1e-4, rtol=2e-4`，批次沿用跨形状的 `atol=2e-4, rtol=2e-4`；没有为本次结果放宽门槛。双请求使用交错、非连续槽位，各做 prefill 和 4 步固定 decode。Qwen3.5 参考请求各自保存状态，未构造一个会串联 DeltaNet 历史的 packed HF 假参考。
+
+2B 还完成双请求分块生成：中文 KV Cache 解释输出 47 token，英文 `1 plus 1` 回答输出 9 token，两者均遇 EOS 结束，512/512 逻辑槽位回收。[完整输出](results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)按实际结果保留。该结果是运行示例，不是通用回答质量或性能评测。
+
+本地 PyTorch 2.5.1 与服务器 2.10.0 环境均通过 44 项 CPU 测试，新增 8 项 Qwen3.5 对照覆盖整段/分块/缓存、GQA、请求重排与隔离、脏槽位复用、取消与异常回收，以及原始多模态 checkpoint 的纯文本加载和共享权重。BF16 归一化回归测试也做了反例检查：恢复旧计算顺序后测试确实失败。
+
+### BF16：保留失败，不以 top-1 代替数值验收
+
+真实 0.8B 的[首轮 BF16 对照](results/2026-10-24/qwen35-08b-npu-bf16-initial.json)没有通过原 `atol=0.125, rtol=0.01`。权重逐项一致，[卷积隔离与逐层诊断](results/2026-10-24/bf16-initial-diagnosis.json)排除了首层卷积差异。原实现先转 FP32 再归一化 Q/K，而固定的 Transformers 5.12.1 先按投影 dtype 归一化；现已对齐计算顺序并补回归测试。
+
+修正后的[BF16 对照](results/2026-10-24/qwen35-08b-npu-bf16.json)仍未全部通过，最大误差 0.25；检查位置 top-1 一致，项目缓存与重算在该输入上完全一致。参考自身缓存/重算也有最大 0.203125 差异，不能据此直接宣布项目通过。
+
+进一步[扫描隔离](results/2026-10-24/bf16-scan-diagnosis.json)显示相同首层输入的分块与逐 token 输出一致，末状态有约 `5.96e-8` 的 FP32 运算顺序差异；[逐层记录](results/2026-10-24/bf16-layer-diagnosis.json)中前 17 层输出一致，第 18 层开始出现 BF16 舍入差异。Transformers 5.12.1 的默认线性缓存还按卷积 dtype 分配递推存储，本项目则保存 FP32。以上确定了需要分别核对的精度与缓存语义，尚不能把全部误差归为单一原因。
+
+因此，当前示例明确使用 FP32，BF16 继续作为实验路径。没有通过调整门槛抹去失败，也没有吞吐、延迟或相对成熟框架的性能结论。
 
 ## 2026-10-21：分块 prefill 验证
 

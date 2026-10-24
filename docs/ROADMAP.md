@@ -6,7 +6,7 @@
 
 ## 第一阶段：单请求真实生成
 
-当前代码已包含请求循环、逻辑槽位、Qwen2 forward、张量 KV Cache、离线生成与数值对照脚本。模型选用 DeepSeek-R1-Distill-Qwen-1.5B，先限定单设备、eager、greedy 和短上下文。
+当前代码已包含请求循环、逻辑槽位、Qwen2 forward、张量 KV Cache、离线生成与数值对照脚本。保留 DeepSeek-R1-Distill-Qwen-1.5B 回归基线，新增 Qwen3.5-0.8B / 2B 纯文本示例，限定单设备、eager、greedy 和短上下文。混合缓存与运行方法见[第四课](QWEN35.md)。
 
 模型配置、tokenizer 与 safetensors 读取复用现有库；模型计算由本项目实现。入门模型采用 Qwen2 架构，用于验证执行和缓存，并不包含 MLA/MoE。
 

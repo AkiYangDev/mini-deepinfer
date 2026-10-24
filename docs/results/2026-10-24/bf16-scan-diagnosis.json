@@ -1,0 +1,29 @@
+{
+  "matmul_hf32": false,
+  "conv_hf32": true,
+  "chunk_vs_recurrent": {
+    "max_abs": 0.0,
+    "rms": 0.0,
+    "different": 0,
+    "elements": 4096
+  },
+  "chunk_state_vs_recurrent_state": {
+    "max_abs": 5.960464477539063e-08,
+    "rms": 4.046059043361083e-10,
+    "different": 113219,
+    "elements": 262144
+  },
+  "first_delta_output": {
+    "max_abs": 0.0,
+    "rms": 0.0,
+    "different": 0,
+    "elements": 2048
+  },
+  "first_delta_vs_reference_recurrent": {
+    "max_abs": 0.0,
+    "rms": 0.0,
+    "different": 0,
+    "elements": 2048
+  },
+  "state_dtype": "torch.float32"
+}

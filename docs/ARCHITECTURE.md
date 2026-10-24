@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [实施路线](ROADMAP.md)
 
-第一课保留同步 FIFO 单请求 Engine，第三课增加按轮调度的 BatchEngine。两者使用同一个 Qwen2 模型与张量 KV Cache；批次路径合并输入并通过 mask 隔开各请求，仍等待本轮计算结束再提交。
+第一课保留同步 FIFO 单请求 Engine，第三课增加按轮调度的 BatchEngine。Runner 可以执行 Qwen2，或第四课的纯文本 Qwen3.5。批次通过 mask 隔开完整注意力，通过请求边界隔开 DeltaNet 递推，仍等待本轮计算结束再提交。
 
 ## 核心对象
 
@@ -11,8 +11,9 @@
 | Request | 维护请求生命周期与输出 | prompt、已输出 token、已计算输入数量、停止原因、错误 |
 | Step | 描述一次执行，不承载模型计算 | 输入 token、绝对位置、本轮写入槽位、有序上下文槽位 |
 | SlotPool | 管理逻辑槽位归属，不存储张量 | 空闲槽位、请求独占槽位 |
-| ModelRunner | 准备输入、执行 forward、选择 token | Qwen2 权重、设备输入、当前请求的已计算前缀 |
+| ModelRunner | 准备输入、执行 forward、选择 token | 模型权重、设备输入、各请求的已计算前缀 |
 | TensorKVCache | 存放真实 K/V 张量 | 按 layer / slot / KV head / head dimension 分配 |
+| HybridCache | 管理 Qwen3.5 两类设备缓存 | 完整注意力的 KV；每个请求、每个线性层的卷积窗口与 FP32 递推矩阵 |
 | Engine | FIFO 调度、准备元数据、提交结果与终止 | 等待队列、一个运行请求、该请求的预留槽位 |
 | BatchEngine | 按轮准入与整批结果提交 | 等待队列、运行请求及各自槽位、请求数与 token 预算 |
 
@@ -74,7 +75,9 @@ minideepinfer/
   batch_demo.py   # 批次从 [A, B] 变成 [B, C]
   model_runner.py # 输入准备 / forward / greedy
   tensor_cache.py # 真实 K/V 张量与槽位读写
+  hybrid_cache.py # 完整注意力 KV 与请求独占的线性状态
   models/qwen2.py # Qwen2 模型与 safetensors 加载
+  models/qwen3_5.py # 纯文本混合注意力与 checkpoint 映射
   generate.py     # 离线真实生成入口
   verify.py       # 真实权重 logits 对照
   verify_batch.py # 批次与独立请求的数值对照

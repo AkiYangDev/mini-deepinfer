@@ -1,0 +1,16 @@
+{
+  "Qwen3.5-0.8B": {
+    "repo": "Qwen/Qwen3.5-0.8B",
+    "hf_revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "bytes": 1746942600,
+    "sha256": "04b1c301231dd422b8860db31311ab2721511346a32cb1e079c4c4e5f1fe4696",
+    "transport": "www.modelscope.cn"
+  },
+  "Qwen3.5-2B": {
+    "repo": "Qwen/Qwen3.5-2B",
+    "hf_revision": "15852e8c16360a2fea060d615a32b45270f8a8fc",
+    "bytes": 4548221488,
+    "sha256": "aa33250c4fc64891ddfaba3a314fd9542ea371843c387178b425fbcc5ed680b1",
+    "transport": "www.modelscope.cn"
+  }
+}

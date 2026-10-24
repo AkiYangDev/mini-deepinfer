@@ -1,0 +1,9 @@
+{
+  "python": "3.12.13",
+  "packages": {
+    "torch": "2.10.0+cpu",
+    "torch-npu": "2.10.0.post6",
+    "transformers": "5.12.1",
+    "safetensors": "0.8.0"
+  }
+}

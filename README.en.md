@@ -16,29 +16,27 @@ Built for learning, targeting Ascend 910C.
 
 mini-DeepInfer studies the design of [DeepInfer](https://github.com/deepseek-ai/DeepInfer) through a small teaching engine: how inputs become tokens, how prefill leads into decode, where the KV cache lives, and who releases it when a request ends.
 
-The project can now run **DeepSeek-R1-Distill-Qwen-1.5B** using its own Qwen2 forward pass and tensor KV cache. You can read and run the CPU path without an NPU. **Ascend 910C is the target platform; full-model NPU validation is still pending.**
+The project now runs **text-only Qwen3.5-2B on Ascend 910C** using its own forward pass and cache management. Qwen3.5-0.8B is the smaller development model; DeepSeek-R1-Distill-Qwen-1.5B remains a regression baseline. Full attention stores token KV, while DeltaNet keeps convolution and recurrent state for each request.
+
+**The validated path uses FP32. BF16 numerical checks do not all pass yet.** The engine supports synchronous dynamic batching, chunked prefill, cancellation, and cache reclamation.
 
 ## What runs today
 
 | Check | Result |
 | --- | --- |
-| Real weights, CPU FP32 | 5-token prefill + 4 fixed-token decode steps; maximum absolute logits difference from the Transformers cached path: **0** |
-| Cache vs. recomputation | Maximum absolute difference about `7.56e-5`, also present in the reference model's own cache/recompute comparison; top-1 agrees at every checked position |
-| Text generation | 96 generated tokens, length stop, then **512/512** KV slots reclaimed |
-| Automated checks | 36 tests pass, covering model comparisons, batch isolation, chunked prefill, slot reuse, and request lifecycles |
+| Qwen3.5-0.8B / Ascend 910C FP32 | Chunked prefill + 4 fixed-token decode steps; maximum absolute difference about `2.00e-5` |
+| Qwen3.5-2B / Ascend 910C FP32 | Single-request and two-request numerical checks pass; maximum absolute difference about `2.29e-5`, with top-1 agreement at every checked position |
+| 2B, two concurrent requests | Chinese explanation and English answer both stop at EOS; 512/512 logical slots reclaimed |
 
-These results apply to the recorded model, inputs, and dependency versions. See the [validation record](docs/VALIDATION.md) for the environment and raw JSON. Synchronous dynamic batching now supports changing membership and mixed prefill/decode; see [lesson three](docs/BATCHING.md). Scheduling overlap is not implemented yet.
-
-A real CPU run with `What is 1 plus 1? Answer in one short sentence.` produced this excerpt:
+The English answer from the real 2B run:
 
 ```text
-Okay, so I need to figure out what 1 plus 1 is. Hmm, I remember learning this in school,
-but I'm not entirely sure. Let me think. ...
+1 plus 1 equals 2.
 
-[length; 96 output tokens; free KV slots 512/512]
+[eos; 9 output tokens; free KV slots 512/512]
 ```
 
-This is an unfinished R1 reasoning passage. It demonstrates generation and reclamation, rather than answer quality or performance. The [complete output](docs/results/2026-10-20/generation-cpu.txt) is preserved.
+The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt), inputs, environment, errors, and failed BF16 checks are preserved in the [validation record](docs/VALIDATION.md). These are short-context correctness checks, without throughput or latency claims.
 
 ## Run a real model
 
@@ -47,20 +45,21 @@ Clone the project and install the model dependencies:
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
-python -m pip install -e ".[model]"
+python -m pip install -e ".[qwen35]"
 ```
 
-Prepare local weights using the [pinned download command in lesson two](docs/REAL_GENERATION.md), then start on CPU:
+Download the pinned checkpoints using [lesson four](docs/QWEN35.md). In an Ascend environment with compatible PyTorch, torch_npu, and CANN:
 
 ```bash
 python -m minideepinfer.generate \
-  --model weights/DeepSeek-R1-Distill-Qwen-1.5B \
-  --device cpu --dtype float32 \
+  --model weights/Qwen3.5-2B --device npu:0 --dtype float32 \
+  --prompt "用两句话解释 KV Cache 的作用。" \
   --prompt "What is 1 plus 1? Answer in one short sentence." \
-  --max-new-tokens 96
+  --max-new-tokens 128 --cache-capacity 512 \
+  --max-num-seqs 2 --max-batched-tokens 16 --chunked-prefill
 ```
 
-NPU execution requires compatible PyTorch, `torch_npu`, and CANN versions. [Lesson two](docs/REAL_GENERATION.md) includes the NPU and numerical-check commands. Start with short contexts; the CPU path also loads the full model weights.
+Without an NPU, use `--device cpu --dtype float32` and start with 0.8B. This implementation targets short teaching examples; CPU execution still loads the full text model.
 
 ## Follow a request through the code
 
@@ -71,6 +70,7 @@ If you know basic Python and PyTorch, follow these entry points. The project imp
 | What does each prefill or decode step consume? | [`Engine.step()`](minideepinfer/engine.py) |
 | How do tokens, positions, and KV slots line up? | [`ModelRunner.prepare_input()`](minideepinfer/model_runner.py) |
 | How does attention write and read past K/V? | [`qwen2.py`](minideepinfer/models/qwen2.py) · [`TensorKVCache`](minideepinfer/tensor_cache.py) |
+| How does linear attention remember history without mixing requests? | [`qwen3_5.py`](minideepinfer/models/qwen3_5.py) · [`HybridCache`](minideepinfer/hybrid_cache.py) |
 | How do logits become the next token? | [`ModelRunner.execute_sample()`](minideepinfer/model_runner.py) |
 | Who releases slots on completion or cancellation? | [`Engine`](minideepinfer/engine.py) · [`SlotPool`](minideepinfer/kv_cache.py) |
 
@@ -81,13 +81,13 @@ python -m minideepinfer
 python -m unittest discover -s tests -v
 ```
 
-Without model dependencies, 8 engine tests run and 8 model tests are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
+Without model dependencies, 19 engine tests run and model comparisons are explicitly skipped. [Lesson two](docs/REAL_GENERATION.md) replaces the runner with a real model. Detailed lessons and design documents are currently in Chinese; code comments are in English.
 
 ## How this relates to DeepInfer
 
 DeepInfer is the primary technical reference. The current implementation separates input preparation, main-model execution, sampling, and result handling. Future lessons will study in-flight states and scheduling overlap. The [source map](docs/SOURCE_MAP.md) identifies the pinned upstream revision, corresponding entry points, and teaching simplifications.
 
-**Qwen2 is the introductory model, not a reproduction of DeepInfer's advanced mechanisms.** Both single-request and synchronous batch paths remain available for comparison. Next comes full-model Ascend 910C validation. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
+**Small Qwen models carry the teaching examples; DeepInfer remains the engine-design reference.** Single-request and synchronous batch paths remain available for comparison. [Lesson four](docs/QWEN35.md) explains hybrid model state management. MLA, MoE, speculative decoding, and bounded replay belong to later, separate lessons; see the [roadmap](docs/ROADMAP.md).
 
 [mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format; Ascend SGLang informs NPU API and compatibility work. See the [architecture](docs/ARCHITECTURE.md) and [references](docs/REFERENCES.md) for further details.
 

@@ -38,7 +38,11 @@ def main():
         parser.error("steps exceeds the fixed continuation length")
     capacity = len(prompt) + args.steps
     runner = ModelRunner.from_pretrained(args.model, args.device, dtype, capacity)
-    reference = AutoModelForCausalLM.from_pretrained(
+    reference_class = AutoModelForCausalLM
+    if hasattr(runner.model.config, "layer_types"):
+        from transformers import Qwen3_5ForCausalLM
+        reference_class = Qwen3_5ForCausalLM
+    reference = reference_class.from_pretrained(
         args.model, torch_dtype=dtype, attn_implementation="eager", local_files_only=True
     ).to(runner.device).eval()
     rows = []
@@ -95,6 +99,10 @@ def main():
                hashlib.sha256(path.read_bytes()).hexdigest()
                for path in (root / "model_runner.py", root / "models/qwen2.py",
                             root / "tensor_cache.py", Path(__file__))}
+    if hasattr(runner.model.config, "layer_types"):
+        sources.update({"minideepinfer/" + str(path.relative_to(root)).replace("\\", "/"):
+                        hashlib.sha256(path.read_bytes()).hexdigest()
+                        for path in (root / "models/qwen3_5.py", root / "hybrid_cache.py")})
     report = {"passed": passed, "device": str(runner.device), "dtype": args.dtype,
               "atol": atol, "rtol": rtol, "packages": packages, "steps": rows,
               "prompt_ids": prompt, "forced_ids": forced[:args.steps],

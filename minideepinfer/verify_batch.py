@@ -59,11 +59,16 @@ def main():
     dtype = getattr(torch, args.dtype)
     runner = ModelRunner.from_pretrained(args.model, args.device, dtype, capacity)
     singles = [ModelRunner(runner.model, capacity) for _ in prompts]
-    reference = AutoModelForCausalLM.from_pretrained(
+    hybrid = hasattr(runner.model.config, "layer_types")
+    reference_class = AutoModelForCausalLM
+    if hybrid:
+        from transformers import Qwen3_5ForCausalLM
+        reference_class = Qwen3_5ForCausalLM
+    reference = reference_class.from_pretrained(
         args.model, torch_dtype=dtype, attn_implementation="eager", local_files_only=True
     ).to(runner.device).eval()
     past = [None] * stride
-    packed_past = packed_reference_cache()
+    packed_past = None if hybrid else packed_reference_cache()
     atol, rtol = (0.125, 0.01) if dtype == torch.bfloat16 else (2e-4, 2e-4)
     packed_atol = 0.125 if dtype == torch.bfloat16 else 1e-4
 
@@ -85,7 +90,7 @@ def main():
                                   tuple(prefix[start:]), tuple(range(start, end)),
                                   slots[i][start:end], slots[i][:end]))
             batched = runner.forward_batch(tuple(plans))
-            if iteration:
+            if iteration and not hybrid:
                 old_lengths = [len(p) - 1 for p in prefixes]
                 order, offset = [], 0
                 for i, length in enumerate(old_lengths):
@@ -93,19 +98,20 @@ def main():
                     order.append(sum(old_lengths) + i)
                     offset += length
                 packed_past.permutation = torch.tensor(order, device=runner.device)
-            # Independent reference mask: no reuse of the mini runner's mask.
-            positions = [p for plan in plans for p in plan.positions]
-            owners = [i for i, plan in enumerate(plans) for _ in plan.input_ids]
-            keys = [(i, p) for i, prefix in enumerate(prefixes) for p in range(len(prefix))]
-            allowed = torch.tensor([[owner == i and p <= pos for i, p in keys]
-                                    for owner, pos in zip(owners, positions)], device=runner.device)
-            mask = torch.zeros(allowed.shape, dtype=dtype, device=runner.device).masked_fill(
-                ~allowed, torch.finfo(dtype).min)
-            packed = reference(torch.tensor([[t for plan in plans for t in plan.input_ids]], device=runner.device),
-                               attention_mask=mask[None, None],
-                               position_ids=torch.tensor([positions], device=runner.device),
-                               past_key_values=packed_past, use_cache=True).logits[0]
-            packed_rows = packed.split([len(plan.input_ids) for plan in plans])
+            if not hybrid:
+                # Independent reference mask: no reuse of the mini runner's mask.
+                positions = [p for plan in plans for p in plan.positions]
+                owners = [i for i, plan in enumerate(plans) for _ in plan.input_ids]
+                keys = [(i, p) for i, prefix in enumerate(prefixes) for p in range(len(prefix))]
+                allowed = torch.tensor([[owner == i and p <= pos for i, p in keys]
+                                        for owner, pos in zip(owners, positions)], device=runner.device)
+                mask = torch.zeros(allowed.shape, dtype=dtype, device=runner.device).masked_fill(
+                    ~allowed, torch.finfo(dtype).min)
+                packed = reference(torch.tensor([[t for plan in plans for t in plan.input_ids]], device=runner.device),
+                                   attention_mask=mask[None, None],
+                                   position_ids=torch.tensor([positions], device=runner.device),
+                                   past_key_values=packed_past, use_cache=True).logits[0]
+                packed_rows = packed.split([len(plan.input_ids) for plan in plans])
             for i, (plan, actual) in enumerate(zip(plans, batched)):
                 single = singles[i].forward(plan)
                 cached = reference(torch.tensor([plan.input_ids], device=runner.device),
@@ -113,20 +119,23 @@ def main():
                 past[i] = cached.past_key_values
                 full = reference(torch.tensor([prefixes[i]], device=runner.device), use_cache=False).logits[0]
                 expected = full[-len(plan.input_ids):]
-                rows.append({"iteration": iteration, "request_id": plan.request_id,
+                row = {"iteration": iteration, "request_id": plan.request_id,
                              "phase": plan.phase, "context_tokens": len(plan.context_slots),
                              "single_vs_batch": compare(actual, single),
-                             "reference_packed": compare(actual, packed_rows[i], packed_atol),
-                             "reference_packed_vs_single": compare(packed_rows[i], cached.logits[0]),
                              "reference_cached": compare(actual, cached.logits[0]),
                              "reference_full": compare(actual, expected),
-                             "reference_cache_recompute": compare(cached.logits[0], expected)})
+                             "reference_cache_recompute": compare(cached.logits[0], expected)}
+                if not hybrid:
+                    row.update(reference_packed=compare(actual, packed_rows[i], packed_atol),
+                               reference_packed_vs_single=compare(packed_rows[i], cached.logits[0]))
+                rows.append(row)
             if iteration < 4:
                 for prefix in prefixes:
                     prefix.append(forced[iteration])
         runner.synchronize()
-    for plan in plans:
+    for i, plan in enumerate(plans):
         runner.release(plan.request_id)
+        singles[i].release(plan.request_id)
     packages = {}
     for name in ("torch", "torch-npu", "transformers", "safetensors"):
         try:
@@ -140,12 +149,22 @@ def main():
                             root / "tensor_cache.py", Path(__file__))}
     checks = ("single_vs_batch", "reference_packed", "reference_packed_vs_single",
               "reference_cached", "reference_full", "reference_cache_recompute")
+    if hybrid:
+        # A 4D attention mask does not isolate DeltaNet's recurrent scan. Keep
+        # HF requests independent rather than create a misleading packed oracle.
+        checks = ("single_vs_batch", "reference_cached", "reference_full", "reference_cache_recompute")
+        sources.update({"minideepinfer/" + str(path.relative_to(root)).replace("\\", "/"):
+                        hashlib.sha256(path.read_bytes()).hexdigest()
+                        for path in (root / "models/qwen3_5.py", root / "hybrid_cache.py")})
     report = {"passed": all(row[key]["passed"] for row in rows for key in checks),
               "device": str(runner.device), "dtype": args.dtype,
               "atol": atol, "packed_atol": packed_atol, "rtol": rtol,
               "packages": packages, "prompts": prompts, "prompt_ids": original_ids,
               "forced_ids": forced, "source_sha256": sources, "steps": rows,
               "remaining_prefixes": len(runner._prefixes)}
+    if hybrid:
+        report["reference_layout"] = "independent requests; no packed HF DeltaNet oracle"
+        report["remaining_linear_states"] = len(runner.cache.linear_states)
     payload = json.dumps(report, indent=2)
     print(payload)
     if args.output:

@@ -163,6 +163,9 @@ class Engine:
 
     def _release_active(self) -> None:
         assert self._active is not None
+        release = getattr(self.runner, "release", None)
+        if release is not None:
+            release(self._active.request_id)
         self.cache.release(self._active.request_id)
         self._active = None
         self._slots = ()
