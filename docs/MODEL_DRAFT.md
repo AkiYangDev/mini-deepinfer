@@ -45,6 +45,26 @@ target 继续使用 [`generate()`](../minideepinfer/speculative.py) 的验证与
 
 最终只剩一个 target 输出时，候选上限为零，draft 不再计算。结束后两边分别同步和清理；draft 的等待失败会继续持有自己的槽位。测试检查拒绝后的恢复、EOS 在候选中被接受、初始提交回调异常，以及关闭失败时不能提前归还资源。
 
+### 计算抛异常后，不从半份状态继续
+
+模型计算会逐层写入缓存。假设 draft 要从 `P` 补算到 `P A`，第一层已经更新线性状态，第二层却抛了异常；此时记录的 token 仍可能只有 `P`，实际张量已经不再是完整的 `P`。再输入一次 `A`，会让部分层多计算一遍。单看 token 数没前进，不能认为缓存也没变。
+
+当前 `ModelDraft` 在计算阶段出错后会标记 `failed=True`，保留原异常，拒绝后续候选调用，包括候选上限为零的调用。回退重算、快照、采样或观察回调抛异常，以及 `KeyboardInterrupt`，也按这个规则结束该请求。它不尝试修补一半写入的缓存；同步、清理后，用新的 draft 开始请求。
+
+调用者仍负责关闭自己创建的 draft，和演示入口一致：
+
+```python
+draft = ModelDraft(small, capacity)
+try:
+    result = generate(target, prompt, count, draft, width=1)
+finally:
+    draft.close()
+```
+
+`close()` 先确认设备用完，再清理状态和归还槽位。如果等待失败，`failed=True`、`closed=False`，槽位仍归这个对象持有；保留对象，待设备能够完成同步后重试 `close()`，不能继续提出候选。成功关闭后 `failed` 保留失败记录。计算前的参数校验错误不改变缓存，修正参数后可以继续使用同一个对象。
+
+这条异常路径用 CPU 在第一层真实写入缓存后注入故障，覆盖首次计算、补齐前缀、临时候选和混合状态恢复重算；另检查 target 与 draft 出错时，两边都先完成同步再归还槽位。这些是 CPU 的状态与清理测试，没有把故障注入扩展为新的 Ascend 910C 实机结果。
+
 这套回调复用已有接受、提交和长度修正的分工，是对原[DeepInfer 来源映射](SPECULATIVE.md#这和-deepinfer-怎样对应)的延伸。双模型草稿器是本项目的简化实现，不是 DeepInfer 的 MTP，也没有实现概率接受、残差采样或 SWA Bounded Replay。
 
 ## 首轮 Ascend 910C 固定实验
@@ -169,5 +189,7 @@ Only width 1 was timed: one warmup per path, three alternating-order pairs, the 
 Target calls fell from ten to seven, but the draft made five additional calls; each model also copied five 20,201,472-byte linear-state snapshots. The entire check, warmup and measurement program made 138 model calls, loading each existing checkpoint once. There were no downloads or traces. Run the tiny CPU mode without checkpoints using `python -m minideepinfer.model_draft_demo`; real paths and paired timing require the explicit arguments above.
 
 Those initial reports are pinned to `7b27e8e`. Current main skips draft snapshots when only one candidate is requested: argmax reads the committed endpoint without feeding that candidate back into the draft. Target snapshots remain necessary. A separate same-load comparison (`--compare-draft-snapshots --width 1 --repeats 3`) removed five draft snapshots, or 101,007,360 cloned bytes per request, while preserving outputs, acceptance, model work and cleanup. All 32 cold-cache checks passed. Width-3 checks use the current policy in both runs; they are not an old-policy comparison.
+
+The snapshot reports are pinned to `ed767bc`. Current main additionally marks a draft as failed after an exception during cache initialization, alignment, proposal computation or observation. A forward may have updated some layers before raising, even when the recorded token count did not advance. Failed drafts reject further proposal calls; `close()` must still drain, clear state and return slots. A failed drain retains ownership and permits retrying `close()`. Input validation before computation remains retryable. CPU fault injection covers real partial writes, prefill, prefix alignment, proposal and replay, interruption, and cleanup of both models. This exception handling change has no new NPU fault-injection or performance measurement.
 
 Three alternating-order pairs had median whole latency of 502.466 ms with the old width-1 snapshots versus 499.026 ms without them, about 0.7% lower. Median TTFT/TPOT/E2E were 51.107/50.120/502.276 ms versus 51.178/49.745/498.879 ms; throughput was 19.902 versus 20.039 tokens/s. All six requests succeeded, each accepting 4/5 proposals with AL 1.8. This small fixed-workload change is not evidence of general speculative speedup. The new program made 186 forward calls and loaded each existing checkpoint once; ordinary greedy was checked for correctness but not retimed. Do not compare timings across the two experiments as a paired result.

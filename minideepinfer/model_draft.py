@@ -43,16 +43,18 @@ class ModelDraft:
         self.cache = None
         self.committed = ()
         self.closed = False
+        self.failed = False
         self.on_cache = on_cache
         self.calls = self.proposed = self.recoveries = 0
         self.sync_calls = self.sync_tokens = 0
         self.proposal_calls = self.proposal_tokens = 0
 
     def __call__(self, prefix, limit):
-        from .speculative import CachedTarget
         prefix = tuple(prefix)
         if self.closed:
             raise ValueError('draft is closed')
+        if self.failed:
+            raise RuntimeError('draft failed; close it and create a new draft')
         if type(limit) is not int or not 0 <= limit <= 8:
             raise ValueError('draft limit must be an integer from zero to eight')
         if (not prefix or any(type(t) is not int or not 0 <= t < self.model.config.vocab_size for t in prefix)
@@ -63,6 +65,15 @@ class ModelDraft:
         self.calls += 1
         if limit == 0:
             return ()  # No draft computation is needed for a direct final target output.
+        try:
+            return self._propose(prefix,limit)
+        except BaseException:
+            # A failed forward may already have changed KV or linear state.
+            self.failed = True
+            raise
+
+    def _propose(self, prefix, limit):
+        from .speculative import CachedTarget
         if self.cache is None:
             self.cache = CachedTarget(self.model,self.slots,self.pool.capacity)
         else:
@@ -101,7 +112,11 @@ class ModelDraft:
         if self.closed:
             return
         if self.cache is not None:
-            self.cache.synchronize()  # Failed drain keeps this request's slots owned.
+            try:
+                self.cache.synchronize()  # Failed drain keeps this request's slots owned.
+            except BaseException:
+                self.failed = True
+                raise
             if self.cache.hybrid:
                 self.cache.cache.release('spec')
             self.cache._snapshot = None
@@ -119,4 +134,4 @@ class ModelDraft:
                     peak_snapshot_bytes=cache.peak_snapshot_bytes if cache else 0,
                     linear_states_remaining=len(cache.cache.linear_states) if cache and cache.hybrid else 0,
                     snapshot_retained=cache._snapshot is not None if cache else False,
-                    closed=self.closed,free_slots=self.pool.free_count)
+                    failed=self.failed,closed=self.closed,free_slots=self.pool.free_count)

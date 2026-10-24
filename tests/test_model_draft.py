@@ -178,7 +178,105 @@ class ModelDraftTests(unittest.TestCase):
         with patch.object(CachedTarget,'synchronize',side_effect=RuntimeError('drain failed')):
             with self.assertRaisesRegex(RuntimeError,'drain failed'):draft.close()
         self.assertEqual(draft.pool.free_count,0);self.assertFalse(draft.closed)
+        self.assertTrue(draft.stats()['failed'])
+        with self.assertRaisesRegex(RuntimeError,'draft failed'):draft((2,3,4,5),1)
         draft.close();self.assertEqual(draft.pool.free_count,16)
+
+    def test_partial_forward_failure_cannot_reuse_draft_state(self):
+        from minideepinfer.model_draft import ModelDraft
+        for hybrid in (False,True):
+            stages=('prefill','sync','proposal','replay') if hybrid else ('prefill','sync','proposal')
+            for stage in stages:
+                with self.subTest(hybrid=hybrid,stage=stage):
+                    _,model=self.models(hybrid)
+                    draft=ModelDraft(model,24);prefix=(2,3,4)
+                    if stage!='prefill':
+                        values=draft(prefix,3 if stage=='replay' else 1)
+                        prefix+=((values[0],(values[1]+1)%97) if stage=='replay' else values)
+                    decoder=model.model.layers[0];forward=decoder.forward;calls=[]
+                    original_error=RuntimeError('failure after first layer wrote its cache')
+                    def fail_after_write(*args,**kwargs):
+                        value=forward(*args,**kwargs);calls.append(1)
+                        if len(calls)==(2 if stage=='proposal' else 1):raise original_error
+                        return value
+                    with patch.object(decoder,'forward',fail_after_write):
+                        with self.assertRaises(RuntimeError) as raised:
+                            draft(prefix,3 if stage=='proposal' else 1)
+                    self.assertIs(raised.exception,original_error)
+                    self.assertTrue(draft.stats()['failed'])
+                    self.assertFalse(draft.closed)
+                    self.assertEqual(draft.pool.free_count,0)
+                    # No more model work is allowed, even if a caller requests no candidates.
+                    with patch.object(model,'forward') as unexpected:
+                        for limit in (0,1,3):
+                            with self.assertRaisesRegex(RuntimeError,'draft failed'):
+                                draft(prefix+(2,),limit)
+                        unexpected.assert_not_called()
+                    draft.close();draft.close()
+                    self.assertTrue(draft.closed)
+                    self.assertEqual(draft.pool.free_count,24)
+                    self.assertEqual(draft.stats()['linear_states_remaining'],0)
+                    self.assertFalse(draft.stats()['snapshot_retained'])
+                    fresh=ModelDraft(model,24)
+                    fresh((2,3,4),1)
+                    from minideepinfer.spec_demo import compare_cache
+                    compare_cache(fresh.cache);fresh.close()
+
+    def test_observer_failure_or_interrupt_requires_close_but_bad_input_can_retry(self):
+        from minideepinfer.model_draft import ModelDraft
+        _,model=self.models(True)
+        for error in (ValueError('observer failed'),KeyboardInterrupt()):
+            draft=ModelDraft(model,16)
+            with self.assertRaises(ValueError):draft((2,3,4),9)
+            self.assertFalse(draft.failed)
+            draft((2,3,4),1)
+            def abort(cache):raise error
+            draft.on_cache=abort
+            with self.assertRaises(type(error)) as raised:draft((2,3,4,5),1)
+            self.assertIs(raised.exception,error)
+            self.assertTrue(draft.failed)
+            self.assertEqual(draft.pool.free_count,0)
+            with self.assertRaisesRegex(RuntimeError,'draft failed'):draft((2,3,4,5,6),1)
+            draft.close();self.assertEqual(draft.pool.free_count,16)
+
+    def test_draft_or_target_failure_drains_both_caches_before_release(self):
+        from minideepinfer.model_draft import ModelDraft
+        from minideepinfer.speculative import CachedTarget,generate
+        from minideepinfer.kv_cache import SlotPool
+        for failed_role in ('draft','target'):
+            target,small=self.models(True)
+            draft=ModelDraft(small,11)
+            decoder=(small if failed_role=='draft' else target).model.layers[0]
+            forward=decoder.forward;events=[];calls=[];caches={}
+            original_error=RuntimeError(failed_role+' failed after cache write')
+            def fail_after_write(*args,**kwargs):
+                value=forward(*args,**kwargs);calls.append(1)
+                if len(calls)==2:raise original_error
+                return value
+            synchronize=CachedTarget.synchronize;release=SlotPool.release
+            def drain(cache):
+                synchronize(cache)
+                role='draft' if cache.model is small else 'target'
+                caches[role]=cache
+                events.append(('drain',role))
+            def freed(pool,rid):
+                release(pool,rid)
+                events.append(('release','draft' if rid=='draft' else 'target'))
+            with patch.object(decoder,'forward',fail_after_write), \
+                    patch.object(CachedTarget,'synchronize',drain),patch.object(SlotPool,'release',freed):
+                with self.assertRaises(RuntimeError) as raised:
+                    try:generate(target,(2,3,4),9,draft,width=3)
+                    finally:draft.close()
+            self.assertIs(raised.exception,original_error)
+            for role in ('draft','target'):
+                self.assertIn(('release',role),events)
+                end=events.index(('release',role))
+                self.assertIn(('drain',role),events[:end])
+                self.assertFalse(caches[role].cache.linear_states)
+                self.assertIsNone(caches[role]._snapshot)
+            self.assertEqual(draft.failed,failed_role=='draft')
+            self.assertEqual(draft.pool.free_count,11)
+            self.assertEqual(draft.stats()['linear_states_remaining'],0)
 
     def test_invalid_prefix_and_capacity(self):
         from minideepinfer.model_draft import ModelDraft
