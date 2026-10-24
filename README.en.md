@@ -18,7 +18,7 @@ mini-DeepInfer studies the design of [DeepInfer](https://github.com/deepseek-ai/
 
 The project now runs **text-only Qwen3.5-2B on Ascend 910C** using its own forward pass and cache management. Qwen3.5-0.8B is the smaller development model; DeepSeek-R1-Distill-Qwen-1.5B remains a regression baseline. Full attention stores token KV, while DeltaNet keeps convolution and recurrent state for each request.
 
-**The validated path uses FP32. BF16 numerical checks do not all pass yet.** The engine supports synchronous dynamic batching, chunked prefill, cancellation, and cache reclamation.
+The main example uses FP32. BF16 also passes fixed short trajectories against an independent recurrent reference with FP32 state storage; native chunk-path and cross-schedule generation differences are documented in the [reference notes](docs/BF16_REFERENCE.md). The engine supports synchronous dynamic batching, chunked prefill, cancellation, and cache reclamation.
 
 ## What runs today
 
@@ -26,6 +26,7 @@ The project now runs **text-only Qwen3.5-2B on Ascend 910C** using its own forwa
 | --- | --- |
 | Qwen3.5-0.8B / Ascend 910C FP32 | Chunked prefill + 4 fixed-token decode steps; maximum absolute difference about `2.00e-5` |
 | Qwen3.5-2B / Ascend 910C FP32 | Single-request and two-request numerical checks pass; maximum absolute difference about `2.29e-5`, with top-1 agreement at every checked position |
+| Qwen3.5 BF16 recurrent checks | Fixed short trajectories for 0.8B, 2B, and a two-request 2B batch have maximum difference **0**, with zero tolerances and matched scan/state semantics |
 | 2B, two concurrent requests | Chinese explanation and English answer both stop at EOS; 512/512 logical slots reclaimed |
 
 The English answer from the real 2B run:

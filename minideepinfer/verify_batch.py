@@ -39,6 +39,9 @@ def main():
     parser.add_argument("--device", default="npu:0")
     parser.add_argument("--dtype", choices=("float32", "bfloat16"), default="bfloat16")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--reference-mode", choices=("native", "recurrent-fp32"), default="native")
+    parser.add_argument("--atol", type=float, default=None)
+    parser.add_argument("--rtol", type=float, default=None)
     args = parser.parse_args()
 
     import torch
@@ -67,10 +70,17 @@ def main():
     reference = reference_class.from_pretrained(
         args.model, torch_dtype=dtype, attn_implementation="eager", local_files_only=True
     ).to(runner.device).eval()
+    if args.reference_mode == "recurrent-fp32":
+        from .reference_qwen3_5 import RecurrentFP32Reference
+        reference = RecurrentFP32Reference(reference)
     past = [None] * stride
     packed_past = None if hybrid else packed_reference_cache()
     atol, rtol = (0.125, 0.01) if dtype == torch.bfloat16 else (2e-4, 2e-4)
     packed_atol = 0.125 if dtype == torch.bfloat16 else 1e-4
+    if args.atol is not None:
+        atol = packed_atol = args.atol
+    if args.rtol is not None:
+        rtol = args.rtol
 
     def compare(actual, expected, tolerance=atol):
         actual, expected = actual.float().cpu(), expected.float().cpu()
@@ -156,12 +166,17 @@ def main():
         sources.update({"minideepinfer/" + str(path.relative_to(root)).replace("\\", "/"):
                         hashlib.sha256(path.read_bytes()).hexdigest()
                         for path in (root / "models/qwen3_5.py", root / "hybrid_cache.py")})
+    if args.reference_mode == "recurrent-fp32":
+        path = root / "reference_qwen3_5.py"
+        sources["minideepinfer/reference_qwen3_5.py"] = hashlib.sha256(path.read_bytes()).hexdigest()
     report = {"passed": all(row[key]["passed"] for row in rows for key in checks),
               "device": str(runner.device), "dtype": args.dtype,
               "atol": atol, "packed_atol": packed_atol, "rtol": rtol,
               "packages": packages, "prompts": prompts, "prompt_ids": original_ids,
               "forced_ids": forced, "source_sha256": sources, "steps": rows,
-              "remaining_prefixes": len(runner._prefixes)}
+              "remaining_prefixes": len(runner._prefixes), "reference_mode": args.reference_mode}
+    if args.reference_mode == "recurrent-fp32":
+        report["reference_scope"] = "HF recurrent equations with FP32 state; not native chunk-path compatibility"
     if hybrid:
         report["reference_layout"] = "independent requests; no packed HF DeltaNet oracle"
         report["remaining_linear_states"] = len(runner.cache.linear_states)

@@ -41,6 +41,8 @@
 
 Qwen3.5 权重固定到 [0.8B / 2fc06364](https://huggingface.co/Qwen/Qwen3.5-0.8B/tree/2fc06364715b967f1860aea9cf38778875588b17) 与 [2B / 15852e8c](https://huggingface.co/Qwen/Qwen3.5-2B/tree/15852e8c16360a2fea060d615a32b45270f8a8fc)。0.8B 用于开发验证，2B 为主要示例；运行范围见[第四课](QWEN35.md)与[验证记录](VALIDATION.md)。
 
+验证专用的 [`reference_qwen3_5.py`](../minideepinfer/reference_qwen3_5.py) 调用 Transformers v5.12.1 的 `torch_recurrent_gated_delta_rule`，独立控制扫描方式和 FP32 状态存储。缓存差异对照 [v5.12.1 cache_utils.py](https://github.com/huggingface/transformers/blob/v5.12.1/src/transformers/cache_utils.py) 中的 `LinearAttentionLayer.lazy_initialization()` / `update_recurrent_state()`。适配器不参与引擎执行，原生参考模式仍保留，详见 [BF16 对照说明](BF16_REFERENCE.md)。
+
 [`minideepinfer/models/qwen2.py`](../minideepinfer/models/qwen2.py) 对照 [Transformers v4.46.3 的 Qwen2 实现](https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/qwen2/modeling_qwen2.py) 实现数学计算和 checkpoint 参数映射，其中 RMSNorm 与旋转位置编码公式按上游简化改写。保留 Qwen / Alibaba / Hugging Face 的版权归属，适用 [Apache-2.0](https://github.com/huggingface/transformers/blob/v4.46.3/LICENSE)。本项目采用显式 attention 和外部槽位缓存，批次通过隔离 mask 支持多个请求；省去训练、分布式、动态 RoPE、滑窗与多模型兼容分支。
 
 入门权重固定到 [ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B/tree/ad9f0ae0864d7fbcd1cd905e3c6c5b069cc8b562)。运行时的模型计算使用本项目实现；Transformers 用于 tokenizer 和测试参考。

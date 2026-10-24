@@ -17,6 +17,8 @@ def main():
     parser.add_argument("--rtol", type=float, default=None)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--prefill-chunk-size", type=int, default=None)
+    parser.add_argument("--reference-mode", choices=("native", "recurrent-fp32"), default="native",
+                        help="Qwen3.5 only: explicitly match token scan and FP32 state storage")
     args = parser.parse_args()
     if args.steps < 1:
         parser.error("steps must be positive")
@@ -45,6 +47,9 @@ def main():
     reference = reference_class.from_pretrained(
         args.model, torch_dtype=dtype, attn_implementation="eager", local_files_only=True
     ).to(runner.device).eval()
+    if args.reference_mode == "recurrent-fp32":
+        from .reference_qwen3_5 import RecurrentFP32Reference
+        reference = RecurrentFP32Reference(reference)
     rows = []
     reference_past = None
 
@@ -103,10 +108,16 @@ def main():
         sources.update({"minideepinfer/" + str(path.relative_to(root)).replace("\\", "/"):
                         hashlib.sha256(path.read_bytes()).hexdigest()
                         for path in (root / "models/qwen3_5.py", root / "hybrid_cache.py")})
+    if args.reference_mode == "recurrent-fp32":
+        path = root / "reference_qwen3_5.py"
+        sources["minideepinfer/reference_qwen3_5.py"] = hashlib.sha256(path.read_bytes()).hexdigest()
     report = {"passed": passed, "device": str(runner.device), "dtype": args.dtype,
               "atol": atol, "rtol": rtol, "packages": packages, "steps": rows,
               "prompt_ids": prompt, "forced_ids": forced[:args.steps],
-              "prefill_chunk_size": args.prefill_chunk_size, "source_sha256": sources}
+              "prefill_chunk_size": args.prefill_chunk_size, "source_sha256": sources,
+              "reference_mode": args.reference_mode}
+    if args.reference_mode == "recurrent-fp32":
+        report["reference_scope"] = "HF recurrent equations with FP32 state; not native chunk-path compatibility"
     payload = json.dumps(report, indent=2)
     print(payload)
     if args.output:

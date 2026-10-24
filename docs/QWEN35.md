@@ -86,6 +86,8 @@ python -m minideepinfer.verify_batch \
 
 Qwen3.5 的批次对照使用独立的 Transformers 请求，各自保存状态。普通 attention mask 无法隔离线性层递推，不能直接套用 Qwen2 的 packed 参考方法。
 
+BF16 需要另外说明扫描方式与状态存储精度。固定轨迹已在逐 token / FP32 状态参考下零容差通过，原生分块差异保留；命令与边界见[BF16 对照说明](BF16_REFERENCE.md)。
+
 ## 与 DeepInfer 的关系
 
 模型计算对照 Qwen / Transformers；引擎的输入准备、执行、采样、结果提交和资源归属继续按照 [DeepInfer 职责映射](SOURCE_MAP.md)展开。本课展示同一请求生命周期怎样管理不同模型状态，不把 Qwen3.5 的 DeltaNet 称为 DeepInfer 特有机制。

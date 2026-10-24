@@ -1,11 +1,15 @@
 """Hybrid-state correctness against independent Transformers Qwen3.5 math."""
 
 from dataclasses import asdict, replace
+import contextlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 AVAILABLE = False
 if importlib.util.find_spec("transformers") and importlib.util.find_spec("torch"):
@@ -19,6 +23,7 @@ if AVAILABLE:
     from minideepinfer import BatchEngine, Engine, Step, Status
     from minideepinfer.model_runner import ModelRunner
     from minideepinfer.models.qwen3_5 import Qwen3_5Config, Qwen3_5ForCausalLM
+    from minideepinfer.reference_qwen3_5 import FP32RecurrentCache, RecurrentFP32Reference
 
 
 @unittest.skipUnless(AVAILABLE, "Qwen3.5 numerical tests require Transformers with Qwen3.5 support")
@@ -108,6 +113,95 @@ class Qwen35Tests(unittest.TestCase):
                 actual = runner.forward(Step("a", "prefill", ids, tuple(range(n)), tuple(range(n)), tuple(range(n))))
                 expected = reference(torch.tensor([ids]), use_cache=False).logits[0]
                 torch.testing.assert_close(actual, expected, atol=5e-4, rtol=1e-3)
+
+    def test_bfloat16_chunk_continuation_uses_independent_recurrent_fp32_reference(self):
+        model = ReferenceModel(self.reference_config).eval().to(torch.bfloat16)
+        model.load_state_dict(self.reference.state_dict())
+        reference = RecurrentFP32Reference(model)
+        originals = [layer.linear_attn.chunk_gated_delta_rule for layer in model.model.layers[:-1]]
+        runner, past, prefix = ModelRunner(self.model().to(torch.bfloat16), 64), None, []
+        with torch.inference_mode():
+            for phase, ids, last in (("prefill", (2, 3), False), ("prefill", (5, 7, 11), True),
+                                     ("decode", (13,), True), ("decode", (17,), True)):
+                start = len(prefix)
+                prefix.extend(ids)
+                end = len(prefix)
+                actual = runner.forward_batch((Step("a", phase, ids, tuple(range(start, end)),
+                                                    tuple(range(start, end)), tuple(range(end)), last),))[0]
+                cached = reference(torch.tensor([ids]), past_key_values=past, use_cache=True)
+                past = cached.past_key_values
+                full = reference(torch.tensor([prefix]), use_cache=False).logits[0, -len(ids):]
+                torch.testing.assert_close(actual, cached.logits[0], atol=5e-4, rtol=1e-3)
+                torch.testing.assert_close(actual, full, atol=5e-4, rtol=1e-3)
+                for layer in past.layers[:-1]:
+                    self.assertEqual(layer.conv_states.dtype, torch.bfloat16)
+                    self.assertEqual(layer.recurrent_states.dtype, torch.float32)
+                for history, state in runner.cache.linear_states.values():
+                    self.assertEqual(history.dtype, torch.bfloat16)
+                    self.assertEqual(state.dtype, torch.float32)
+        for layer, original in zip(model.model.layers[:-1], originals):
+            self.assertIs(layer.linear_attn.chunk_gated_delta_rule, original)
+        runner.release("a")
+        self.assertEqual(runner.cache.linear_states, {})
+
+    def test_reference_cache_preserves_residuals_smaller_than_a_bfloat16_ulp(self):
+        from transformers.cache_utils import DynamicCache
+        caches = [DynamicCache(config=self.reference_config), FP32RecurrentCache(config=self.reference_config)]
+        first = torch.full((1, 4, 8, 8), 1.0 + 2 ** -15, dtype=torch.float32)
+        second = torch.full_like(first, 1.0 + 2 ** -14)
+        pointers = []
+        for cache in caches:
+            cache.update_conv_state(torch.zeros(1, 64, 4, dtype=torch.bfloat16), 0)
+            cache.update_recurrent_state(first, 0)
+            pointers.append(cache.layers[0].recurrent_states.data_ptr())
+        self.assertTrue(torch.equal(caches[0].layers[0].recurrent_states.float(), torch.ones_like(first)))
+        torch.testing.assert_close(caches[1].layers[0].recurrent_states, first, atol=0, rtol=0)
+        for cache, pointer in zip(caches, pointers):
+            cache.update_recurrent_state(second, 0)
+            self.assertEqual(cache.layers[0].recurrent_states.data_ptr(), pointer)
+        torch.testing.assert_close(caches[1].layers[0].recurrent_states, second, atol=0, rtol=0)
+
+    def test_reference_adapter_restores_model_after_error_and_rejects_mixed_caches(self):
+        from transformers.cache_utils import DynamicCache
+        reference = RecurrentFP32Reference(self.reference)
+        originals = [layer.linear_attn.chunk_gated_delta_rule for layer in self.reference.model.layers[:-1]]
+        with patch.object(self.reference, "forward", side_effect=RuntimeError("reference failure")):
+            with self.assertRaisesRegex(RuntimeError, "reference failure"):
+                reference(torch.tensor([[2, 3]]), use_cache=False)
+        for layer, original in zip(self.reference.model.layers[:-1], originals):
+            self.assertIs(layer.linear_attn.chunk_gated_delta_rule, original)
+        with self.assertRaisesRegex(ValueError, "mix native"):
+            reference(torch.tensor([[2]]), use_cache=True,
+                      past_key_values=DynamicCache(config=self.reference_config))
+        with self.assertRaisesRegex(ValueError, "text model"):
+            RecurrentFP32Reference(SimpleNamespace(config=SimpleNamespace(model_type="qwen2")))
+
+    def test_verification_tools_report_explicit_reference_scope_and_source(self):
+        from minideepinfer import verify, verify_batch
+        tokenizer = SimpleNamespace(encode=lambda text, **kwargs:
+                                    [2, 3, 5, 7, 11] if text.startswith("The capital") else
+                                    [13, 17, 19] if text == "A KV cache" else [23, 29, 31, 37])
+        for tool in (verify, verify_batch):
+            model = ReferenceModel(self.reference_config).eval().to(torch.bfloat16)
+            model.load_state_dict(self.reference.state_dict())
+            runner = ModelRunner(self.model().to(torch.bfloat16), 64)
+            arguments = ["verify", "--model", "unused", "--device", "cpu", "--dtype", "bfloat16",
+                         "--reference-mode", "recurrent-fp32"]
+            if tool is verify:
+                arguments += ["--prefill-chunk-size", "2"]
+            output = io.StringIO()
+            with self.subTest(tool=tool.__name__), patch("sys.argv", arguments), \
+                    contextlib.redirect_stdout(output), \
+                    patch("transformers.AutoTokenizer.from_pretrained", return_value=tokenizer), \
+                    patch("transformers.Qwen3_5ForCausalLM.from_pretrained", return_value=model), \
+                    patch.object(ModelRunner, "from_pretrained", return_value=runner):
+                tool.main()
+            report = json.loads(output.getvalue())
+            self.assertTrue(report["passed"])
+            self.assertEqual(report["reference_mode"], "recurrent-fp32")
+            self.assertIn("not native", report["reference_scope"])
+            self.assertIn("minideepinfer/reference_qwen3_5.py", report["source_sha256"])
+            self.assertEqual(runner.cache.linear_states, {})
 
     def test_future_and_other_requests_cannot_change_prefix(self):
         outputs = []

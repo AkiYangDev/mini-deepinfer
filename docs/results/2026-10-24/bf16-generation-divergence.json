@@ -1,0 +1,227 @@
+{
+  "prediction_index_zero_based": 37,
+  "prompt_ids": [
+    248045,
+    846,
+    198,
+    95826,
+    96177,
+    98933,
+    98682,
+    81726,
+    18887,
+    220,
+    101680,
+    1710,
+    248046,
+    198,
+    248045,
+    74455,
+    198,
+    248068,
+    271,
+    248069,
+    271
+  ],
+  "forced_output_prefix": [
+    79852,
+    18887,
+    220,
+    99580,
+    95759,
+    103725,
+    132421,
+    99927,
+    104653,
+    95865,
+    111066,
+    129933,
+    96280,
+    9616,
+    1536,
+    220,
+    95793,
+    4997,
+    46662,
+    99131,
+    97909,
+    108695,
+    97792,
+    109822,
+    110321,
+    98853,
+    1710,
+    96540,
+    96580,
+    144798,
+    97032,
+    96468,
+    97792,
+    104027,
+    3709,
+    100120,
+    112999
+  ],
+  "paths": {
+    "project_whole": {
+      "top5": [
+        {
+          "id": 104218,
+          "text": "后续",
+          "logit": 16.75
+        },
+        {
+          "id": 96547,
+          "text": "显",
+          "logit": 16.75
+        },
+        {
+          "id": 103725,
+          "text": "模型",
+          "logit": 16.375
+        },
+        {
+          "id": 108695,
+          "text": "重复",
+          "logit": 16.25
+        },
+        {
+          "id": 103740,
+          "text": "每次",
+          "logit": 15.75
+        }
+      ],
+      "margin": 0.0
+    },
+    "hf_whole": {
+      "top5": [
+        {
+          "id": 104218,
+          "text": "后续",
+          "logit": 16.75
+        },
+        {
+          "id": 96547,
+          "text": "显",
+          "logit": 16.75
+        },
+        {
+          "id": 103725,
+          "text": "模型",
+          "logit": 16.375
+        },
+        {
+          "id": 108695,
+          "text": "重复",
+          "logit": 16.25
+        },
+        {
+          "id": 103740,
+          "text": "每次",
+          "logit": 15.75
+        }
+      ],
+      "margin": 0.0
+    },
+    "project_chunked": {
+      "top5": [
+        {
+          "id": 104218,
+          "text": "后续",
+          "logit": 16.75
+        },
+        {
+          "id": 96547,
+          "text": "显",
+          "logit": 16.625
+        },
+        {
+          "id": 103725,
+          "text": "模型",
+          "logit": 16.375
+        },
+        {
+          "id": 108695,
+          "text": "重复",
+          "logit": 16.25
+        },
+        {
+          "id": 103740,
+          "text": "每次",
+          "logit": 15.75
+        }
+      ],
+      "margin": 0.125
+    },
+    "hf_chunked": {
+      "top5": [
+        {
+          "id": 104218,
+          "text": "后续",
+          "logit": 16.75
+        },
+        {
+          "id": 96547,
+          "text": "显",
+          "logit": 16.625
+        },
+        {
+          "id": 103725,
+          "text": "模型",
+          "logit": 16.5
+        },
+        {
+          "id": 108695,
+          "text": "重复",
+          "logit": 16.25
+        },
+        {
+          "id": 103740,
+          "text": "每次",
+          "logit": 15.75
+        }
+      ],
+      "margin": 0.125
+    }
+  },
+  "comparisons": {
+    "project_whole_vs_chunked": {
+      "max_abs": 0.171875,
+      "rms": 0.035201869904994965,
+      "passed": false,
+      "top1_equal": false
+    },
+    "hf_whole_vs_chunked": {
+      "max_abs": 0.1875,
+      "rms": 0.03694529831409454,
+      "passed": false,
+      "top1_equal": false
+    },
+    "project_whole_vs_hf_whole": {
+      "max_abs": 0.0,
+      "rms": 0.0,
+      "passed": true,
+      "top1_equal": true
+    },
+    "project_chunked_vs_hf_chunked": {
+      "max_abs": 0.234375,
+      "rms": 0.03953699395060539,
+      "passed": false,
+      "top1_equal": true
+    }
+  },
+  "first_greedy_difference": {
+    "project_whole_vs_chunked": 37,
+    "hf_whole_vs_chunked": 37
+  },
+  "prompt_chunk_lengths": {
+    "whole": [
+      21
+    ],
+    "chunked": [
+      16,
+      5
+    ]
+  },
+  "driver_sha256": "623cd76df90c54a0ff0671098331f57b5b59a14e14a7794b05791958777e342e"
+}

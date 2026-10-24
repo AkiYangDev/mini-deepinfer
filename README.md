@@ -18,7 +18,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 
 现在可以用项目自己的前向计算，在 **Ascend 910C 上运行 Qwen3.5-2B 的纯文本推理**。Qwen3.5-0.8B 用于开发验证，已有 DeepSeek-R1-Distill-Qwen-1.5B 保留为回归基线。完整注意力保存 KV，DeltaNet 保存每个请求的卷积和递推状态。
 
-**当前验证通过的是 FP32 路径；BF16 对照尚未全部通过。** 支持同步动态批处理、分块 prefill、请求取消和缓存回收。
+当前主要示例使用 FP32。BF16 已通过固定短轨迹的逐 token / FP32 状态参考检查，原生分块与跨调度生成的差异见[对照说明](docs/BF16_REFERENCE.md)。支持同步动态批处理、分块 prefill、请求取消和缓存回收。
 
 ## 已经跑通什么
 
@@ -26,6 +26,7 @@ mini-DeepInfer 借鉴 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的�
 | --- | --- |
 | Qwen3.5-0.8B / Ascend 910C FP32 | 分块 prefill + 4 步固定 token decode；最大绝对误差约 `2.00e-5` |
 | Qwen3.5-2B / Ascend 910C FP32 | 单请求与双请求数值对照通过；最大绝对误差约 `2.29e-5`，检查位置 top-1 全部一致 |
+| Qwen3.5 BF16 递推对照 | 0.8B、2B 与 2B 双请求的固定短轨迹，在同扫描方式与状态精度下最大差异 **0**，零容差通过 |
 | 2B 双请求生成 | 中文解释与英文问答均遇 EOS 结束，512/512 逻辑槽位回收 |
 
 真实 2B 运行中的英文回答：
