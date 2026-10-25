@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="264" viewBox="0 0 1000 264" role="img" aria-labelledby="title desc">
+  <title id="title">A real CPU demo: B releases its slots and C reuses them</title>
+  <desc id="desc">Excerpt from python -m minideepinfer.pipeline_demo. B has finished, C owns slots 14, 15, 16, and no slots are free because they are already reused.</desc>
+  <rect x="1" y="1" width="998" height="262" rx="14" fill="#101b2b" stroke="#30465e"/>
+  <path d="M 1 48 H 999" stroke="#30465e"/>
+  <circle cx="24" cy="25" r="5" fill="#f18d8d"/><circle cx="43" cy="25" r="5" fill="#e5ba70"/><circle cx="62" cy="25" r="5" fill="#79c9ab"/>
+  <text x="88" y="31" font-family="Consolas, monospace" font-size="16" fill="#8ea6bf">python -m minideepinfer.pipeline_demo</text>
+  <g font-family="Consolas, monospace" xml:space="preserve"><text x="30" y="91" fill="#a4b8cd" font-size="20">  B: finished; cached CPU/issued=3/3; slots=0</text>
+<text x="30" y="125" fill="#bce7fa" font-size="20">  C: running; cached CPU/issued=0/3; slots=6</text>
+<text x="30" y="159" fill="#6ee7cf" font-size="20">  reused B -&gt; C: slots [14, 15, 16]</text>
+<text x="30" y="193" fill="#c7d7e7" font-size="20">  free slots: 0/20</text></g>
+  <text x="43" y="238" font-family="Arial, Helvetica, sans-serif" font-size="18" fill="#77d9c3">B released its cache. C already owns the slots.</text>
+</svg>
