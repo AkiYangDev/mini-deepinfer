@@ -2,48 +2,46 @@
 
 # mini-DeepInfer
 
-**跟着一次真实请求，读懂 DeepInfer 的执行过程。**
+**在 Ascend 910C 上，读懂推理引擎的执行过程。**
 
-A small inference engine for learning DeepInfer, targeting Ascend 910C.
+A readable inference engine for learning DeepInfer, on CPU and Ascend 910C.
 
 [![CPU checks](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml/badge.svg)](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml) [![Target: Ascend 910C](https://img.shields.io/badge/Target-Ascend%20910C-2563eb)](docs/VALIDATION.md) [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-16a34a)](LICENSE)
 
 **简体中文** · [English](README.en.md)
 
-[开始运行](docs/START_HERE.md) · [A、B、C 演示](docs/WALKTHROUGH.md) · [十四课学习路线](docs/LEARNING_PATH.md) · [v0.4 说明](docs/RELEASE_v0.4.md)
+[快速开始](#快速开始) · [Ascend 910C 实机](#在-ascend-910c-上生成文本) · [学习路线](docs/LEARNING_PATH.md) · [源码对应](docs/SOURCE_MAP.md)
 
 </div>
 
-mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 [DeepInfer](https://github.com/deepseek-ai/DeepInfer)。你可以沿着一次请求，读清输入准备、模型计算、采样和结果提交的顺序，再看看请求结束后，缓存到底什么时候才能归还。
+mini-DeepInfer 参考 [DeepInfer](https://github.com/deepseek-ai/DeepInfer) 的执行设计，用 Python 和 PyTorch 实现调度、模型前向与缓存读写。你可以从 CPU 上的状态演示开始，一路跑到 Ascend 910C 上的真实 Qwen3.5 模型，跟踪一次请求怎样计算、提交、停止和归还缓存。
 
-目前已用项目自己的前向计算，在 **Ascend 910C 上跑通 Qwen3.5-2B 文本生成**。教程从能直接打印状态的整数例子开始，逐步换成 PyTorch 小模型和真实权重，共十四课。开发时也使用 Qwen3.5-0.8B，原有 DeepSeek-R1-Distill-Qwen-1.5B 示例继续用于回归检查。
+## 项目亮点
 
-v0.3 围绕“候选猜错后，怎样继续生成”增加一条[三步学习路线](docs/RELEASE_v0.3.md)：可控 greedy 验证 → Qwen3.5 状态恢复 → 不读取答案的 lookup draft。CPU 例子无需权重，真实 2B 的 Ascend 910C 输出与缓存对照已通过。lookup 的实机短例子接受 0/5、增加了计算，这个结果和全部成本一同保留。独立同步实验没有接入跨轮文本入口，也没有提速结论。
+- **Ascend 910C 实机验证。** Qwen3.5-2B 已跑通单请求、批处理与跨轮文本生成，仓库保留[真实输出](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)、数值对照和对应源码版本。
+- **没有 NPU，也能跑模型实验。** 整数例子只需 Python；装好 PyTorch 后，可以运行随机小模型，观察真实 forward、混合缓存、跨轮调度和候选拒绝，全程无需下载权重。
+- **十四课，沿请求读代码。** 从 prefill、decode 走到分块、动态到达与取消，逐步分清 CPU 已提交、设备已发出和最后使用完成。每课有[运行入口与代码位置](docs/LEARNING_PATH.md)。
+- **双模型生成与状态回退。** Qwen3.5-0.8B 提候选、2B 验证；main 支持自己的文本、流式输出和提交后取消。用[逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md)看清候选猜错后，两边怎样接回已提交的前缀。
 
-v0.4 的[双模型逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md)继续跟踪一次候选拒绝：draft 提出什么、target 提交什么、下一轮两边怎样恢复。CPU 小模型无需权重；真实 Qwen3.5-0.8B→2B 已通过 Ascend 910C 输出与缓存验收。[实现与实验](docs/MODEL_DRAFT.md)同时保留早期更慢的结果和省去多余快照的小幅变化，没有投机加速承诺。
+## 快速开始
 
-main 新增[自定义文本的双模型生成](docs/SPECULATIVE_TEXT.md)：`generate --speculative` 支持聊天模板、EOS、流式输出、提交后取消和可选的独立 greedy 对照；v0.4.0 制品不包含这一入口。
-
-## 先跑起来
-
-Python 3.10+，先看一个无需模型依赖、权重或 NPU 的例子：
+Python 3.10+，在源码目录运行。这个例子不需要 PyTorch、权重或 NPU：
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
-python -m pip install -e .
 python -m minideepinfer.step_demo
 ```
 
-例子里，A 取消后仍要等设备用完，才能归还缓存；B 换了批次行号，仍要接上自己的上一轮结果。程序会打印这些状态变化，用手动事件模拟设备完成，无需执行模型。
+A 取消了，设备却还在使用它的缓存；B 换了批次行号，仍要接上自己的上一轮结果。程序通过手动事件推进设备完成状态，把提交与回收的顺序打印出来。
 
-已有 PyTorch 时，接着跑一个无需下载权重的混合注意力小模型：
+已有 PyTorch 时，接着运行一个无需权重的 Qwen3.5 小模型：
 
 ```bash
 python -m minideepinfer.pipeline_demo
 ```
 
-这个例子里，A 的长 prompt 分块计算，B 先生成结束，C 排队后复用 B 的槽位。实际输出包括：
+这次 A 的长 prompt 分块计算，B 先结束，C 排队后拿到 B 的槽位。实际输出片段：
 
 ```text
   B: finished; cached CPU/issued=3/3; slots=0
@@ -53,19 +51,22 @@ python -m minideepinfer.pipeline_demo
   free slots: 0/20
 ```
 
-B 已释放，空闲槽位却变成了 0，因为 C 已经拿走它们。[跟着这次调度读代码](docs/WALKTHROUGH.md)，看清 CPU 进度、已发出计算和缓存归属怎样变化；依赖安装见[运行指南](docs/START_HERE.md)。
+B 已释放，空闲槽位仍是 0，因为 C 已经拿走它们。[跟着 A、B、C 读代码](docs/WALKTHROUGH.md)，看清进度与缓存归属怎样变化。安装依赖见[运行指南](docs/START_HERE.md)；随机模型用于观察执行状态，输出文本不代表模型能力。
 
-想接着看候选猜错后怎样继续，运行：
+<details>
+<summary>在 CPU 上看一次候选拒绝与缓存恢复</summary>
 
 ```bash
 python -m minideepinfer.model_draft_demo --cpu-example rejection --trace-rounds --width 3 --output outputs/draft-rejection.json
 ```
 
-它会打印 draft 从“已算 6 个 → 保留 4 个 → 补到 5 个输入”接回正确前缀的过程。[对着前两轮读代码](docs/MODEL_DRAFT_WALKTHROUGH.md)，区分候选、实际模型输入和最终提交。
+draft 从“已算 6 个 → 保留 4 个 → 补到 5 个输入”接回正确前缀。[逐轮讲解](docs/MODEL_DRAFT_WALKTHROUGH.md)对照候选、实际模型输入和最终提交；这个例子也不需要权重或 NPU。
 
-## 在 Ascend 910C 上运行真实模型
+</details>
 
-先按[运行指南](docs/START_HERE.md#ascend-910c真实权重)准备匹配的 PyTorch、torch_npu、CANN 和固定版本的 Qwen3.5-2B 权重。在仓库目录运行：
+## 在 Ascend 910C 上生成文本
+
+先按[运行指南](docs/START_HERE.md#ascend-910c真实权重)准备匹配的 PyTorch、torch_npu、CANN，以及本地 Qwen3.5-2B 权重。在仓库目录执行，以下多行命令使用 Bash：
 
 ```bash
 python -m minideepinfer.generate \
@@ -84,45 +85,63 @@ python -m minideepinfer.generate \
 [eos; 9 output tokens; free KV slots 512/512]
 ```
 
-[完整双语输出](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)保留在仓库。默认采用 FP32、eager 和 greedy，适合短上下文教学。没有 NPU 时，可以改用 `--device cpu` 和 0.8B 权重；仍需要加载完整文本模型。
+[完整双语输出](docs/results/2026-10-24/qwen35-2b-generation-npu-fp32.txt)已保存。添加 `--pipeline` 可以让自己的文本走跨轮执行，再用 `--stagger-prompts --trace-rounds` 观察请求到达与缓存回收，见[文本接入说明](docs/PIPELINE_TEXT.md)。
 
-## 沿着请求读代码
+### 双模型、流式输出与取消
 
-| 你想弄清的问题 | 从这里读 |
+main 的 `generate --speculative` 复用同一个候选验证与回退循环，支持聊天模板、raw 输入、EOS、逐组输出和协作取消。[使用说明](docs/SPECULATIVE_TEXT.md)包含完整参数、独立 greedy 对照和原始结果。
+
+本页命令以 **main（0.5.0.dev0）** 为准。固定版本学习可使用 [v0.4.0](docs/RELEASE_v0.4.md)；该版本包含双模型逐轮实验，自己的文本、流式输出与取消需要 main。
+
+<details>
+<summary>运行一次流式生成，在提交组边界取消</summary>
+
+准备本地 Qwen3.5-0.8B 和 2B 权重后执行：
+
+```bash
+python -m minideepinfer.generate \
+  --model weights/Qwen3.5-2B --draft-model weights/Qwen3.5-0.8B \
+  --speculative --device npu:0 --dtype float32 \
+  --prompt "The capital of France is" --raw \
+  --max-new-tokens 10 --cache-capacity 128 --draft-width 3 \
+  --stream --cancel-after-tokens 2 --check-greedy \
+  --output outputs/stream-cancel.json
+```
+
+Ascend 910C 上的记录在完整交付下一组后停在 4 个 token，两边各归还全部 14 个槽位。取消门槛不会截断已经交付的接受组；这里的 greedy 检查只对照已交付前缀，不表示剩余输出或 EOS 已通过验证。
+
+</details>
+
+## 沿着代码学习
+
+| 想读懂的机制 | 代码与教程 |
 | --- | --- |
-| prefill、decode 每一步输入什么？ | [`Engine.step()`](minideepinfer/engine.py) · [第一课](docs/FIRST_REQUEST.md) |
-| 多请求怎样合批，位置和缓存怎样隔离？ | [`BatchEngine`](minideepinfer/batch_engine.py) · [第三课](docs/BATCHING.md) |
-| Qwen3.5 为什么需要两种缓存？ | [`HybridCache`](minideepinfer/hybrid_cache.py) · [第四课](docs/QWEN35.md) |
-| 计算已经发出，取消后怎样收尾？ | [`DeferredRunner`](minideepinfer/deferred_runner.py) · [第七、八课](docs/DEFERRED_ENGINE.md) |
-| CPU 没读到 token，下一轮怎样接着算？ | [`decode_pipeline.py`](minideepinfer/decode_pipeline.py) · [第十一课](docs/DECODE_PIPELINE.md) |
-| EOS、新请求、分块 prompt 怎样进入同一个循环？ | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十二至十四课](docs/CHUNK_PIPELINE.md) |
-| 已发出、已提交和设备已用完，有什么区别？ | [`IssuedProgress` / `plan_step()`](minideepinfer/planning.py) · [第十四课](docs/CHUNK_PIPELINE.md) |
-| 小模型提候选后，两边状态怎样接续？ | [`ModelDraft`](minideepinfer/model_draft.py) · [双模型参考](docs/MODEL_DRAFT.md) |
-| 不预先知道答案，draft 怎样提出候选？ | [`LookupDraft`](minideepinfer/lookup_draft.py) · [独立候选](docs/LOOKUP_DRAFT.md) |
-| draft 猜错后，哪些输出和缓存能保留？ | [`verify_greedy()` / `CachedTarget`](minideepinfer/speculative.py) · [投机实验](docs/SPECULATIVE.md) |
+| 一次请求的 prefill、decode 与输出提交 | [`Engine.step()`](minideepinfer/engine.py) · [第一课](docs/FIRST_REQUEST.md) |
+| 动态批处理、token 预算与分块 prefill | [`BatchEngine`](minideepinfer/batch_engine.py) · [第三课](docs/BATCHING.md) |
+| Qwen3.5 的 KV、卷积窗口与递推状态 | [`HybridCache`](minideepinfer/hybrid_cache.py) · [第四课](docs/QWEN35.md) |
+| 计算已发出后，读取、取消与回收的顺序 | [`DeferredRunner`](minideepinfer/deferred_runner.py) · [第七、八课](docs/DEFERRED_ENGINE.md) |
+| CPU 尚未读到 token，下一轮怎样接着算 | [`StoppingDecodePipeline`](minideepinfer/stopping_pipeline.py) · [第十一至十四课](docs/CHUNK_PIPELINE.md) |
+| 候选验证、接受、改正与两份缓存的回退 | [`verify_greedy()`](minideepinfer/speculative.py) / [`ModelDraft`](minideepinfer/model_draft.py) · [双模型逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md) |
 
-默认 BatchEngine 支持同步动态批处理、输入预算、分块 prefill、取消和回收；`--deferred` 把发起与结果提交拆开，仍只允许一批在途。现在也可以用 `--pipeline` 选择跨轮执行，配合 `--stagger-prompts --trace-rounds` 观察文本到达和缓存回收，见[自己的文本怎样进入跨轮循环](docs/PIPELINE_TEXT.md)。各章节入口见[学习路线](docs/LEARNING_PATH.md)。
+[完整学习路线](docs/LEARNING_PATH.md)保留十四课的运行顺序；[源码映射](docs/SOURCE_MAP.md)列出固定版本 DeepInfer 的对应入口与教学简化。同步、跨轮与投机参考分别保留自己的执行路径。
 
-## 验证到了哪里
+## 验证与实验
 
-| 检查 | 已有证据 |
+| 场景 | 已有记录 |
 | --- | --- |
-| 真实 2B / Ascend 910C FP32 | 单请求、双请求与独立参考对照通过，检查位置 top-1 一致 |
-| 跨轮分块、到达与复用 | 九轮、十四组完整 logits 最大差约 `2.67e-5`，原容差通过；四个中间块不采样，24/24 槽位归还 |
-| 新文本生成入口 | 同步、跨轮与逐条到达输出一致；聊天生成自然遇 EOS，含额外已发出一步的 43 组 logits 对照通过，最大差约 `4.94e-5`；见[运行说明](docs/PIPELINE_TEXT.md) |
-| 取消与主机异常 | 等最后使用完成后清理，Runner 可复用；等待失败保留资源的分支另有 CPU 注入检查 |
-| BF16 | 固定短轨迹通过同扫描方式、FP32 状态参考；原生分块与跨调度长生成仍有差异，见[说明](docs/BF16_REFERENCE.md) |
+| 真实权重与模型计算 | Qwen3.5-2B / Ascend 910C FP32 的单请求、双请求与独立参考对照；见[验证记录](docs/VALIDATION.md) |
+| 跨轮文本生成 | 同步、跨轮与逐条到达输出一致；EOS 轨迹的 43 组完整 logits 对照通过，最大差约 `4.94e-5`；见[文本检查](docs/PIPELINE_TEXT.md) |
+| 双模型状态接续 | 实机宽度 1/3 的输出与独立 greedy 一致；CPU 自然拒绝例子展示 draft 截短与恢复；见[实现与实验](docs/MODEL_DRAFT.md) |
+| 流式取消 | 实机已交付的 4 个 token 与独立 greedy 前缀一致，target / draft 各归还 14 个槽位；见[取消记录](docs/SPECULATIVE_TEXT.md#ascend-910c-检查) |
 
-这些结果验证了短上下文下的数值和状态处理。v0.2.0 发布后，main 新增[同步与跨轮对照](docs/PIPELINE_BENCHMARK.md)：三类短负载的跨轮耗时都更长。后续[首轮提交实验](docs/FIRST_RESULT.md)在相同计划下更早交付首 token，整批耗时没有稳定改善；报告均保留每次结果。[验证记录](docs/VALIDATION.md)保存环境、输出和源码 SHA；旧报告按对应 commit 校验，方法见[历史证据说明](docs/EVIDENCE.md)。
+每份报告保存输入、配置、原始结果和源码 SHA；历史结果按固定 commit 核对，见[证据说明](docs/EVIDENCE.md)。性能实验也保留了短负载更慢的情况：[同步与跨轮](docs/PIPELINE_BENCHMARK.md)、[首轮提交](docs/FIRST_RESULT.md)、[双模型成本](docs/MODEL_DRAFT.md)。接受率和减少的 forward 次数不能直接写成吞吐收益。
 
-另一个[准入实验](docs/PIPELINE_BENCHMARK.md#等待请求的后续对照)先确认长度结束，再安排等待请求，在两个四请求负载里少调用一次 forward。计时波动较大，尚不能判断稳定加速；它保留为默认关闭的 Python 实验参数，测量复用现有入口。
+## 范围与来源
 
-## 为什么参考 DeepInfer
+当前主例采用 Qwen3.5、FP32、eager 和 greedy，面向短上下文教学。BF16 的参考检查和分块差异见[说明](docs/BF16_REFERENCE.md)；原有 DeepSeek-R1-Distill-Qwen-1.5B 示例继续用于回归。DeepSeek-V4.1 模型架构、MLA/MoE、MTP、bounded replay、图执行和分布式仍在[后续路线](docs/ROADMAP.md)中。
 
-读 DeepInfer 时，输入准备、设备计算和结果处理分散在不同组件里，还要考虑前后轮之间的依赖。本项目把这些步骤拆成小实验，便于单独运行和对照。[源码映射](docs/SOURCE_MAP.md)列出了参考的上游版本、对应入口，以及教学版省略或改写的部分。Qwen3.5 则用来观察真实模型计算和两种缓存的变化。
+执行设计主要参考 [DeepInfer](https://github.com/deepseek-ai/DeepInfer)。[mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现与教学组织参考，Ascend SGLang 提供 NPU 接口与兼容性参考；具体来源和许可证见[参考记录](docs/REFERENCES.md)。
 
-[mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。MLA、MoE、MTP、概率采样、bounded replay、图执行和分布式留在[后续路线](docs/ROADMAP.md)。来源与许可证见[参考记录](docs/REFERENCES.md)。
-
-欢迎带着一个具体问题[提交 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose)：哪一步看不懂，哪条命令没跑通，或哪项缓存行为需要补例子。也欢迎按[贡献指南](CONTRIBUTING.md)改进代码和教程。如果这条学习路线对你有用，欢迎 Star。
+欢迎 Star 收藏，也欢迎带着一条没跑通的命令、一处没讲清的状态变化[提交 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose)。代码和教程贡献见[贡献指南](CONTRIBUTING.md)。
 
 本项目为独立社区项目，与 DeepSeek、SGLang 及华为无官方隶属关系。原创代码与文档采用 [Apache-2.0](LICENSE)，模型及第三方代码遵循各自许可证。
