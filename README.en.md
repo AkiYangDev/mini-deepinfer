@@ -2,9 +2,9 @@
 
 # ![mini-DeepInfer](docs/assets/readme-hero-whale.png)
 
-**Build a small inference engine for Ascend 910C.**
+**Learn how DeepInfer runs a request.**
 
-Study DeepInfer's execution design through runnable Qwen3.5 examples.
+A small teaching implementation for Ascend 910C, using real Qwen3.5 weights.
 
 [![CPU checks](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml/badge.svg)](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml) [![Ascend 910C](https://img.shields.io/badge/Ascend%20910C-FP32%20checked-0f766e)](docs/VALIDATION.md) [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-2563eb)](pyproject.toml) [![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-475569)](LICENSE)
 
@@ -16,11 +16,13 @@ Study DeepInfer's execution design through runnable Qwen3.5 examples.
 
 <img align="right" src="docs/assets/deepseek-girl-full.png" width="126" alt="Blue-haired, whale-themed DeepSeek girl illustration" />
 
-mini-DeepInfer is a small inference engine for **Ascend 910C**, built for learning and inspired by [DeepInfer](https://github.com/deepseek-ai/DeepInfer). Qwen3.5 forward passes, request scheduling, output commits and cache management are implemented here in Python and PyTorch, so you can follow a request through the code.
+mini-DeepInfer is a teaching inference engine centered on **[DeepInfer](https://github.com/deepseek-ai/DeepInfer)'s execution design**. A compact Python and PyTorch implementation connects request scheduling, model execution, sampling and output commits, so you can follow how they work together for one request.
 
-If you can already deploy a model and want to understand the engine behind it, start here. Follow how requests join a batch, how the next token is computed, and when memory can be reused by another request. The [fourteen lessons](docs/LEARNING_PATH.md) build up from a minimal loop to batching, chunked prefill and cross-round execution, with examples you can run and change.
+If you can already deploy a model and want to read DeepInfer's source, start here. The [fourteen lessons](docs/LEARNING_PATH.md) build from a minimal request loop to batching, chunked prefill and cross-round execution. They focus on state after computation is issued: which data the device still needs, when the CPU commits results, and when a cancelled request's cache can be released.
 
-Start on CPU with scheduling examples and random tiny models. On Ascend 910C, load real Qwen3.5 weights for single-model generation, or let 0.8B propose tokens for 2B to verify. The [round walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) follows a wrong proposal through rollback and recovery of KV, convolution and recurrent state.
+The [DeepInfer source map](docs/SOURCE_MAP.md) connects upstream entry points to the teaching code and explains the simplifications. After scheduling and in-flight state, follow a rejected proposal in the [dual-model walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) to see how output commits and cache recovery prepare the next round.
+
+Ascend 910C is the hardware platform; Qwen3.5 models are used to check these mechanisms. Start on CPU with scheduling examples and random tiny models. With the device and weights ready, run real text generation or let 0.8B propose tokens for 2B to verify.
 
 <br clear="both" />
 
@@ -121,7 +123,9 @@ The saved run stopped after delivering a whole group, with four committed tokens
 
 </details>
 
-## Find the code behind a question
+## Read the code alongside DeepInfer
+
+Start with a question, then connect it to the corresponding responsibility in DeepInfer: the engine organizes a step, the Runner prepares inputs and sampling, in-flight state tracks issued work, and result handling decides which outputs and progress to commit. The [source map](docs/SOURCE_MAP.md) records these connections; the table below gives entry points into the teaching code.
 
 | Mechanism | Code and guide |
 | --- | --- |

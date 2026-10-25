@@ -2,9 +2,9 @@
 
 # ![mini-DeepInfer](docs/assets/readme-hero-whale.png)
 
-**在 Ascend 910C 上，从头做一个推理引擎。**
+**读懂 DeepInfer，从一条请求开始。**
 
-参考 DeepInfer 的设计，用 Qwen3.5 跑真实请求。
+一个面向 Ascend 910C 的精简教学实现，使用真实 Qwen3.5 权重。
 
 [![CPU checks](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml/badge.svg)](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml) [![Ascend 910C](https://img.shields.io/badge/Ascend%20910C-FP32%20checked-0f766e)](docs/VALIDATION.md) [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-2563eb)](pyproject.toml) [![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-475569)](LICENSE)
 
@@ -16,11 +16,13 @@
 
 <img align="right" src="docs/assets/deepseek-girl-full.png" width="126" alt="蓝白裙装、鲸尾的 DeepSeek 娘角色插画" />
 
-mini-DeepInfer 是一个面向 **Ascend 910C** 的小型推理引擎，设计参考 [DeepInfer](https://github.com/deepseek-ai/DeepInfer)。Qwen3.5 的模型计算、请求调度、输出提交和缓存管理都在这个仓库里，用 Python 与 PyTorch 实现，可以沿着一条请求读下去。
+mini-DeepInfer 是一个以 **[DeepInfer](https://github.com/deepseek-ai/DeepInfer) 执行设计**为主线的教学推理引擎。它用精简的 Python 与 PyTorch 实现，把请求调度、模型执行、采样和结果提交串起来，让你能顺着一条请求读懂这些环节怎样配合。
 
-如果你已经会部署模型，想继续弄明白请求怎样合批、下一个 token 怎样算出来、显存什么时候能交给另一条请求，可以从这里开始。[十四课](docs/LEARNING_PATH.md)从最小的调度循环写起，逐步加入批处理、分块 prefill 和跨轮执行；每一步都有例子，可以边跑边改。
+如果你已经会部署模型，想进一步读 DeepInfer 的源码，可以从这里开始。[十四课](docs/LEARNING_PATH.md)从最小的请求循环写起，逐步加入批处理、分块 prefill 和跨轮执行。重点看计算发出后的状态：设备还在用哪些数据，CPU 什么时候提交结果，请求取消后缓存何时才能归还。
 
-没有 NPU，也能先在 CPU 上读调度、跑随机小模型。有 Ascend 910C，就能接上真实 Qwen3.5 权重，尝试单模型生成，或让 0.8B 提候选、2B 做验证。小模型猜错后怎样回退，KV、卷积窗口和递推状态怎样恢复，都能在[逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md)里看到。
+[DeepInfer 源码映射](docs/SOURCE_MAP.md)列出原版入口、这里的对应实现和教学简化。读完调度与在途状态，再看[双模型逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md)，跟着一次候选拒绝，检查输出提交和缓存恢复怎样接上下一轮。
+
+Ascend 910C 是这个项目的实机平台，Qwen3.5 用来验证这些机制。没有 NPU，也能先跑 CPU 调度和随机小模型；准备好设备与权重后，再运行真实文本生成，让 0.8B 提候选、2B 做验证。
 
 <br clear="both" />
 
@@ -121,7 +123,9 @@ python -m minideepinfer.generate \
 
 </details>
 
-## 从问题找到代码
+## 对照 DeepInfer 读代码
+
+先从自己关心的问题进入，再回到 DeepInfer 的对应职责：引擎组织一轮执行，Runner 准备输入和采样，在途状态记录尚未收取的计算，结果处理决定哪些输出与进度可以提交。[源码映射](docs/SOURCE_MAP.md)把这些关系逐项列出，下面是教学版的阅读入口。
 
 | 想读懂的机制 | 代码与教程 |
 | --- | --- |
