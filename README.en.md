@@ -1,6 +1,6 @@
 <div align="center">
 
-# ![mini-DeepInfer](docs/assets/readme-hero.svg)
+# ![mini-DeepInfer](docs/assets/readme-hero-whale.png)
 
 **Explore DeepInfer's engine design. Run real inference on Ascend 910C.**
 
@@ -20,10 +20,14 @@ Follow a request through the engine, change a scheduling decision, or cancel gen
 
 ## What you can build on
 
+<img align="right" src="docs/assets/deepseek-girl-full.png" width="126" alt="Blue-haired, whale-themed DeepSeek girl illustration" />
+
 - **Real models on Ascend 910C.** Run Qwen3.5-2B text generation, dynamic batching and cross-round execution. [Commands and saved output](docs/VALIDATION.md) accompany the NPU checks.
 - **Scheduling you can follow.** Trace chunked prompts, new arrivals and the next round starting before the CPU reads the previous token. Watch [requests A, B and C](docs/WALKTHROUGH.en.md) take ownership of cache slots and reuse them.
 - **Dual-model speculation, including recovery.** Qwen3.5-0.8B proposes; 2B verifies. Follow rejection, recurrent-state recovery, probability sampling, streamed groups and cancellation. [Start with a wrong proposal](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough).
 - **A runnable path into engine internals.** Start the CPU scheduling demo in three commands, with no dependencies or checkpoints. [Fourteen lessons](docs/LEARNING_PATH.md) introduce batching, chunked prefill and cross-round execution; the [DeepInfer source map](docs/SOURCE_MAP.md) connects the implementation to its design references.
+
+<br clear="both" />
 
 ## Quick start
 
@@ -116,6 +120,8 @@ python -m minideepinfer.generate \
 
 The saved run stopped after delivering a whole group, with four committed tokens and all 14 slots returned in each pool. Cancellation does not truncate an accepted group. The greedy check covers only the delivered prefix, not the remaining output or EOS. Random sampling cannot use `--check-greedy`.
 
+<p align="center"><img src="docs/assets/deepseek-girl-chibi.jpg" width="96" alt="A small glowing-eyed chibi whale girl Easter egg" /></p>
+
 </details>
 
 ## Find the code behind a question
@@ -150,4 +156,4 @@ Engine design primarily follows [DeepInfer](https://github.com/deepseek-ai/DeepI
 
 **Start with three commands and explore inference engines on Ascend 910C.** Star the repository to keep it in your reading list. Bring a failing command or a mechanism you want explained to [Issues](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose), or help implement a mechanism and improve a lesson through the [contribution guide](CONTRIBUTING.md).
 
-This independent community project has no official affiliation with DeepSeek, SGLang or Huawei. Original code and documentation use [Apache-2.0](LICENSE); models and third-party code retain their licenses.
+This independent community project has no official affiliation with DeepSeek, SGLang or Huawei. Original code and documentation use [Apache-2.0](LICENSE); models and third-party code retain their licenses. Character artwork is covered separately in the [artwork notes](docs/assets/ARTWORK.md).

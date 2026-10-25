@@ -1,6 +1,6 @@
 <div align="center">
 
-# ![mini-DeepInfer](docs/assets/readme-hero.svg)
+# ![mini-DeepInfer](docs/assets/readme-hero-whale.png)
 
 **读懂 DeepInfer 的执行设计，跑通 Ascend 910C 上的真实推理。**
 
@@ -20,10 +20,14 @@ mini-DeepInfer 是一个面向 **Ascend 910C** 的精简推理引擎。我们借
 
 ## 值得动手的四件事
 
+<img align="right" src="docs/assets/deepseek-girl-full.png" width="126" alt="蓝白裙装、鲸尾的 DeepSeek 娘角色插画" />
+
 - **在 Ascend 910C 上跑真实模型。** Qwen3.5-2B 已跑通文本生成、动态批处理与跨轮执行，命令和原始输出[直接可查](docs/VALIDATION.md)。
 - **看清每一步调度。** 长 prompt 怎样分块，新请求怎样插入批次，CPU 还没读到上一轮 token 时下一轮怎样继续；跟着 [A、B、C 三条请求](docs/WALKTHROUGH.md)观察缓存被谁持有、何时复用。
 - **把双模型投机解码走完整。** Qwen3.5-0.8B 提候选、2B 验证，包含拒绝回退、线性状态恢复、随机采样、逐组流式输出与取消。[从一次猜错开始读](docs/MODEL_DRAFT_WALKTHROUGH.md)。
 - **从能运行的代码学起。** 三条命令启动 CPU 调度演示，无需依赖和权重。[十四课](docs/LEARNING_PATH.md)带你逐步加入批处理、分块 prefill 和跨轮执行，并对照 [DeepInfer 源码](docs/SOURCE_MAP.md)理解设计取舍。
+
+<br clear="both" />
 
 ## 快速开始
 
@@ -116,6 +120,8 @@ python -m minideepinfer.generate \
 
 实机记录在完整交付下一组后停在 4 个 token，两边各归还 14 个槽位。取消门槛不会截断已经提交的接受组；greedy 检查只对照已交付前缀，不表示剩余输出或 EOS 已验证。随机采样不能同时使用 `--check-greedy`。
 
+<p align="center"><img src="docs/assets/deepseek-girl-chibi.jpg" width="96" alt="眼睛发光的 Q 版大肥鱼小彩蛋" /></p>
+
 </details>
 
 ## 从问题找到代码
@@ -150,4 +156,4 @@ python -m minideepinfer.generate \
 
 **在 Ascend 910C 上学推理引擎，从这三条命令开始。** 欢迎 Star，留着对照源码；也欢迎把跑不通的命令或想弄明白的机制[写进 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose)。想动手补一个机制、改一课教程，从[贡献指南](CONTRIBUTING.md)加入。
 
-独立社区项目，与 DeepSeek、SGLang、华为无官方隶属关系。原创代码和文档采用 [Apache-2.0](LICENSE)，模型与第三方代码遵循各自许可证。
+独立社区项目，与 DeepSeek、SGLang、华为无官方隶属关系。原创代码和文档采用 [Apache-2.0](LICENSE)，模型与第三方代码遵循各自许可证。角色图片另见[素材说明](docs/assets/ARTWORK.md)。

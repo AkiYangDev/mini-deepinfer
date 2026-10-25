@@ -1,5 +1,5 @@
 include README.md README.en.md CONTRIBUTING.md
-recursive-include docs *.md *.json *.txt *.py *.svg
+recursive-include docs *.md *.json *.txt *.py *.svg *.png *.jpg
 recursive-include scripts *.py
 recursive-include examples *.py
 recursive-include tests *.py
