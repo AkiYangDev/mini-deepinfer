@@ -1,4 +1,4 @@
-"""Synchronous single-request greedy verification and cache rollback reference.
+"""Synchronous single-request verification and cache rollback reference.
 
 Controlled drafts are test inputs, not MTP or a learned draft model. Only the
 existing Qwen2/Qwen3.5 implementations are supported; see SPECULATIVE.md.
@@ -131,7 +131,8 @@ class CachedTarget:
 
 
 def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=None,
-             cache_capacity=None, on_round=None, on_cache=None, on_commit=None, should_cancel=None):
+             cache_capacity=None, on_round=None, on_cache=None, on_commit=None, should_cancel=None,
+             sampler=None):
     """draft(committed_prefix, limit) supplies up to limit candidates after pending.
 
     The last committed output is pending: it has not yet been consumed by target.
@@ -140,9 +141,11 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
     on_commit receives each CPU-visible group of committed output tokens.
     should_cancel is polled before prefill and after each commit callback. A
     committed group is atomic; EOS and length completion take precedence.
+    With sampler, draft returns SampledDraft with the actual proposal distributions.
     """
     from .engine import validate_request
     from .kv_cache import SlotPool
+    from .sampling import SampledDraft, TemperatureSampler, verify_sampled
 
     prompt = tuple(prompt_ids)
     if type(width) is not int or not 0 <= width <= 8 or not callable(draft):
@@ -151,6 +154,9 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
         raise ValueError('max_new_tokens must be a positive integer')
     if should_cancel is not None and not callable(should_cancel):
         raise ValueError('should_cancel must be a callable or None')
+    if sampler is not None and (not isinstance(sampler, TemperatureSampler)
+                                or next(model.parameters()).device.type != 'cpu'):
+        raise ValueError('sampled generation requires a CPU model and TemperatureSampler')
     capacity = len(prompt)+max_new_tokens-1 if cache_capacity is None else cache_capacity
     pool = SlotPool(capacity)
     prompt = validate_request(prompt,max_new_tokens,eos_token_id,capacity)
@@ -168,7 +174,8 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
         reason = stop_reason(None)
         if reason is None:
             target = CachedTarget(model,slots,capacity)
-            output.append(int(target.forward(prompt)[-1].argmax()))
+            first = target.forward(prompt)[-1]
+            output.append(int(first.argmax()) if sampler is None else sampler.sample(first))
             direct = 1  # Prefill supplies the first output, without draft verification.
             reason = 'eos' if output[-1]==eos_token_id else 'length' if max_new_tokens==1 else None
             if on_commit is not None:
@@ -177,7 +184,15 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
         while reason is None:
             remaining = max_new_tokens-len(output)
             count = min(width,remaining-1)
-            candidates = tuple(draft(prompt+tuple(output),count))
+            proposal = draft(prompt+tuple(output),count)
+            if sampler is not None:
+                if not isinstance(proposal, SampledDraft):
+                    raise ValueError('sampled generation requires a SampledDraft, not greedy candidates')
+                candidates = proposal.tokens
+            else:
+                if isinstance(proposal, SampledDraft):
+                    raise ValueError('sampled candidates require a target sampler')
+                candidates = tuple(proposal)
             if len(candidates) > count or any(type(t) is not int or not 0 <= t < model.config.vocab_size for t in candidates):
                 raise ValueError('draft must return at most the requested number of vocabulary IDs')
             before = len(target.tokens)
@@ -186,7 +201,11 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
             logits = target.forward(inputs)
             predictions = tuple(logits.argmax(-1).tolist())
             tentative = len(target.tokens)
-            decision = verify_greedy(candidates,predictions,remaining,eos_token_id)
+            if sampler is None:
+                decision = verify_greedy(candidates,predictions,remaining,eos_token_id)
+            else:
+                decision, checks = verify_sampled(proposal, tuple(sampler.probabilities(row) for row in logits),
+                                                   remaining, sampler.rng, eos_token_id)
             output.extend(decision.tokens)
             retained = len(prompt)+len(output)-1
             replay_before=target.replay_calls
@@ -207,6 +226,8 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
                           replay_tokens=target.replay_tokens-replay_tokens_before,
                           finish_reason=decision.finish_reason)
             rounds.append(record)
+            if sampler is not None:
+                record['sampling_checks'] = checks
             if on_commit is not None:
                 on_commit(decision.tokens)
             reason = stop_reason(decision.finish_reason)
@@ -234,4 +255,7 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
             target._snapshot=None
         pool.release('spec')
     result['free_slots'] = pool.free_count
+    if sampler is not None:
+        result['sampling'] = dict(temperature=sampler.temperature, seed=sampler.seed,
+                                  probability_device='cpu', probability_dtype='float64')
     return result

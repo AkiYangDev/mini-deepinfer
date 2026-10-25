@@ -457,7 +457,8 @@ class SpeculativeTextTests(unittest.TestCase):
             self.assertIn(result['text'], stdout.getvalue())
             self.assertIn('accepted draft', stdout.getvalue())
             self.assertIn('greedy check passed', stdout.getvalue())
-            self.assertEqual(len(result['source_sha256']), 13)
+            self.assertEqual(len(result['source_sha256']), 14)
+            self.assertIn('minideepinfer/sampling.py', result['source_sha256'])
             self.assert_clean(result)
 
 

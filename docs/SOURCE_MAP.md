@@ -86,6 +86,8 @@ mask/compact 对照通过，不能证明近似回放与完整重算严格等价�
 
 ## 当前进度与下一项交付
 
+新增的 [CPU 正温度采样](SAMPLING.md)沿用 `Sampler._verification()` 中采样、验证与有效输出整理的职责划分。顺序拒绝采样的数学规则来自 Leviathan 等人的 Algorithm 1，见该章节；独立小模型、CPU FP64 概率和请求本地随机数为教学实现，不复制上游 MTP 或融合采样 kernel。
+
 同步执行与真实模型路径已落地：第一课保留 [`Engine.step()`](../minideepinfer/engine.py)，第三课增加 [`BatchEngine`](../minideepinfer/batch_engine.py) 与真正合并计算的多请求 Runner。阅读入口见[第一课](FIRST_REQUEST.md)、[第二课](REAL_GENERATION.md)和[第三课](BATCHING.md)，验证范围见[实验记录](VALIDATION.md)。同步对照保留；跨轮实验的顺序与验证边界见第十一至十四课。
 
 Qwen3.5 的 CPU 与 Ascend 910C FP32 路径、BF16 的固定短轨迹参考检查已经记录；原生 BF16 分块与长生成差异继续保留。[第五课](STEP_STATE.md)解释按请求映射旧输出与延迟释放，[第六课](NPU_EVENTS.md)用实际 Ascend 910C 事件和微型张量检查拷贝、读取与复用。

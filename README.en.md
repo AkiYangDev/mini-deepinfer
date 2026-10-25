@@ -133,12 +133,15 @@ The [full fourteen-lesson index](docs/LEARNING_PATH.md) is in Chinese; English s
 | Cross-round text generation | Matching sync, pipeline and staggered-arrival outputs; 43 full-logit comparisons in an EOS trajectory pass, with maximum difference about `4.94e-5`; see [text checks](docs/PIPELINE_TEXT.md) |
 | Dual-model state alignment | Widths 1/3 match independent greedy on the NPU; a random CPU rejection example shows draft truncation and recovery; see [implementation and experiments](docs/MODEL_DRAFT.md#english-summary) |
 | Streamed cancellation | Four committed tokens match independent greedy's prefix, with all 14 slots returned in each pool; see the [cancellation record](docs/SPECULATIVE_TEXT.md#english-usage) |
+| Probability sampling (CPU) | Toy distribution experiments, dual-model rejection sampling and cold-cache comparisons without checkpoints; see [sampling](docs/SAMPLING.md#english-usage) |
 
 Reports preserve inputs, configuration, raw results and source hashes. Historical results are checked against immutable commits; see [evidence checks](docs/EVIDENCE.md). Performance experiments also retain slower short-workload results: [sync versus pipeline](docs/PIPELINE_BENCHMARK.md#english-summary), [first commit](docs/FIRST_RESULT.md#english-summary), and [dual-model costs](docs/MODEL_DRAFT.md#english-summary). Acceptance and fewer forward calls do not by themselves establish higher throughput.
 
 ## Scope and sources
 
 The main examples use Qwen3.5, FP32, eager execution and greedy decoding on short contexts. See [BF16 notes](docs/BF16_REFERENCE.md) for reference checks and chunk-path differences. The earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in regression checks. DeepSeek-V4.1 model architecture, MLA/MoE, MTP, bounded replay, graph execution and distribution remain on the [roadmap](docs/ROADMAP.md).
+
+A separate [CPU temperature-sampling reference](docs/SAMPLING.md#english-usage) reuses speculative cache rollback. This new path has not been validated on Ascend 910C.
 
 Engine design primarily follows [DeepInfer](https://github.com/deepseek-ai/DeepInfer). [mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format; Ascend SGLang informs NPU API and compatibility work. See [references](docs/REFERENCES.md) for sources and licenses.
 

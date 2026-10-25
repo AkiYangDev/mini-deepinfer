@@ -15,7 +15,9 @@ class DraftTrace:
                             before_ids=list(cache.tokens) if cache else [],aligned_ids=None)
         values = self.draft(prefix,limit)
         cache = self.draft.cache
-        self.pending.update(candidates=list(values),after_ids=list(cache.tokens) if cache else [])
+        from .sampling import SampledDraft
+        self.pending.update(candidates=list(values.tokens if isinstance(values, SampledDraft) else values),
+                            after_ids=list(cache.tokens) if cache else [])
         return values
 
     def aligned(self, cache):
@@ -59,7 +61,11 @@ def print_trace(report):
             print(f"  draft 已算 {len(state['before_ids'])} → 保留 {state['retained_before_sync']} → 补到 {len(state['aligned_ids'])}；"
                   f"恢复线性状态={restored}，重算 {state['replayed_input_tokens']}，补算 {state['sync_input_tokens']} 个输入。")
             print(f"  提出 {state['candidates']}；draft 实际额外输入 {state['after_ids'][len(state['aligned_ids']):]}。")
-        print(f"  target 输入 {row['input_ids']}，预测 {row['target']}。")
+        label = 'argmax（仅供观察）' if 'sampling_checks' in row else '预测'
+        print(f"  target 输入 {row['input_ids']}，{label} {row['target']}。")
+        for check in row.get('sampling_checks', ()):
+            print(f"  候选 {check['token']}：p={check['p']:.6f}，q={check['q']:.6f}，"
+                  f"接受概率={check['acceptance_probability']:.6f}，抽数={check['uniform']:.6f}，接受={check['accepted']}。")
         role = dict(correction='target 改正',bonus='target 补 bonus',target='target 直接输出').get(row['final_role'],'候选中的 EOS')
         print(f"  接受 {row['accepted_draft']} 个候选，提交 {row['committed']}（{role}）。")
         stopped = '请求已取消' if row['finish_reason']=='cancelled' else '请求结束'

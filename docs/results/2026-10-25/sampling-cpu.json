@@ -1,0 +1,889 @@
+{
+  "passed": true,
+  "device": "cpu",
+  "dtype": "float32",
+  "torch": "2.5.1+cpu",
+  "temperature": 0.7,
+  "target_sampling_seed": 2026,
+  "draft_sampling_seed": 2027,
+  "weight_seeds": [
+    2026,
+    2036
+  ],
+  "trained": false,
+  "tie_word_embeddings": false,
+  "prompt_ids": [
+    2,
+    3,
+    4
+  ],
+  "max_new_tokens": 10,
+  "cache_capacity": 12,
+  "weight_loads": 0,
+  "source_sha256": {
+    "minideepinfer/sampling.py": "ff036c2c6486d049a383a6483359a253a46f5cb9f3a4b7f40a12c302ca0130b7",
+    "minideepinfer/sampling_demo.py": "d2f8640bf5356d091c3668407ac4878b4d1061275c681b6e207dfa0159f1794c",
+    "minideepinfer/model_draft.py": "2bfb38d19fdc05fafa0de3957cd1a26246226145dd03c773b471c6a1e2cf7f64",
+    "minideepinfer/speculative.py": "63af31f00d3a590d6cfe8205f2e029d890a05d7c05f28c9e0de31dc9b1ea3e5e",
+    "minideepinfer/spec_demo.py": "a55b298d3bcef6ca3efaaaa93fca0c2722b2cd9138e83706a6369db8e8d1331d",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5"
+  },
+  "cache_checks": [
+    {
+      "cached_tokens": 4,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 4,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 4.76837158203125e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 2.980232238769531e-07,
+      "recurrence_1_max_abs": 5.21540641784668e-08,
+      "conv_2_max_abs": 4.76837158203125e-07,
+      "recurrence_2_max_abs": 8.940696716308594e-08
+    },
+    {
+      "cached_tokens": 5,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 5,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 2.980232238769531e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 8.940696716308594e-08,
+      "conv_1_max_abs": 2.980232238769531e-07,
+      "recurrence_1_max_abs": 3.725290298461914e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 8.940696716308594e-08
+    },
+    {
+      "cached_tokens": 6,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 6,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 2.4586915969848633e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 2.2351741790771484e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 4.470348358154297e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 5.960464477539063e-08
+    },
+    {
+      "cached_tokens": 7,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 7,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 3.8743019104003906e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 5.960464477539063e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 2.7939677238464355e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 5.960464477539063e-08
+    },
+    {
+      "cached_tokens": 8,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 8,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 4.172325134277344e-07,
+      "logits_max_abs": 2.384185791015625e-07,
+      "conv_0_max_abs": 1.7881393432617188e-07,
+      "recurrence_0_max_abs": 4.470348358154297e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 2.9802322387695312e-08
+    },
+    {
+      "cached_tokens": 9,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 9,
+      "passed": true,
+      "keys_max_abs": 9.5367431640625e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 3.5762786865234375e-07,
+      "conv_0_max_abs": 1.4901161193847656e-07,
+      "recurrence_0_max_abs": 5.587935447692871e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 1.341104507446289e-07,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 1.4901161193847656e-07
+    },
+    {
+      "cached_tokens": 10,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 10,
+      "passed": true,
+      "keys_max_abs": 6.556510925292969e-07,
+      "values_max_abs": 4.76837158203125e-07,
+      "logits_max_abs": 3.5762786865234375e-07,
+      "conv_0_max_abs": 2.980232238769531e-07,
+      "recurrence_0_max_abs": 3.3527612686157227e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 1.1920928955078125e-07,
+      "conv_2_max_abs": 4.76837158203125e-07,
+      "recurrence_2_max_abs": 8.940696716308594e-08
+    },
+    {
+      "cached_tokens": 11,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 11,
+      "passed": true,
+      "keys_max_abs": 6.556510925292969e-07,
+      "values_max_abs": 4.76837158203125e-07,
+      "logits_max_abs": 2.384185791015625e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 4.470348358154297e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 7.450580596923828e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 1.043081283569336e-07
+    },
+    {
+      "cached_tokens": 12,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 12,
+      "passed": true,
+      "keys_max_abs": 6.556510925292969e-07,
+      "values_max_abs": 4.76837158203125e-07,
+      "logits_max_abs": 5.364418029785156e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 3.632158041000366e-08,
+      "conv_1_max_abs": 3.2782554626464844e-07,
+      "recurrence_1_max_abs": 3.3527612686157227e-08,
+      "conv_2_max_abs": 3.5762786865234375e-07,
+      "recurrence_2_max_abs": 3.725290298461914e-08
+    },
+    {
+      "cached_tokens": 4,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 4,
+      "passed": true,
+      "keys_max_abs": 0.0,
+      "values_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "conv_0_max_abs": 0.0,
+      "recurrence_0_max_abs": 0.0
+    },
+    {
+      "cached_tokens": 7,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 7,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 3.5762786865234375e-07,
+      "conv_0_max_abs": 3.5762786865234375e-07,
+      "recurrence_0_max_abs": 1.4901161193847656e-08,
+      "conv_1_max_abs": 2.384185791015625e-07,
+      "recurrence_1_max_abs": 8.940696716308594e-08,
+      "conv_2_max_abs": 2.980232238769531e-07,
+      "recurrence_2_max_abs": 8.940696716308594e-08
+    },
+    {
+      "cached_tokens": 8,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 8,
+      "passed": true,
+      "keys_max_abs": 2.384185791015625e-07,
+      "values_max_abs": 1.1920928955078125e-07,
+      "logits_max_abs": 1.7881393432617188e-07,
+      "conv_0_max_abs": 1.1920928955078125e-07,
+      "recurrence_0_max_abs": 1.30385160446167e-08
+    },
+    {
+      "cached_tokens": 9,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 9,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.2782554626464844e-07,
+      "logits_max_abs": 4.470348358154297e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 5.727633833885193e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 8.940696716308594e-08,
+      "conv_2_max_abs": 4.470348358154297e-07,
+      "recurrence_2_max_abs": 5.587935447692871e-08
+    },
+    {
+      "cached_tokens": 10,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 10,
+      "passed": true,
+      "keys_max_abs": 2.384185791015625e-07,
+      "values_max_abs": 1.1920928955078125e-07,
+      "logits_max_abs": 1.7881393432617188e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 4.0978193283081055e-08
+    },
+    {
+      "cached_tokens": 10,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 10,
+      "passed": true,
+      "keys_max_abs": 6.258487701416016e-07,
+      "values_max_abs": 3.8743019104003906e-07,
+      "logits_max_abs": 4.3213367462158203e-07,
+      "conv_0_max_abs": 2.980232238769531e-07,
+      "recurrence_0_max_abs": 2.9802322387695312e-08,
+      "conv_1_max_abs": 4.76837158203125e-07,
+      "recurrence_1_max_abs": 4.842877388000488e-08,
+      "conv_2_max_abs": 4.76837158203125e-07,
+      "recurrence_2_max_abs": 5.4016709327697754e-08
+    },
+    {
+      "cached_tokens": 11,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 11,
+      "passed": true,
+      "keys_max_abs": 2.384185791015625e-07,
+      "values_max_abs": 2.384185791015625e-07,
+      "logits_max_abs": 2.980232238769531e-07,
+      "conv_0_max_abs": 2.384185791015625e-07,
+      "recurrence_0_max_abs": 2.2351741790771484e-08
+    },
+    {
+      "cached_tokens": 11,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 11,
+      "passed": true,
+      "keys_max_abs": 1.2516975402832031e-06,
+      "values_max_abs": 4.76837158203125e-07,
+      "logits_max_abs": 5.960464477539062e-07,
+      "conv_0_max_abs": 2.980232238769531e-07,
+      "recurrence_0_max_abs": 3.725290298461914e-08,
+      "conv_1_max_abs": 3.5762786865234375e-07,
+      "recurrence_1_max_abs": 5.960464477539063e-08,
+      "conv_2_max_abs": 5.960464477539062e-07,
+      "recurrence_2_max_abs": 8.707866072654724e-08
+    },
+    {
+      "cached_tokens": 12,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 12,
+      "passed": true,
+      "keys_max_abs": 9.834766387939453e-07,
+      "values_max_abs": 4.76837158203125e-07,
+      "logits_max_abs": 2.980232238769531e-07,
+      "conv_0_max_abs": 2.980232238769531e-07,
+      "recurrence_0_max_abs": 3.3527612686157227e-08,
+      "conv_1_max_abs": 2.980232238769531e-07,
+      "recurrence_1_max_abs": 3.725290298461914e-08,
+      "conv_2_max_abs": 5.960464477539062e-07,
+      "recurrence_2_max_abs": 8.940696716308594e-08
+    }
+  ],
+  "cases": {
+    "width_zero": {
+      "output_ids": [
+        11,
+        52,
+        49,
+        80,
+        10,
+        25,
+        57,
+        52,
+        77,
+        51
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            11
+          ],
+          "draft": [],
+          "target": [
+            94
+          ],
+          "committed": [
+            52
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 3,
+          "tentative_cached": 4,
+          "retained_cached": 4,
+          "invalidated_slots": [],
+          "pending_token": 52,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            52
+          ],
+          "draft": [],
+          "target": [
+            18
+          ],
+          "committed": [
+            49
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 4,
+          "tentative_cached": 5,
+          "retained_cached": 5,
+          "invalidated_slots": [],
+          "pending_token": 49,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            49
+          ],
+          "draft": [],
+          "target": [
+            16
+          ],
+          "committed": [
+            80
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 5,
+          "tentative_cached": 6,
+          "retained_cached": 6,
+          "invalidated_slots": [],
+          "pending_token": 80,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            80
+          ],
+          "draft": [],
+          "target": [
+            77
+          ],
+          "committed": [
+            10
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 6,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 10,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            10
+          ],
+          "draft": [],
+          "target": [
+            47
+          ],
+          "committed": [
+            25
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 7,
+          "tentative_cached": 8,
+          "retained_cached": 8,
+          "invalidated_slots": [],
+          "pending_token": 25,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            25
+          ],
+          "draft": [],
+          "target": [
+            20
+          ],
+          "committed": [
+            57
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 8,
+          "tentative_cached": 9,
+          "retained_cached": 9,
+          "invalidated_slots": [],
+          "pending_token": 57,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            57
+          ],
+          "draft": [],
+          "target": [
+            62
+          ],
+          "committed": [
+            52
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 9,
+          "tentative_cached": 10,
+          "retained_cached": 10,
+          "invalidated_slots": [],
+          "pending_token": 52,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            52
+          ],
+          "draft": [],
+          "target": [
+            18
+          ],
+          "committed": [
+            77
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 10,
+          "tentative_cached": 11,
+          "retained_cached": 11,
+          "invalidated_slots": [],
+          "pending_token": 77,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            77
+          ],
+          "draft": [],
+          "target": [
+            3
+          ],
+          "committed": [
+            51
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 51,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length",
+          "sampling_checks": []
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 0,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 10,
+      "target_forward_calls": 10,
+      "target_input_tokens": 12,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 9,
+      "snapshot_bytes_total": 48384,
+      "peak_snapshot_bytes": 5376,
+      "free_slots": 12,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64"
+      }
+    },
+    "draft_width_three": {
+      "output_ids": [
+        11,
+        9,
+        40,
+        2,
+        9,
+        33,
+        42,
+        43,
+        80,
+        70
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            11,
+            9,
+            40,
+            2
+          ],
+          "draft": [
+            9,
+            40,
+            2
+          ],
+          "target": [
+            94,
+            62,
+            52,
+            68
+          ],
+          "committed": [
+            9,
+            40,
+            2,
+            9
+          ],
+          "accepted_draft": 3,
+          "final_role": "bonus",
+          "cached_before": 3,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 9,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": [
+            {
+              "token": 9,
+              "p": 0.005781590089799016,
+              "q": 0.004378402111351646,
+              "acceptance_probability": 1.0,
+              "uniform": 0.5025157552312506,
+              "accepted": true
+            },
+            {
+              "token": 40,
+              "p": 0.009481834892276789,
+              "q": 0.009076226055940929,
+              "acceptance_probability": 1.0,
+              "uniform": 0.511822712773071,
+              "accepted": true
+            },
+            {
+              "token": 2,
+              "p": 0.005526608063664332,
+              "q": 0.005881642711556856,
+              "acceptance_probability": 0.9396368216663492,
+              "uniform": 0.8600005876492754,
+              "accepted": true
+            }
+          ]
+        },
+        {
+          "input_ids": [
+            9,
+            33,
+            34,
+            87
+          ],
+          "draft": [
+            33,
+            34,
+            87
+          ],
+          "target": [
+            90,
+            14,
+            85,
+            13
+          ],
+          "committed": [
+            33,
+            42
+          ],
+          "accepted_draft": 1,
+          "final_role": "correction",
+          "cached_before": 7,
+          "tentative_cached": 11,
+          "retained_cached": 9,
+          "invalidated_slots": [
+            9,
+            10
+          ],
+          "pending_token": 42,
+          "replay_calls": 1,
+          "replay_tokens": 2,
+          "finish_reason": null,
+          "sampling_checks": [
+            {
+              "token": 33,
+              "p": 0.0043654920641179925,
+              "q": 0.018558061229789004,
+              "acceptance_probability": 0.235234274209129,
+              "uniform": 0.22328455667799063,
+              "accepted": true
+            },
+            {
+              "token": 34,
+              "p": 0.0053561777282866915,
+              "q": 0.04669211827243965,
+              "acceptance_probability": 0.11471267371153329,
+              "uniform": 0.6010306523850866,
+              "accepted": false
+            }
+          ]
+        },
+        {
+          "input_ids": [
+            42,
+            18,
+            22
+          ],
+          "draft": [
+            18,
+            22
+          ],
+          "target": [
+            30,
+            51,
+            96
+          ],
+          "committed": [
+            43
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 9,
+          "tentative_cached": 12,
+          "retained_cached": 10,
+          "invalidated_slots": [
+            10,
+            11
+          ],
+          "pending_token": 43,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null,
+          "sampling_checks": [
+            {
+              "token": 18,
+              "p": 0.00975509727234513,
+              "q": 0.07973443915372001,
+              "acceptance_probability": 0.12234484089789958,
+              "uniform": 0.7833733824831903,
+              "accepted": false
+            }
+          ]
+        },
+        {
+          "input_ids": [
+            43,
+            47
+          ],
+          "draft": [
+            47
+          ],
+          "target": [
+            85,
+            85
+          ],
+          "committed": [
+            80
+          ],
+          "accepted_draft": 0,
+          "final_role": "correction",
+          "cached_before": 10,
+          "tentative_cached": 12,
+          "retained_cached": 11,
+          "invalidated_slots": [
+            11
+          ],
+          "pending_token": 80,
+          "replay_calls": 1,
+          "replay_tokens": 1,
+          "finish_reason": null,
+          "sampling_checks": [
+            {
+              "token": 47,
+              "p": 0.011960121220863939,
+              "q": 0.05286984162650732,
+              "acceptance_probability": 0.22621821539309284,
+              "uniform": 0.7305389924092037,
+              "accepted": false
+            }
+          ]
+        },
+        {
+          "input_ids": [
+            80
+          ],
+          "draft": [],
+          "target": [
+            34
+          ],
+          "committed": [
+            70
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 11,
+          "tentative_cached": 12,
+          "retained_cached": 12,
+          "invalidated_slots": [],
+          "pending_token": 70,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length",
+          "sampling_checks": []
+        }
+      ],
+      "cached_tokens": 12,
+      "proposed_draft_tokens": 9,
+      "accepted_draft_tokens": 4,
+      "correction_tokens": 3,
+      "bonus_tokens": 1,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 9,
+      "target_input_tokens": 21,
+      "replay_forward_calls": 3,
+      "replayed_input_tokens": 4,
+      "snapshot_count": 5,
+      "snapshot_bytes_total": 26880,
+      "peak_snapshot_bytes": 5376,
+      "free_slots": 12,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64"
+      },
+      "draft_work": {
+        "calls": 5,
+        "proposed_tokens": 9,
+        "recovered_branches": 2,
+        "forward_calls": 10,
+        "input_tokens": 14,
+        "sync_forward_calls": 4,
+        "sync_input_tokens": 8,
+        "proposal_forward_calls": 5,
+        "proposal_input_tokens": 5,
+        "replay_forward_calls": 1,
+        "replayed_input_tokens": 1,
+        "snapshot_count": 3,
+        "snapshot_bytes_total": 960,
+        "peak_snapshot_bytes": 320,
+        "linear_states_remaining": 0,
+        "snapshot_retained": false,
+        "failed": false,
+        "closed": true,
+        "free_slots": 12
+      }
+    }
+  },
+  "scope": "CPU FP64 sampling reference and untrained models; no NPU run, timing or speedup claim",
+  "probability_experiment": {
+    "p": [
+      0.25,
+      0.75
+    ],
+    "q": [
+      0.75,
+      0.25
+    ],
+    "next_p_given_first": [
+      [
+        0.8,
+        0.2
+      ],
+      [
+        0.1,
+        0.9
+      ]
+    ],
+    "trials": 10000,
+    "seed": 2026,
+    "counts": [
+      [
+        2021,
+        493
+      ],
+      [
+        764,
+        6722
+      ]
+    ],
+    "expected_joint": [
+      [
+        0.2,
+        0.05
+      ],
+      [
+        0.07500000000000001,
+        0.675
+      ]
+    ],
+    "observed_joint": [
+      [
+        0.2021,
+        0.0493
+      ],
+      [
+        0.0764,
+        0.6722
+      ]
+    ],
+    "max_abs_frequency_error": 0.0028000000000000247,
+    "tolerance": 0.015,
+    "passed": true,
+    "scope": "fixed two-token toy distribution; empirical check, not a proof for arbitrary models"
+  },
+  "full_prefix_reference": {
+    "output_ids": [
+      11,
+      52,
+      49,
+      80,
+      10,
+      25,
+      57,
+      52,
+      77,
+      51
+    ],
+    "forward_calls": 10,
+    "input_tokens": 75
+  },
+  "ordinary_matches_full_prefix": true
+}

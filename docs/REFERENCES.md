@@ -62,6 +62,8 @@ Qwen3.5 权重固定到 [0.8B / 2fc06364](https://huggingface.co/Qwen/Qwen3.5-0.
 
 ## 引入代码时的记录规则
 
+正温度的 [CPU 投机采样](SAMPLING.md)使用 [Fast Inference from Transformers via Speculative Decoding](https://proceedings.mlr.press/v202/leviathan23a.html) Algorithm 1 的接受与补采样规则。实现为原创教学代码，未复制论文实现或第三方采样代码；执行与资源归属继续参考上文固定 DeepInfer 版本。
+
 直接复用或改写上游代码时，记录项目、commit、原文件路径和修改目的，保留适用的版权/许可证及必要 NOTICE。第三方代码引入后，在对应目录附带来源与许可证信息。
 
 仅借鉴概念时，也在教学章节说明来源、与原版的对应关系和简化条件。当前项目的 Apache-2.0 许可不改变模型及第三方组件的许可。

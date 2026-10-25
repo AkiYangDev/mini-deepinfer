@@ -1,0 +1,11 @@
+{
+  "version": "0.5.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-25/sampling-cpu.json",
+      "sha256": "d1a23d36b27c7cc5ebb67c2b50c79b98f668b3ee83d789398c5c47f9e632a783",
+      "scope": "CPU FP64 temperature sampling: two-token conditional distribution experiment and untrained independent Qwen3.5 draft/target models; 18 cold-cache checks and complete slot return. Width zero matches independent full-prefix temperature sampling.",
+      "limits": "Fixed seeds and short contexts; toy empirical distribution check is not a general proof. No NPU sampling run, trained checkpoint, timing or speedup claim. Greedy history does not certify this path."
+    }
+  ]
+}

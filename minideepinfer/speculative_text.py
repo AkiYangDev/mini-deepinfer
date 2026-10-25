@@ -1,9 +1,10 @@
-"""Text input for the existing single-request greedy draft/target loop."""
+"""Text input for the existing single-request draft/target loop."""
 
 
 def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
                          cache_capacity=512, width=1, raw=False, thinking=False,
-                         trace_rounds=False, check_greedy=False, on_commit=None, should_cancel=None):
+                         trace_rounds=False, check_greedy=False, on_commit=None, should_cancel=None,
+                         temperature=None, seed=2026):
     """Own both request caches; reuse loaded models without sharing their state.
 
     The optional greedy check runs afterwards with a fresh target cache. It is
@@ -16,6 +17,11 @@ def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
     from .model_runner import ModelRunner
     from .speculative import generate
     from .text_loop import encode_prompt
+    from .sampling import TemperatureSampler
+
+    sampler = None if temperature is None else TemperatureSampler(temperature, seed)
+    if sampler is not None and check_greedy:
+        raise ValueError('random sampling cannot use a token-by-token greedy check')
 
     if type(width) is not int or not 1 <= width <= 8:
         raise ValueError('draft width must be an integer from one to eight')
@@ -24,6 +30,8 @@ def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
     if should_cancel is not None and not callable(should_cancel):
         raise ValueError('should_cancel must be a callable or None')
     weights = [next(model.parameters()) for model in (target, small)]
+    if sampler is not None and any(weight.device.type != 'cpu' for weight in weights):
+        raise ValueError('temperature sampling is currently a CPU reference; NPU validation is pending')
     if (any(weight.dtype != torch.float32 for weight in weights)
             or weights[0].device != weights[1].device
             or weights[0].device.type not in ('cpu', 'npu')):
@@ -40,7 +48,8 @@ def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
         raise ValueError('request exceeds a model position limit')
     # Capacity is a request budget, not a reason to allocate beyond its inputs.
     capacity = needed
-    draft = ModelDraft(small, capacity)
+    draft_sampler = None if sampler is None else TemperatureSampler(temperature, (seed+1) % 2**63)
+    draft = ModelDraft(small, capacity, sampler=draft_sampler)
     trace = DraftTrace(draft, ids) if trace_rounds else None
     if trace is not None:
         draft.on_cache = trace.aligned
@@ -56,7 +65,8 @@ def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
         result = generate(target, ids, max_new_tokens, trace.propose if trace else draft,
                           width=width, eos_token_id=tokenizer.eos_token_id,
                           cache_capacity=capacity, on_commit=committed,
-                          on_round=trace.observed if trace else None, should_cancel=should_cancel)
+                          on_round=trace.observed if trace else None, should_cancel=should_cancel,
+                          sampler=sampler)
     finally:
         draft.close()
     result.update(prompt_ids=list(ids), text=tokenizer.decode(result['output_ids'], skip_special_tokens=True,

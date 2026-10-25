@@ -1,4 +1,4 @@
-"""Offline greedy text generation with local Qwen3.5 or Qwen2 weights."""
+"""Offline text generation with local Qwen3.5 or Qwen2 weights; greedy by default."""
 
 import argparse
 
@@ -22,6 +22,8 @@ def parse_args(argv=None):
     modes.add_argument("--speculative", action="store_true", help="use a separate greedy draft model (one prompt, FP32)")
     parser.add_argument("--draft-model", help="local draft checkpoint; requires --speculative")
     parser.add_argument("--draft-width", type=int, default=None, help="1..8 candidates per speculative round (default: 1)")
+    parser.add_argument("--temperature", type=float, help="positive temperature; speculative CPU reference only (default: greedy)")
+    parser.add_argument("--seed", type=int, help="request-local sampling seed (default: 2026); requires --temperature")
     parser.add_argument("--check-greedy", action="store_true", help="with --speculative, compare against a fresh target-only run")
     parser.add_argument("--output", help="with --speculative, save a generation or cancellation report as JSON")
     parser.add_argument("--stream", action="store_true", help="with --speculative, print committed text during generation")
@@ -54,8 +56,18 @@ def parse_args(argv=None):
         args.draft_width = 1 if args.draft_width is None else args.draft_width
         if args.cancel_after_tokens is not None and args.cancel_after_tokens < 1:
             parser.error('--cancel-after-tokens must be positive')
+        if args.temperature is not None:
+            from .sampling import TemperatureSampler
+            try:
+                TemperatureSampler(args.temperature, 2026 if args.seed is None else args.seed)
+            except ValueError as error:
+                parser.error(str(error))
+            if args.device != 'cpu' or args.check_greedy:
+                parser.error('--temperature requires --device cpu and cannot use --check-greedy')
+        elif args.seed is not None:
+            parser.error('--seed requires --temperature')
     elif (args.draft_model is not None or args.draft_width is not None or args.check_greedy or args.output is not None
-          or args.stream or args.cancel_after_tokens is not None):
+          or args.stream or args.cancel_after_tokens is not None or args.temperature is not None or args.seed is not None):
         parser.error('draft, stream, cancellation, greedy-check and report options require --speculative')
     args.max_num_seqs = 4 if args.max_num_seqs is None else args.max_num_seqs
     return args
@@ -138,7 +150,8 @@ def main(argv=None):
                     max_new_tokens=args.max_new_tokens, cache_capacity=args.cache_capacity,
                     width=args.draft_width, raw=args.raw, thinking=args.thinking,
                     trace_rounds=args.trace_rounds, check_greedy=args.check_greedy,
-                    on_commit=committed, should_cancel=cancel.is_set)
+                    on_commit=committed, should_cancel=cancel.is_set,
+                    temperature=args.temperature, seed=2026 if args.seed is None else args.seed)
         finally:
             if streamer is not None:
                 streamer.end()
@@ -148,6 +161,8 @@ def main(argv=None):
                       target_model=Path(args.model).name, draft_model=Path(args.draft_model).name,
                       python=platform.python_version(), torch=torch.__version__, cpu_threads=torch.get_num_threads(),
                       scope='single-request eager greedy; independent draft cache; no timing or speedup claim')
+        if args.temperature is not None:
+            result['scope'] = 'single-request CPU temperature sampling; independent draft cache; no distribution certification or speedup claim'
         if args.device.startswith('npu'):
             import torch_npu
             result.update(torch_npu=torch_npu.__version__,
@@ -157,7 +172,7 @@ def main(argv=None):
         if result['greedy_check']['status'] == 'passed':
             result['passed'] = True
         sources = ('generate.py', 'speculative_text.py', 'text_loop.py', 'model_draft.py',
-                   'model_draft_trace.py', 'speculative.py', 'model_runner.py', 'models/qwen2.py',
+                   'model_draft_trace.py', 'speculative.py', 'sampling.py', 'model_runner.py', 'models/qwen2.py',
                    'models/qwen3_5.py', 'tensor_cache.py', 'hybrid_cache.py', 'engine.py', 'kv_cache.py')
         result['source_sha256'] = {'minideepinfer/'+name: hashlib.sha256((Path(__file__).parent/name).read_bytes()).hexdigest()
                                   for name in sources}

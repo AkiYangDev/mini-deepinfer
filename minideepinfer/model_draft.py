@@ -1,4 +1,4 @@
-"""A greedy draft model with its own cache, aligned to committed target tokens."""
+"""A draft model with its own cache, aligned to committed target tokens."""
 
 import hashlib
 import json
@@ -33,8 +33,12 @@ def check_tokenizer_pair(draft_directory, target_directory):
 class ModelDraft:
     """One request, separate slots. Resolve the previous branch on the next call."""
 
-    def __init__(self, model, capacity, *, on_cache=None):
+    def __init__(self, model, capacity, *, on_cache=None, sampler=None):
         from .kv_cache import SlotPool
+        from .sampling import TemperatureSampler
+        if sampler is not None and (not isinstance(sampler, TemperatureSampler)
+                                    or next(model.parameters()).device.type != 'cpu'):
+            raise ValueError('sampled draft requires a CPU model and TemperatureSampler')
         if type(capacity) is not int or capacity < 1 or capacity > model.config.max_position_embeddings:
             raise ValueError('draft capacity exceeds its position limit')
         self.model = model
@@ -45,6 +49,7 @@ class ModelDraft:
         self.closed = False
         self.failed = False
         self.on_cache = on_cache
+        self.sampler = sampler
         self.calls = self.proposed = self.recoveries = 0
         self.sync_calls = self.sync_tokens = 0
         self.proposal_calls = self.proposal_tokens = 0
@@ -64,6 +69,9 @@ class ModelDraft:
             raise ValueError('committed prefix must extend the previous committed prefix')
         self.calls += 1
         if limit == 0:
+            if self.sampler is not None:
+                from .sampling import SampledDraft
+                return SampledDraft((), ())
             return ()  # No draft computation is needed for a direct final target output.
         try:
             return self._propose(prefix,limit)
@@ -98,14 +106,23 @@ class ModelDraft:
         # One candidate only reads the committed endpoint; no tentative state is written.
         if limit > 1:
             self.cache.checkpoint()
-        candidates = []
+        candidates, probabilities = [], []
         for index in range(limit):
-            candidates.append(int(self.cache.last_logits.argmax()))
+            if self.sampler is None:
+                candidates.append(int(self.cache.last_logits.argmax()))
+            else:
+                from .sampling import draw
+                q = self.sampler.probabilities(self.cache.last_logits)
+                probabilities.append(q)
+                candidates.append(draw(q, self.sampler.rng))
             if index+1 < limit:
                 self.cache.forward((candidates[-1],))
                 self.proposal_calls += 1
                 self.proposal_tokens += 1
         self.proposed += len(candidates)
+        if self.sampler is not None:
+            from .sampling import SampledDraft
+            return SampledDraft(tuple(candidates), tuple(probabilities))
         return tuple(candidates)
 
     def close(self):
