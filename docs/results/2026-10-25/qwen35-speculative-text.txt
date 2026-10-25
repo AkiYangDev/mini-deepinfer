@@ -1,0 +1,15 @@
+can not use command: npu-smi info
+[W1025 01:07:13.869695180 NPUCachingAllocator.cpp:202] Warning: The current CANN and HDK(driver) versions require processing for 32 padding size, with memory allocation. (function operator())
+Paris
+
+[eos; 2 output tokens; accepted draft 0/3; target/draft free slots 35/35 of 35 each; greedy check passed]
+
+text generation，候选宽度 3：
+  prompt [248045, 846, 198, 20206, 440, 6681, 799, 3299, 25, 11751, 13, 248046, 198, 248045, 74455, 198, 248068, 271, 248069, 271]；target 首次输出 [57590]，末尾 token 待下一轮消费。
+第 1 轮，已提交前缀 [248045, 846, 198, 20206, 440, 6681, 799, 3299, 25, 11751, 13, 248046, 198, 248045, 74455, 198, 248068, 271, 248069, 271, 57590]
+  draft 已算 0 → 保留 0 → 补到 21；恢复线性状态=False，重算 0，补算 21 个输入。
+  提出 [13, 248046, 198]；draft 实际额外输入 [13, 248046]。
+  target 输入 [57590, 13, 248046, 198]，预测 [248046, 248046, 198, 248044]。
+  接受 0 个候选，提交 [248046]（target 改正）。
+  target KV 暂存 24 → 保留 21；失效槽位 [21, 22, 23]，恢复后重算 1 个输入；最后输出 token=248046；请求结束，不再输入模型。
+结束：target 归还槽位 35/35；draft 35/35，剩余线性状态 0，保留快照=False。

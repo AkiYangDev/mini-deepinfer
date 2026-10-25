@@ -126,7 +126,8 @@ minideepinfer/
   hybrid_cache.py # 完整注意力 KV 与请求独占的线性状态
   models/qwen2.py # Qwen2 模型与 safetensors 加载
   models/qwen3_5.py # 纯文本混合注意力与 checkpoint 映射
-  generate.py     # 离线真实生成入口 / 同步或跨轮方式选择
+  generate.py     # 离线真实生成入口 / 同步、跨轮或双模型方式选择
+  speculative_text.py # 用户文本 / EOS / 独立 greedy 对照，复用投机参考
   pipeline_text.py # 文本编码 / 单线程回调到达 / 提交前观察
   verify_pipeline_text.py # 共享生成前端的同步、跨轮与EOS对照
   verify.py       # 真实权重 logits 对照
@@ -147,3 +148,5 @@ tests/
 固定参考提交、具体文件与许可证记录见[参考与来源](REFERENCES.md)。调度器初期用 Python 表达；调度、执行、设备缓存及步骤元数据的边界借鉴原版设计。
 
 独立实验与主引擎通过同一套数值和状态约定连接。只有机制验证与模型兼容性均完成后，才将实验能力标记为引擎功能。
+
+main 的[双模型文本入口](SPECULATIVE_TEXT.md)复用 `ModelDraft` 与 `speculative.generate()`，不经过同步/跨轮批调度器。文本编码、EOS 与可选的独立 greedy 对照放在接入层；候选验证、状态回退和槽位归还仍由原有执行代码负责。

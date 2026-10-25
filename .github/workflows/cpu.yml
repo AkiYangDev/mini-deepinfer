@@ -31,6 +31,7 @@ jobs:
       - run: python scripts/check_evidence.py --index docs/results/model-draft/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/draft-snapshot/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/v0.4/evidence.json
+      - run: python scripts/check_evidence.py --index docs/results/speculative-text/evidence.json
       - run: python -m minideepinfer
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
@@ -103,6 +104,8 @@ jobs:
         working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.model_draft_demo --cpu-example rejection --trace-rounds --width 3 --output installed-draft-rejection.json
         working-directory: ${{ runner.temp }}
+      - run: python -I -m unittest discover -s "${{ github.workspace }}/tests" -p test_speculative_text.py -v
+        working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.benchmark_pipeline --repeats 1 --output installed-pipeline-benchmark.json
         working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.benchmark_pipeline --compare-admission --repeats 1 --output installed-admission.json
@@ -123,7 +126,7 @@ jobs:
       - name: Run the installed package outside the checkout
         working-directory: ${{ runner.temp }}
         run: |
-          "$RUNNER_TEMP/mini-install/bin/python" -I -c "from importlib.metadata import version; assert version('mini-deepinfer') == '0.4.0'"
+          "$RUNNER_TEMP/mini-install/bin/python" -I -c "from importlib.metadata import version; assert version('mini-deepinfer') == '0.5.0.dev0'"
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.batch_demo
           "$RUNNER_TEMP/mini-install/bin/python" -I -m minideepinfer.step_demo

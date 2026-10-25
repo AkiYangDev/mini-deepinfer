@@ -54,4 +54,4 @@
 
 读到后几课时，可以回看两个公共入口：[`plan_step()`](../minideepinfer/planning.py)负责构造同步和跨轮使用的 Step；[`_launch()` / `_sample()`](../minideepinfer/decode_pipeline.py)负责固定批次与动态实验的设备输入和采样。两种调度循环仍分别保留，因为跨轮执行必须额外记住已发出的工作和最后使用事件，不能只看 CPU 已提交的进度。
 
-每课记录自己的实现阶段与实测条件；最新可用入口以[运行指南](START_HERE.md)、[v0.4 说明](RELEASE_v0.4.md)为准。DeepInfer 固定参考及教学简化见[源码映射](SOURCE_MAP.md)，后续方向见[路线](ROADMAP.md)。
+每课记录自己的实现阶段与实测条件；正式 v0.4 的入口见[运行指南](START_HERE.md)与[版本说明](RELEASE_v0.4.md)，main 新增的用户文本投机入口见[双模型文本生成](SPECULATIVE_TEXT.md)。DeepInfer 固定参考及教学简化见[源码映射](SOURCE_MAP.md)，后续方向见[路线](ROADMAP.md)。

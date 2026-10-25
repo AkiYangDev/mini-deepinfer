@@ -208,6 +208,10 @@ python scripts/check_evidence.py
 
 脚本按索引读取报告对应的固定 Git commit，或核对未指定版本的当前文件；历史通过不表示新代码重新跑过实机。v0.3 投机结果使用 `--index docs/results/v0.3/evidence.json`。完整规则和源码包不含历史的区别见[证据说明](EVIDENCE.md)。
 
+## 让自己的文本用双模型生成
+
+main 另有[`generate --speculative`](SPECULATIVE_TEXT.md)，可以让自己的文本使用独立小模型提出候选。它是单请求 FP32 入口，不能直接拼接上面的批处理参数；固定 v0.4.0 安装包不包含该功能。
+
 ## 常见卡点
 
 | 现象 | 先检查什么 |

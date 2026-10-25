@@ -1,0 +1,341 @@
+{
+  "output_ids": [
+    57590,
+    248046
+  ],
+  "finish_reason": "eos",
+  "rounds": [
+    {
+      "input_ids": [
+        57590,
+        13,
+        248046,
+        198
+      ],
+      "draft": [
+        13,
+        248046,
+        198
+      ],
+      "target": [
+        248046,
+        248046,
+        198,
+        248044
+      ],
+      "committed": [
+        248046
+      ],
+      "accepted_draft": 0,
+      "final_role": "correction",
+      "cached_before": 20,
+      "tentative_cached": 24,
+      "retained_cached": 21,
+      "invalidated_slots": [
+        21,
+        22,
+        23
+      ],
+      "pending_token": 248046,
+      "replay_calls": 1,
+      "replay_tokens": 1,
+      "finish_reason": "eos"
+    }
+  ],
+  "cached_tokens": 21,
+  "proposed_draft_tokens": 3,
+  "accepted_draft_tokens": 0,
+  "correction_tokens": 1,
+  "bonus_tokens": 0,
+  "direct_target_tokens": 1,
+  "target_forward_calls": 3,
+  "target_input_tokens": 25,
+  "replay_forward_calls": 1,
+  "replayed_input_tokens": 1,
+  "snapshot_count": 1,
+  "snapshot_bytes_total": 20201472,
+  "peak_snapshot_bytes": 20201472,
+  "free_slots": 35,
+  "prompt_ids": [
+    248045,
+    846,
+    198,
+    20206,
+    440,
+    6681,
+    799,
+    3299,
+    25,
+    11751,
+    13,
+    248046,
+    198,
+    248045,
+    74455,
+    198,
+    248068,
+    271,
+    248069,
+    271
+  ],
+  "text": "Paris",
+  "cache_capacity": 35,
+  "cache_budget": 128,
+  "draft_width": 3,
+  "draft_work": {
+    "calls": 1,
+    "proposed_tokens": 3,
+    "recovered_branches": 0,
+    "forward_calls": 3,
+    "input_tokens": 23,
+    "sync_forward_calls": 1,
+    "sync_input_tokens": 21,
+    "proposal_forward_calls": 2,
+    "proposal_input_tokens": 2,
+    "replay_forward_calls": 0,
+    "replayed_input_tokens": 0,
+    "snapshot_count": 1,
+    "snapshot_bytes_total": 20201472,
+    "peak_snapshot_bytes": 20201472,
+    "linear_states_remaining": 0,
+    "snapshot_retained": false,
+    "failed": false,
+    "closed": true,
+    "free_slots": 35
+  },
+  "greedy_check": {
+    "status": "passed",
+    "output_ids": [
+      57590,
+      248046
+    ],
+    "finish_reason": "eos",
+    "free_slots": 35
+  },
+  "trace": {
+    "prompt_ids": [
+      248045,
+      846,
+      198,
+      20206,
+      440,
+      6681,
+      799,
+      3299,
+      25,
+      11751,
+      13,
+      248046,
+      198,
+      248045,
+      74455,
+      198,
+      248068,
+      271,
+      248069,
+      271
+    ],
+    "capacity": 35,
+    "initial_output": [
+      57590
+    ],
+    "rounds": [
+      {
+        "input_ids": [
+          57590,
+          13,
+          248046,
+          198
+        ],
+        "draft": [
+          13,
+          248046,
+          198
+        ],
+        "target": [
+          248046,
+          248046,
+          198,
+          248044
+        ],
+        "committed": [
+          248046
+        ],
+        "accepted_draft": 0,
+        "final_role": "correction",
+        "cached_before": 20,
+        "tentative_cached": 24,
+        "retained_cached": 21,
+        "invalidated_slots": [
+          21,
+          22,
+          23
+        ],
+        "pending_token": 248046,
+        "replay_calls": 1,
+        "replay_tokens": 1,
+        "finish_reason": "eos",
+        "draft_state": {
+          "prefix_ids": [
+            248045,
+            846,
+            198,
+            20206,
+            440,
+            6681,
+            799,
+            3299,
+            25,
+            11751,
+            13,
+            248046,
+            198,
+            248045,
+            74455,
+            198,
+            248068,
+            271,
+            248069,
+            271,
+            57590
+          ],
+          "limit": 3,
+          "before_ids": [],
+          "aligned_ids": [
+            248045,
+            846,
+            198,
+            20206,
+            440,
+            6681,
+            799,
+            3299,
+            25,
+            11751,
+            13,
+            248046,
+            198,
+            248045,
+            74455,
+            198,
+            248068,
+            271,
+            248069,
+            271,
+            57590
+          ],
+          "retained_before_sync": 0,
+          "sync_input_tokens": 21,
+          "replayed_input_tokens": 0,
+          "recovered_branch": false,
+          "hybrid": true,
+          "candidates": [
+            13,
+            248046,
+            198
+          ],
+          "after_ids": [
+            248045,
+            846,
+            198,
+            20206,
+            440,
+            6681,
+            799,
+            3299,
+            25,
+            11751,
+            13,
+            248046,
+            198,
+            248045,
+            74455,
+            198,
+            248068,
+            271,
+            248069,
+            271,
+            57590,
+            13,
+            248046
+          ]
+        }
+      }
+    ],
+    "path": "text generation",
+    "width": 3,
+    "draft_cleanup": {
+      "calls": 1,
+      "proposed_tokens": 3,
+      "recovered_branches": 0,
+      "forward_calls": 3,
+      "input_tokens": 23,
+      "sync_forward_calls": 1,
+      "sync_input_tokens": 21,
+      "proposal_forward_calls": 2,
+      "proposal_input_tokens": 2,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 1,
+      "snapshot_bytes_total": 20201472,
+      "peak_snapshot_bytes": 20201472,
+      "linear_states_remaining": 0,
+      "snapshot_retained": false,
+      "failed": false,
+      "closed": true,
+      "free_slots": 35
+    },
+    "target_free_slots": 35
+  },
+  "status": "completed",
+  "tokenizer_contract": {
+    "compatible": true,
+    "token_ids": {
+      "vocab_size": 248320,
+      "bos_token_id": null,
+      "eos_token_id": 248044,
+      "pad_token_id": null
+    },
+    "shared_file_sha256": {
+      "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "tokenizer_config.json": "49e2b6e395f959f077f1e992b338919c0d4a9732fc6e613995e06557f843500c",
+      "chat_template.jinja": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80",
+      "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003"
+    },
+    "config_sha256": [
+      "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204",
+      "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4"
+    ]
+  },
+  "raw": false,
+  "thinking": false,
+  "device": "npu:0",
+  "dtype": "float32",
+  "target_model": "Qwen3.5-2B",
+  "draft_model": "Qwen3.5-0.8B",
+  "python": "3.12.13",
+  "torch": "2.10.0+cpu",
+  "cpu_threads": 1,
+  "scope": "single-request eager greedy; independent draft cache; no timing or speedup claim",
+  "torch_npu": "2.10.0.post6",
+  "hf32": {
+    "matmul": false,
+    "conv": false
+  },
+  "passed": true,
+  "source_sha256": {
+    "minideepinfer/generate.py": "59f6d0ec0b27ac17d17f4de5c125f99a65efccab387a50659bf7c12adcf14950",
+    "minideepinfer/speculative_text.py": "8bb383fd8b74d688f8d75b102bf35fa5ae2a69e99c871530beab39145a52c382",
+    "minideepinfer/text_loop.py": "cc5d07d283fd42756d0aeaf31954db83b5a06c9fe2cf6b809ca3553cfa798d03",
+    "minideepinfer/model_draft.py": "98a3f8330aa8eff96d9cdf0e5cf4dce076bd182919ecdda2b0c73a0c9445e126",
+    "minideepinfer/model_draft_trace.py": "53b509e93eee325cedfaedbdb565db0df4aaf6c181c5bf84584dc5f3d6bc564c",
+    "minideepinfer/speculative.py": "e97c82637e2c9e6bf643043533065c0da927d52fc62d0830ba54a86de420b586",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5"
+  }
+}

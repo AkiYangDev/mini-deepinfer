@@ -14,7 +14,7 @@
 
 mini-sglang 继续作为紧凑实现和教学组织的参考。mini-DeepInfer 自己实现请求循环、调度与缓存；后端接口可借鉴成熟项目，验证条件随代码一同记录。
 
-v0.3 开发中的[可控 greedy 投机参考](SPECULATIVE.md)独立实现单请求 CPU 的验证、提交和有效 KV 前缀回退。对应固定版本的 `Sampler._verification()`、引擎结果处理和 Worker 长度修正；具体保留与省略见该章源码表。主生成路径尚未接入模型驱动投机或 Qwen3.5 状态回退。
+v0.3 的[可控 greedy 投机参考](SPECULATIVE.md)独立实现单请求验证、提交和有效 KV 前缀回退。对应固定版本的 `Sampler._verification()`、引擎结果处理和 Worker 长度修正；具体保留与省略见该章源码表。v0.4 加入独立小模型与 Qwen3.5 状态恢复；main 的 [`generate --speculative`](SPECULATIVE_TEXT.md)进一步接入用户文本，仍复用同一个同步参考，不接入跨轮调度或上游 MTP。
 
 十四课后的[首轮提交实验](FIRST_RESULT.md)在同一个跨轮循环中比较第 0 轮的两种收取位置。它延续 Worker 执行顺序这一学习问题，用相同计划隔离交付时机；不改变下表所述的历史实现范围。
 

@@ -196,6 +196,10 @@ python scripts/check_evidence.py
 
 The index selects either a recorded immutable Git revision or current files. A historical match does not establish a new hardware run. Use `--index docs/results/v0.3/evidence.json` for the speculation reports. See [evidence handling](EVIDENCE.md) for the rules and Git-history requirements.
 
+## Use your own text with a draft model
+
+Main adds [`generate --speculative`](SPECULATIVE_TEXT.md#english-usage) for a single FP32 request with a separate draft model. Use its dedicated command rather than appending the batching options above. This frontend is absent from v0.4.0 packages.
+
 ## Troubleshooting
 
 | Symptom | Check |
