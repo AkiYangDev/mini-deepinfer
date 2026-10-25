@@ -1,0 +1,28 @@
+can not use command: npu-smi info
+[W1025 00:19:53.569809238 NPUCachingAllocator.cpp:202] Warning: The current CANN and HDK(driver) versions require processing for 32 padding size, with memory allocation. (function operator())
+以下显示 token ID 和主机观察到的缓存进度，不是设备时间线。
+
+dual，候选宽度 3：
+  prompt [760, 6511, 314, 9338, 369]；target 首次输出 [11751]，末尾 token 待下一轮消费。
+第 1 轮，已提交前缀 [760, 6511, 314, 9338, 369, 11751]
+  draft 已算 0 → 保留 0 → 补到 6；恢复线性状态=False，重算 0，补算 6 个输入。
+  提出 [13, 198, 760]；draft 实际额外输入 [13, 198]。
+  target 输入 [11751, 13, 198, 760]，预测 [13, 198, 32, 6511]。
+  接受 2 个候选，提交 [13, 198, 32]（target 改正）。
+  target KV 暂存 9 → 保留 8；失效槽位 [8]，恢复后重算 3 个输入；末尾待计算 token=32。
+第 2 轮，已提交前缀 [760, 6511, 314, 9338, 369, 11751, 13, 198, 32]
+  draft 已算 8 → 保留 8 → 补到 9；恢复线性状态=False，重算 0，补算 1 个输入。
+  提出 [13, 2912, 198]；draft 实际额外输入 [13, 2912]。
+  target 输入 [32, 13, 2912, 198]，预测 [13, 2912, 198, 33]。
+  接受 3 个候选，提交 [13, 2912, 198, 33]（target 补 bonus）。
+  target KV 暂存 12 → 保留 12；失效槽位 []，恢复后重算 0 个输入；末尾待计算 token=33。
+第 3 轮，已提交前缀 [760, 6511, 314, 9338, 369, 11751, 13, 198, 32, 13, 2912, 198, 33]
+  draft 已算 11 → 保留 11 → 补到 13；恢复线性状态=False，重算 0，补算 2 个输入。
+  提出 [13]；draft 实际额外输入 []。
+  target 输入 [33, 13]，预测 [13, 3439]。
+  接受 1 个候选，提交 [13, 3439]（target 补 bonus）。
+  target KV 暂存 14 → 保留 14；失效槽位 []，恢复后重算 0 个输入；最后输出 token=3439；请求结束，不再输入模型。
+结束：target 归还槽位 14/14；draft 14/14，剩余线性状态 0，保留快照=False。
+greedy outputs and both caches match: True
+dual width=1: accepted/proposed=4/5; target forward=7; draft forward=5
+dual width=3: accepted/proposed=6/7; target forward=5; draft forward=7

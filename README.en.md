@@ -10,7 +10,7 @@ Built for learning, targeting Ascend 910C.
 
 [简体中文](README.md) · **English**
 
-[Setup](docs/START_HERE.en.md) · [A/B/C walkthrough](docs/WALKTHROUGH.en.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.3 notes](docs/RELEASE_v0.3.md)
+[Setup](docs/START_HERE.en.md) · [A/B/C walkthrough](docs/WALKTHROUGH.en.md) · [Fourteen lessons](docs/LEARNING_PATH.md) · [v0.4 notes](docs/RELEASE_v0.4.md#english-release-notes)
 
 </div>
 
@@ -20,7 +20,7 @@ The code runs **text-only Qwen3.5-2B on Ascend 910C** with its own forward pass 
 
 v0.3 adds a [three-step walkthrough](docs/RELEASE_v0.3.md#english-release-notes): controlled greedy verification → Qwen3.5 state recovery → an independent lookup draft. CPU examples need no checkpoint, and real 2B output and cache checks passed on Ascend 910C. The lookup short example accepted 0/5 candidates and increased work; that result and its costs are preserved. This synchronous lesson is separate from the cross-round text frontend, with no speedup claim.
 
-The `0.4.0.dev0` main branch adds a [separate model draft](docs/MODEL_DRAFT.md#english-summary): Qwen3.5-0.8B proposes, and 2B verifies. The first real short input accepted 4/5 candidates but still ran slower than ordinary greedy. Current main removes unnecessary width-1 draft snapshots; a separate paired comparison measured only about 0.7% lower latency. Outputs, state checks and full costs are preserved. This entry point is absent from v0.3.0 assets.
+The v0.4 [dual-model walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) follows a rejected proposal: what the draft predicts, what the target commits, and how both caches continue. Tiny CPU models need no checkpoints; real Qwen3.5-0.8B-to-2B output and cache checks pass on Ascend 910C. The [implementation and experiments](docs/MODEL_DRAFT.md#english-summary) preserve earlier slower results and the small change from removing unnecessary snapshots, without a speculative speedup claim.
 
 ## Start small
 
@@ -52,6 +52,14 @@ In this example, A has a chunked prompt, B finishes first, and C waits before ta
 ```
 
 B has released its slots, yet none are free because C already took them. [Follow this run through the code](docs/WALKTHROUGH.en.md) to understand CPU progress, issued work, and ownership. For dependencies, see [setup](docs/START_HERE.en.md).
+
+To follow a rejected proposal through the next round, run:
+
+```bash
+python -m minideepinfer.model_draft_demo --cpu-example rejection --trace-rounds --width 3 --output outputs/draft-rejection.json
+```
+
+The draft moves from six computed inputs back to four valid ones, then consumes the correction to reach five. The [round walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) explains candidates, actual model inputs and committed outputs. Terminal labels are in Chinese; JSON field names are in English.
 
 ## Run a real model on Ascend 910C
 

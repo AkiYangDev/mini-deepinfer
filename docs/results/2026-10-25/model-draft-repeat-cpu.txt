@@ -1,0 +1,25 @@
+以下显示 token ID 和主机观察到的缓存进度，不是设备时间线。
+
+dual，候选宽度 3：
+  prompt [2, 3, 4]；target 首次输出 [4]，末尾 token 待下一轮消费。
+第 1 轮，已提交前缀 [2, 3, 4, 4]
+  draft 已算 0 → 保留 0 → 补到 4；恢复线性状态=False，重算 0，补算 4 个输入。
+  提出 [4, 4, 4]；draft 实际额外输入 [4, 4]。
+  target 输入 [4, 4, 4, 4]，预测 [4, 4, 4, 4]。
+  接受 3 个候选，提交 [4, 4, 4, 4]（target 补 bonus）。
+  target KV 暂存 7 → 保留 7；失效槽位 []，恢复后重算 0 个输入；末尾待计算 token=4。
+第 2 轮，已提交前缀 [2, 3, 4, 4, 4, 4, 4, 4]
+  draft 已算 6 → 保留 6 → 补到 8；恢复线性状态=False，重算 0，补算 2 个输入。
+  提出 [4, 4, 4]；draft 实际额外输入 [4, 4]。
+  target 输入 [4, 4, 4, 4]，预测 [4, 4, 4, 4]。
+  接受 3 个候选，提交 [4, 4, 4, 4]（target 补 bonus）。
+  target KV 暂存 11 → 保留 11；失效槽位 []，恢复后重算 0 个输入；末尾待计算 token=4。
+第 3 轮，已提交前缀 [2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4]
+  draft：候选上限为 0，本轮不计算。
+  target 输入 [4]，预测 [4]。
+  接受 0 个候选，提交 [4]（target 直接输出）。
+  target KV 暂存 12 → 保留 12；失效槽位 []，恢复后重算 0 个输入；最后输出 token=4；请求结束，不再输入模型。
+结束：target 归还槽位 12/12；draft 12/12，剩余线性状态 0，保留快照=False。
+greedy outputs and both caches match: True
+dual width=1: accepted/proposed=4/4; target forward=6; draft forward=4
+dual width=3: accepted/proposed=6/6; target forward=4; draft forward=6

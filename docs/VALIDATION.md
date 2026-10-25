@@ -4,6 +4,16 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+## 2026-10-25：v0.4 逐轮演示与发布验收
+
+新增只读的 `--trace-rounds`，在已有候选回调、draft 对齐观察和 target 提交后记录真实 token 列表、有效长度、恢复与补算，不改候选或调度。只观察指定宽度的正确性运行，与计时分开。新增四项测试覆盖参数组合、结束 token 不再输入、拒绝与恢复记录、观察前后完整报告和计算量一致、全部接受及两种快照方式。完整 214 项。
+
+新增 `--cpu-example rejection`：未训练的随机 Qwen3.5，target/draft seed 2026/2036，输出头与输入嵌入不共享权重，没有读取答案或改写候选。宽度 3 接受 0/21、AL1，draft 恢复七次，target 恢复后重算八个输入；三十四次冷缓存检查通过，最后各归还十二个槽位。默认重复 token 的例子仍接受 6/6、AL4；十四次冷缓存检查通过。完整程序分别109/44次 forward，默认行为保留。
+
+同日 Ascend 910C 发布候选验收使用现有 0.8B/2B 各一次加载，FP32/HF32关/线程1/raw五输入十输出。宽度1接受4/5、AL1.8、target7/16、draft5/13；宽度3接受6/7、AL3、target5/18、draft7/13。首轮宽度3拒绝最后一个候选，target恢复，draft尚未输入该候选所以无截短；draft恢复由CPU例子覆盖。十六次冷缓存检查通过原atol1e-4/rtol2e-4，max logits abs3.19481e-5，输出同greedy，两边free14、draft linear0/snapshotFalse。加载分词4071.945131ms，完整50forward，无下载、性能计时、trace采集或NPU故障注入。
+
+三份新JSON与完整终端输出见[逐轮说明](MODEL_DRAFT_WALKTHROUGH.md)，[v0.4索引](results/v0.4/evidence.json)各绑定十二份执行源码。旧报告仍按固定commit核对，不改JSON或SHA，不把先前时间拼成本次性能结论。
+
 ## 2026-10-25：失败报告保留中断与清理现场
 
 CPU 复现了 Ctrl+C 后报告仍是 `running`、`failure_count=0` 的缺口。演示入口现在捕获中断并在退出前保存 `interrupted`；普通异常仍为 `failed`。同时记录失败阶段、被捕获的 forward/缓存检查所属模型、尝试计算量、生成错误、draft 清理状态和异常链，再原样抛出异常。

@@ -4,14 +4,14 @@
 
 前一个 lookup 例子从已提交历史里找续文。它能独立提出候选，真实短输入却一个也没接受。这次换成一个真正的小模型：Qwen3.5-0.8B 提候选，Qwen3.5-2B 验证。先把两个模型的状态接续讲清楚，再看节省的 target 计算够不够支付 draft 成本。
 
-这是 main 的 `0.4.0.dev0` 教学入口，已发布的 v0.3.0 安装包不包含它。从 main 安装时使用当前检出；v0.3 的固定 tag 和安装包继续保留。
+这是 v0.4.0 的独立教学入口；旧 v0.3.0 安装包不包含它。第一次阅读可先跑[逐轮演示](MODEL_DRAFT_WALKTHROUGH.md)，再回到本文看状态管理与实验结果。
 
 ## 先跑 CPU 小模型
 
 安装方法沿用[CPU 指南](START_HERE.md)，已有兼容 PyTorch 即可，不需要权重或 Transformers。在 main 仓库目录：
 
 ```bash
-git switch main
+git checkout v0.4.0
 python -m pip install -e . --no-deps
 python -m minideepinfer.model_draft_demo --output outputs/model-draft-cpu.json
 ```
@@ -197,7 +197,7 @@ lookup 与首轮双模型报告按原 commit 校验，原始 JSON 和 SHA 不改
 
 ## English summary
 
-The `model_draft_demo` entry point on main (`0.4.0.dev0`) uses a separate greedy draft model and cache. It is absent from v0.3.0 assets. The draft aligns its previous tentative branch to the newly committed target prefix, reuses valid KV, restores linear state when needed, and computes correction or bonus inputs before proposing again. Both caches use the existing `CachedTarget`; this is not DeepInfer MTP or probability-preserving speculative sampling.
+The `model_draft_demo` entry point in v0.4.0 uses a separate greedy draft model and cache. It is absent from v0.3.0 assets. The draft aligns its previous tentative branch to the newly committed target prefix, reuses valid KV, restores linear state when needed, and computes correction or bonus inputs before proposing again. Both caches use the existing `CachedTarget`; this is not DeepInfer MTP or probability-preserving speculative sampling.
 
 Real local Qwen3.5-0.8B and 2B checkpoints passed a strict tokenizer-file and special-ID contract before loading. On one logical Ascend 910C with FP32 and HF32 disabled, widths 1/3 accepted 4/5 and 6/7 proposals, with measured committed output per draft round of 1.8/3.0 including correction or bonus. Output matched independent target greedy, all sixteen cold-cache checks passed at `atol=1e-4, rtol=2e-4`, and both pools returned fourteen slots. Draft truncation recovery is covered by CPU tests; it was not triggered by this real trajectory.
 

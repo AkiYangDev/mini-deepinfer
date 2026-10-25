@@ -172,7 +172,7 @@ class ModelDraftDemoTests(unittest.TestCase):
             self.assertFalse(report['passed'])
             self.assertEqual(len(report['checks']),1)
             self.assertEqual(report['trials'],[])
-            self.assertEqual(len(report['source_sha256']),11)
+            self.assertEqual(len(report['source_sha256']),12)
 
     def test_different_model_work_stops_comparison_before_warmup(self):
         from minideepinfer.model_draft import ModelDraft

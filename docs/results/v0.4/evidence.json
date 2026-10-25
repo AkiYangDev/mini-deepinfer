@@ -1,0 +1,23 @@
+{
+  "version": "0.4.0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-25/model-draft-repeat-cpu.json",
+      "sha256": "62b45d74e951732177865ec388185bb344614ff2bac611488149597223025f34",
+      "scope": "CPU repeated-token example, widths 1/3, selected width 3 observations; 14 cold checks, 44 total forwards.",
+      "limits": "Single-request eager greedy reference. CPU examples are untrained random models; rejection uses untied output heads without candidate injection. Observations are logical host-side state, not device timestamps. No timing or speedup claim. Real NPU draft truncation did not occur; the CPU rejection example covers it. Cold references use project model code, not new Transformers/BF16 checks."
+    },
+    {
+      "path": "docs/results/2026-10-25/model-draft-rejection-cpu.json",
+      "sha256": "4f40938abb344c2cc0658ab2415b6e60c43d44fc581987ddcc89282b67f18908",
+      "scope": "CPU untied random models, seeds 2026/2036, widths 1/3; 34 cold checks, 109 forwards. Width 3 rejects 21 proposals, target replay consumes 8 retained inputs, draft recovers 7 branches.",
+      "limits": "Single-request eager greedy reference. CPU examples are untrained random models; rejection uses untied output heads without candidate injection. Observations are logical host-side state, not device timestamps. No timing or speedup claim. Real NPU draft truncation did not occur; the CPU rejection example covers it. Cold references use project model code, not new Transformers/BF16 checks."
+    },
+    {
+      "path": "docs/results/2026-10-25/qwen35-v04-rc.json",
+      "sha256": "00ecc2f389abe96b72305f30aee789db7f3e7d7b7ebecb1dec9df235e9a600d3",
+      "scope": "Ascend 910C Qwen3.5-0.8B to 2B FP32 candidate acceptance; widths 1/3 accepted 4/5 and 6/7, selected width 3 observations; 16 cold checks, 50 forwards, both models loaded once.",
+      "limits": "Single-request eager greedy reference. CPU examples are untrained random models; rejection uses untied output heads without candidate injection. Observations are logical host-side state, not device timestamps. No timing or speedup claim. Real NPU draft truncation did not occur; the CPU rejection example covers it. Cold references use project model code, not new Transformers/BF16 checks."
+    }
+  ]
+}

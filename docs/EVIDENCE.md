@@ -20,9 +20,10 @@ python scripts/check_evidence.py --index docs/results/v0.2/evidence.json
 python scripts/check_evidence.py --index docs/results/pipeline-benchmark/evidence.json
 python scripts/check_evidence.py --index docs/results/first-result/evidence.json
 python scripts/check_evidence.py --index docs/results/v0.3/evidence.json
+python scripts/check_evidence.py --index docs/results/v0.4/evidence.json
 ```
 
-前四份索引分别绑定 v0.1.0、v0.2.0、首次同步/跨轮基准和首轮收取实验的 commit。准入前收取的报告另行核对当前相关源码。v0.3 汇总六份投机教学报告，每份保留原始报告 SHA 和对应的固定 commit；完整运行路线见[版本说明](RELEASE_v0.3.md)。需要审查当前源码是否仍与旧报告完全相同时：
+前四份索引分别绑定 v0.1.0、v0.2.0、首次同步/跨轮基准和首轮收取实验的 commit。准入前收取的报告另行核对当前相关源码。v0.3 汇总六份投机教学报告，每份保留原始报告 SHA 和对应的固定 commit。v0.4 的三份新报告记录重复 CPU、拒绝 CPU 与真实 NPU 的逐轮观察，当前发布源码可直接核对；后续修改相关代码前，先将索引固定到对应发布 commit，保留原 JSON。完整运行路线见[v0.3](RELEASE_v0.3.md)与[v0.4](RELEASE_v0.4.md)。需要审查当前源码是否仍与旧报告完全相同时：
 
 ```bash
 python scripts/check_evidence.py --index docs/results/pipeline-benchmark/evidence.json --current

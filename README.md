@@ -10,7 +10,7 @@ A small inference engine for learning DeepInfer, targeting Ascend 910C.
 
 **简体中文** · [English](README.en.md)
 
-[开始运行](docs/START_HERE.md) · [A、B、C 演示](docs/WALKTHROUGH.md) · [十四课学习路线](docs/LEARNING_PATH.md) · [v0.3 说明](docs/RELEASE_v0.3.md)
+[开始运行](docs/START_HERE.md) · [A、B、C 演示](docs/WALKTHROUGH.md) · [十四课学习路线](docs/LEARNING_PATH.md) · [v0.4 说明](docs/RELEASE_v0.4.md)
 
 </div>
 
@@ -20,7 +20,7 @@ mini-DeepInfer 是一个面向 Ascend 910C 的教学推理引擎，设计参考 
 
 v0.3 围绕“候选猜错后，怎样继续生成”增加一条[三步学习路线](docs/RELEASE_v0.3.md)：可控 greedy 验证 → Qwen3.5 状态恢复 → 不读取答案的 lookup draft。CPU 例子无需权重，真实 2B 的 Ascend 910C 输出与缓存对照已通过。lookup 的实机短例子接受 0/5、增加了计算，这个结果和全部成本一同保留。独立同步实验没有接入跨轮文本入口，也没有提速结论。
 
-main 的 `0.4.0.dev0` 新增[双模型 draft](docs/MODEL_DRAFT.md)：Qwen3.5-0.8B 提候选，2B 验证。首轮实机短输入接受 4/5，但整次运行仍比普通 greedy 慢。当前已省去宽度 1 的多余 draft 快照，单独对照只测到约 0.7% 的耗时下降。输出、状态和完整成本都保留；该入口不在 v0.3.0 安装包中。
+v0.4 的[双模型逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md)继续跟踪一次候选拒绝：draft 提出什么、target 提交什么、下一轮两边怎样恢复。CPU 小模型无需权重；真实 Qwen3.5-0.8B→2B 已通过 Ascend 910C 输出与缓存验收。[实现与实验](docs/MODEL_DRAFT.md)同时保留早期更慢的结果和省去多余快照的小幅变化，没有投机加速承诺。
 
 ## 先跑起来
 
@@ -52,6 +52,14 @@ python -m minideepinfer.pipeline_demo
 ```
 
 B 已释放，空闲槽位却变成了 0，因为 C 已经拿走它们。[跟着这次调度读代码](docs/WALKTHROUGH.md)，看清 CPU 进度、已发出计算和缓存归属怎样变化；依赖安装见[运行指南](docs/START_HERE.md)。
+
+想接着看候选猜错后怎样继续，运行：
+
+```bash
+python -m minideepinfer.model_draft_demo --cpu-example rejection --trace-rounds --width 3 --output outputs/draft-rejection.json
+```
+
+它会打印 draft 从“已算 6 个 → 保留 4 个 → 补到 5 个输入”接回正确前缀的过程。[对着前两轮读代码](docs/MODEL_DRAFT_WALKTHROUGH.md)，区分候选、实际模型输入和最终提交。
 
 ## 在 Ascend 910C 上运行真实模型
 
