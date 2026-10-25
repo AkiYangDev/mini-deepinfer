@@ -6,7 +6,7 @@
 
 以下多行命令使用 Bash；在 Windows PowerShell 中，请将一条命令写成一行。安装和运行都使用同一个 Python 环境。
 
-下面使用固定的 v0.4.0，便于按同一版本跟读。已有 v0.3 环境时，可按后面的[双模型接续步骤](#v04让小模型提出候选)升级；原来的整数、跨轮和 lookup 例子仍可运行。
+下面统一使用固定版本 [v0.5.0](RELEASE_v0.5.md)，便于按同一版本跟读。已有旧版环境时，切换该 tag 并重新安装项目即可；整数、跨轮、lookup 和双模型例子继续保留。
 
 ## 先看请求怎样执行
 
@@ -17,7 +17,7 @@
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
-git checkout v0.4.0
+git checkout v0.5.0
 ```
 
 Linux/macOS 创建并激活环境：
@@ -106,16 +106,16 @@ python -m minideepinfer.spec_demo --draft lookup --hybrid --output outputs/spec-
 
 ## v0.4：让小模型提出候选
 
-这一节需要前面装好的 CPU PyTorch。先在仓库目录切到 v0.4.0，并重新安装项目，让当前环境的包信息也跟上源码：
+这一节需要前面装好的 CPU PyTorch。双模型入口从 v0.4 起提供；下面在仓库目录切到 v0.5.0，并重新安装项目，让当前环境的包信息也跟上源码：
 
 ```bash
-git checkout v0.4.0
+git checkout v0.5.0
 python -m pip install -e . --no-deps
 python -c "from importlib.metadata import version; print(version('mini-deepinfer'))"
 python -m minideepinfer.model_draft_demo --output outputs/model-draft-cpu.json
 ```
 
-当前版本号应为 `0.4.0`。这个例子随机初始化两个 Qwen3.5 小模型，让其中一个提出候选，另一个验证；不读取权重，也不下载文件。默认只检查正确性，不计时。最后应看到 `greedy outputs and both caches match: True`，并分别打印宽度 1 和 3 的结果。
+当前版本号应为 `0.5.0`。这个例子随机初始化两个 Qwen3.5 小模型，让其中一个提出候选，另一个验证；不读取权重，也不下载文件。默认只检查正确性，不计时。最后应看到 `greedy outputs and both caches match: True`，并分别打印宽度 1 和 3 的结果。
 
 打开生成的 JSON，先看宽度 1 的这一组：
 
@@ -137,6 +137,17 @@ python -m minideepinfer.model_draft_demo --compare-draft-snapshots --output outp
 两份输出保存在不同文件里。第二份报告比较旧、新快照方式，仍不计时；各阶段的模型工作量必须相同，才能通过检查。
 
 想看到候选被拒绝后的完整过程，按[逐轮演示](MODEL_DRAFT_WALKTHROUGH.md)运行 `--cpu-example rejection --trace-rounds --width 3`；这组未训练随机模型不共享输入嵌入与输出头，不需要下载权重。
+
+## v0.5：随机采样与候选过滤
+
+继续使用前面的 CPU PyTorch 环境，无需下载权重：
+
+```bash
+python -m minideepinfer.sampling_demo --output outputs/sampling-cpu.json
+python -m minideepinfer.sampling_filters_demo --output outputs/sampling-filters-cpu.json
+```
+
+第一个例子解释接受和拒绝后的补采样；第二个从四 token 的表格开始，展示 top-k / top-p 怎样改变候选范围，再用随机模型核对真实条件概率、缓存恢复、取消与停止。完整讲解见[随机采样](SAMPLING.md)与[候选过滤](SAMPLING_FILTERS.md)。
 
 ## Ascend 910C：真实权重
 
@@ -210,7 +221,7 @@ python scripts/check_evidence.py
 
 ## 让自己的文本用双模型生成
 
-main 另有[`generate --speculative`](SPECULATIVE_TEXT.md)，可以让自己的文本使用独立小模型提出候选。它是单请求 FP32 入口，不能直接拼接上面的批处理参数；固定 v0.4.0 安装包不包含该功能。
+v0.5.0 的 [`generate --speculative`](SPECULATIVE_TEXT.md) 可以让自己的文本使用独立小模型提出候选，支持逐组流式输出与取消。添加正温度和 [top-k / top-p](SAMPLING_FILTERS.md) 可使用随机采样。它是单请求 FP32 入口，不能直接拼接上面的批处理参数；v0.4.0 安装包不包含这些文本与采样功能。
 
 ## 常见卡点
 

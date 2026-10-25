@@ -2,16 +2,15 @@
 
 [返回首页](../README.md) · [双模型实现](MODEL_DRAFT.md) · [逐轮讲解](MODEL_DRAFT_WALKTHROUGH.md)
 
-本文命令默认 greedy。main 另有正温度的[投机采样](SAMPLING.md)，复用同一循环；Ascend 910C 数值与回退检查已通过，概率在 CPU FP64 上计算。
+本文命令默认 greedy。v0.5.0 还提供正温度的[投机采样](SAMPLING.md)与 [top-k / top-p](SAMPLING_FILTERS.md)，复用同一循环；Ascend 910C 记录逐项说明实际数值与状态覆盖，概率在 CPU FP64 上计算。
 
 固定输入适合看缓存怎样恢复，但也应该能换成自己的问题。`generate --speculative` 将文本编码后，直接交给已有的 `ModelDraft` 和 `speculative.generate()`：小模型提候选，target 验证，最后只解码实际提交的 token。
 
-这项功能在 main 的 `0.5.0.dev0` 中，v0.4.0 安装包不包含它。已有安装环境可以切到 main 后更新项目本身，无需重装 PyTorch、torch_npu 或 CANN：
+这项功能已收入固定版本 [v0.5.0](RELEASE_v0.5.md)，v0.4.0 安装包不包含它。已有安装环境可以切到该 tag 后更新项目本身，无需重装 PyTorch、torch_npu 或 CANN：
 
 ```bash
-git fetch origin
-git switch main
-git pull --ff-only
+git fetch origin --tags
+git checkout v0.5.0
 python -m pip install -e . --no-deps
 ```
 
@@ -95,7 +94,7 @@ target 共 3 次 forward、12 个输入 token，包含恢复后重算 3 个输�
 
 ## English usage
 
-On main (`0.5.0.dev0`), `generate --speculative --draft-model PATH` accepts your own text with the target checkpoint's chat template, or raw text with `--raw`. The command above runs a single FP32 request using local Qwen3.5-0.8B and 2B checkpoints. v0.4.0 packages do not contain this frontend.
+In v0.5.0, `generate --speculative --draft-model PATH` accepts your own text with the target checkpoint's chat template, or raw text with `--raw`. The command above runs a single FP32 request using local Qwen3.5-0.8B and 2B checkpoints. v0.4.0 packages do not contain this frontend. Fetch tags and check out `v0.5.0` using the installation command above.
 
 The frontend reuses the existing model draft and greedy verification loop. Both models own separate request caches. EOS and the output limit apply to committed target output. Tokenizer files and special IDs must match before either checkpoint loads.
 

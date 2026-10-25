@@ -41,7 +41,7 @@ python -m minideepinfer.step_demo
 
 A is cancelled while the device still needs its cache. B changes batch rows but must retain its previous result. Manual completion events separate issued computation, committed output and cache release. Terminal explanations are in Chinese.
 
-Commands use **main (0.5.0.dev0)**; [v0.4.0](docs/RELEASE_v0.4.md#english-release-notes) is a fixed learning version. Custom speculative text, streaming cancellation and probability sampling use main.
+Use **[v0.5.0](docs/RELEASE_v0.5.md#english-release-notes)** as the fixed learning version. It includes custom speculative text, streaming cancellation, temperature and top-k / top-p sampling. The [setup guide](docs/START_HERE.en.md) uses the same tag; older releases and reports remain available.
 
 **Ready for real forward passes?** With PyTorch installed, run a random tiny Qwen3.5 model without downloading weights:
 

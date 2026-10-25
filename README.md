@@ -41,7 +41,7 @@ python -m minideepinfer.step_demo
 
 例子里 A 已取消，设备却还在使用它的缓存；B 换了批次行号，也必须接上自己的上一轮结果。手动事件把“发出计算、提交结果、归还缓存”分开打印出来。
 
-本页使用 **main（0.5.0.dev0）**；固定学习版本见 [v0.4.0](docs/RELEASE_v0.4.md)。自己的投机文本、流式取消与概率采样使用 main。
+固定学习版本为 **[v0.5.0](docs/RELEASE_v0.5.md)**，包含自己的投机文本、流式取消、温度与 top-k / top-p 采样。[运行指南](docs/START_HERE.md)使用同一个 tag；旧版本与报告继续保留。
 
 **想跑真实 forward？** 已有 PyTorch 时，继续运行无需权重的随机 Qwen3.5 小模型：
 

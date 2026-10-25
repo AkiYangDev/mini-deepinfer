@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mini-deepinfer"
-version = "0.5.0.dev0"
+version = "0.5.0"
 description = "A small educational inference engine targeting Ascend 910C"
 readme = "README.en.md"
 requires-python = ">=3.10"

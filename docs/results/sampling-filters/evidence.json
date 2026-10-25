@@ -5,13 +5,15 @@
       "path": "docs/results/2026-10-25/sampling-filters-cpu.json",
       "sha256": "8a56fe6bf0432e6d7972bb9d7d2949b4b1bbb33623b4f0e7b0ba940681fcdeba",
       "scope": "CPU FP64 top-k/top-p filtering and untrained Qwen3.5 models: 39 conditional probabilities, 11 cold states, stops and cleanup.",
-      "limits": "Fixed examples; toy filtering and scalar-oracle tests do not prove all-input distributions. No trained weights, timing or speedup."
+      "limits": "Fixed examples; toy filtering and scalar-oracle tests do not prove all-input distributions. No trained weights, timing or speedup.",
+      "source_revision": "f40f6af6ce2067af3b11bf270768e2e4e690aa51"
     },
     {
       "path": "docs/results/2026-10-25/qwen35-filters.json",
       "sha256": "4fc7cebd2a6dc62b5f5cd96b5e7096543b837be6f334462015e8de6f7972653f",
       "scope": "Ascend 910C FP32 Qwen3.5-0.8B/2B, top-k=20 and top-p=0.9; 24 conditional probabilities, five cold states, length/cancellation/configured-EOS. Each existing checkpoint loads once.",
-      "limits": "One raw five-token input and six-output budget. All 3/3 candidates accepted; filtered rejection is covered on CPU only. Configured EOS is first sampled ID. 44 forwards/247 inputs including references. No timing, profiling, download or NPU text-streaming CLI test."
+      "limits": "One raw five-token input and six-output budget. All 3/3 candidates accepted; filtered rejection is covered on CPU only. Configured EOS is first sampled ID. 44 forwards/247 inputs including references. No timing, profiling, download or NPU text-streaming CLI test.",
+      "source_revision": "f40f6af6ce2067af3b11bf270768e2e4e690aa51"
     }
   ]
 }

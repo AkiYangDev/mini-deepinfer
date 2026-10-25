@@ -6,7 +6,7 @@ Start with the first section even if you have no NPU or checkpoint. The integer 
 
 Multiline commands use Bash. In PowerShell, put each command on one line. Install and run everything in the same Python environment.
 
-The steps below use the fixed v0.4.0 tag. To upgrade an existing v0.3 setup, use the [model-draft steps](#v04-let-a-small-model-propose) later in this guide. Integer, cross-round and lookup examples remain available.
+The steps below use the fixed [v0.5.0](RELEASE_v0.5.md#english-release-notes) tag. To upgrade an older setup, switch to this tag and reinstall the project. Integer, cross-round, lookup and model-draft examples remain available.
 
 ## No weights or hardware
 
@@ -17,7 +17,7 @@ For integer examples only, an existing Python 3.10+ can run `python -m venv .ven
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
-git checkout v0.4.0
+git checkout v0.5.0
 ```
 
 Create and activate the environment on Linux/macOS:
@@ -106,16 +106,16 @@ The total includes extra work used to verify the example. No time was measured, 
 
 ## v0.4: let a small model propose
 
-Use the CPU PyTorch environment from above. From the repository directory, switch to v0.4.0 and reinstall the project so the package metadata follows the source:
+Use the CPU PyTorch environment from above. The draft-model entry was introduced in v0.4. From the repository directory, switch to v0.5.0 and reinstall the project so the package metadata follows the source:
 
 ```bash
-git checkout v0.4.0
+git checkout v0.5.0
 python -m pip install -e . --no-deps
 python -c "from importlib.metadata import version; print(version('mini-deepinfer'))"
 python -m minideepinfer.model_draft_demo --output outputs/model-draft-cpu.json
 ```
 
-The current version should be `0.4.0`. Two randomly initialized Qwen3.5 models propose and verify candidates without weights or downloads. The default run checks correctness without timing. Expect `greedy outputs and both caches match: True`, followed by results for widths 1 and 3.
+The current version should be `0.5.0`. Two randomly initialized Qwen3.5 models propose and verify candidates without weights or downloads. The default run checks correctness without timing. Expect `greedy outputs and both caches match: True`, followed by results for widths 1 and 3.
 
 Start with the width-1 row in the generated JSON:
 
@@ -137,6 +137,17 @@ python -m minideepinfer.model_draft_demo --compare-draft-snapshots --output outp
 This writes a separate report, also without timing. The comparison must preserve model work in each stage before the checks can pass.
 
 For a rejected-candidate trajectory, follow the [round walkthrough](MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) with `--cpu-example rejection --trace-rounds --width 3`. It uses untrained random models with untied output heads and needs no checkpoint.
+
+## v0.5: probability sampling and candidate filtering
+
+Use the CPU PyTorch environment above; neither example downloads checkpoints:
+
+```bash
+python -m minideepinfer.sampling_demo --output outputs/sampling-cpu.json
+python -m minideepinfer.sampling_filters_demo --output outputs/sampling-filters-cpu.json
+```
+
+The first explains acceptance and correction sampling after rejection. The second starts with a four-token top-k/top-p example, then checks conditional probabilities, state recovery, cancellation and stopping with untrained models. See [sampling](SAMPLING.md#english-usage) and [filtering](SAMPLING_FILTERS.md#english-usage).
 
 ## Real Qwen3.5-2B on Ascend 910C
 
@@ -198,7 +209,7 @@ The index selects either a recorded immutable Git revision or current files. A h
 
 ## Use your own text with a draft model
 
-Main adds [`generate --speculative`](SPECULATIVE_TEXT.md#english-usage) for a single FP32 request with a separate draft model. Use its dedicated command rather than appending the batching options above. This frontend is absent from v0.4.0 packages.
+v0.5.0 includes [`generate --speculative`](SPECULATIVE_TEXT.md#english-usage) for a single FP32 request with a separate draft model, streamed groups and cancellation. Add positive temperature and [top-k/top-p](SAMPLING_FILTERS.md#english-usage) for sampled output. Use the dedicated command rather than appending the batching options above. These text and sampling features are absent from v0.4.0 packages.
 
 ## Troubleshooting
 
