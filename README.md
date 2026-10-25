@@ -28,29 +28,25 @@ Ascend 910C 是这个项目的实机平台，Qwen3.5 用来验证这些机制。
 
 ## 快速开始
 
-有 Python 3.10+ 就能运行下面的调度例子，不需要安装依赖或下载权重：
+先看引擎怎样处理请求。下面的例子只需要 Python 3.10+，不用安装依赖或下载模型权重。在终端运行：
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
-python -m minideepinfer.step_demo
+python -m minideepinfer
 ```
 
-例子里 A 已取消，设备却还在使用它的缓存；B 换了批次行号，也必须接上自己的上一轮结果。手动事件把“发出计算、提交结果、归还缓存”分开打印出来。
+为了看清执行过程，这里用简单的数字运算代替模型：每次把最后一个输入数加一。程序会打印每一步的输入、输出和槽位分配，最后显示：
 
-按教程学习，可以使用固定版本 [v0.5.0](docs/RELEASE_v0.5.md)，[运行指南](docs/START_HERE.md)也基于这个 tag。它包含双模型文本生成、流式输出、取消和温度、top-k / top-p 采样。
-
-main 还提供[单模型入口 `generate --single`](docs/SINGLE_MODEL.md)：只加载一份 Qwen3.5，也能采样、流式输出和取消。这个入口属于 v0.6 开发版，运行前请确认使用的是 main。
-
-安装 PyTorch 后，再跑一个随机初始化的小型 Qwen3.5，看看真实模型计算怎样接入调度：
-
-```bash
-python -m minideepinfer.pipeline_demo
+```text
+req-0: [12, 13, 14] (length)
+req-1: [21, 22] (eos)
+Free slots: 8/8
 ```
 
-![CPU 实际输出：B 结束后，C 已复用它的缓存槽位](docs/assets/cache-reuse.svg)
+第一条请求生成三个数后达到长度上限；第二条请求遇到预先指定的结束标记 `22` 后停止。两条请求结束后，八个槽位全部归还。这个例子先帮你看清“提交请求、执行一步、处理输出、停止回收”的过程，还没有加载真正的语言模型。
 
-这段输出里，B 刚结束，C 就接过了它的缓存槽位，所以空闲槽位仍是 0；A 的长 prompt 还在分块计算。跟着 [A、B、C 读代码](docs/WALKTHROUGH.md)，可以把每次调度与缓存变化对上，也可以直接查看[完整终端输出](docs/assets/pipeline-demo.txt)。这个模型没有训练，重点看执行过程。
+接着打开 [`demo.py`](minideepinfer/demo.py)，从 `engine.submit()` 顺着读到 [`Engine.step()`](minideepinfer/engine.py)。[第一课](docs/FIRST_REQUEST.md)会对照刚才的输出逐步解释；读完后，再看 [DeepInfer 的对应入口](docs/SOURCE_MAP.md)，了解这套教学代码与原版设计怎样联系。
 
 ## 接下来读哪里
 
@@ -61,6 +57,21 @@ python -m minideepinfer.pipeline_demo
 | 看小模型猜错后怎样恢复 | [双模型逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md) → [概率采样](docs/SAMPLING.md) |
 
 [课程目录](docs/LEARNING_PATH.md)列出了完整顺序、运行命令和代码位置，按自己的进度往下读即可。
+
+<details>
+<summary>继续看批处理：长 prompt 还没算完，新请求怎样接着跑</summary>
+
+看过最小循环后，可以按[运行指南](docs/START_HERE.md#cpu-小模型无需下载权重)安装 PyTorch，再运行一个随机初始化的小型 Qwen3.5，不需要下载权重：
+
+```bash
+python -m minideepinfer.pipeline_demo
+```
+
+![CPU 实际输出：B 结束后，C 已复用它的缓存槽位](docs/assets/cache-reuse.svg)
+
+这个例子中，A 的长 prompt 分块计算，B 先结束，C 接过 B 释放的缓存槽位。[A、B、C 讲解](docs/WALKTHROUGH.md)把每一轮的调度与缓存变化对上，[完整终端输出](docs/assets/pipeline-demo.txt)也已保存。模型没有训练，这里重点看执行过程。
+
+</details>
 
 <details>
 <summary>先在 CPU 上看一次候选拒绝与缓存恢复</summary>
@@ -150,6 +161,8 @@ python -m minideepinfer.generate \
 这些记录都保留了输入、配置、原始输出和源码 SHA，可以[按对应 commit 复核](docs/EVIDENCE.md)。性能实验另见[同步与跨轮](docs/PIPELINE_BENCHMARK.md)、[首轮提交](docs/FIRST_RESULT.md)和[双模型成本](docs/MODEL_DRAFT.md)。其中也有短负载变慢的结果：多接受几个 token、少做几次 forward，并不一定让整个请求更快，具体要看恢复、复制和等待花了多少时间。
 
 ## 范围与来源
+
+首页命令使用 main。想按固定版本跟读，可以使用 [v0.5.0](docs/RELEASE_v0.5.md)，[运行指南](docs/START_HERE.md)基于这个 tag。main 新增的[单模型生成](docs/SINGLE_MODEL.md)属于 v0.6 开发版，支持一份 Qwen3.5 权重的采样、流式输出和取消。
 
 当前主线是单设备、FP32、eager 和短上下文，适合学习与实验。greedy、温度与 top-k / top-p 采样、流式输出和取消均已实现；BF16 的参考检查与分块差异见[说明](docs/BF16_REFERENCE.md)，旧 DeepSeek-R1-Distill-Qwen-1.5B 示例继续回归。DeepSeek-V4.1 架构、MLA/MoE、MTP、bounded replay、图执行和分布式尚未实现，见[后续路线](docs/ROADMAP.md)。
 

@@ -28,29 +28,25 @@ Ascend 910C is the hardware platform; Qwen3.5 models are used to check these mec
 
 ## Quick start
 
-Run this scheduling example with Python 3.10+ and its standard library. No dependencies or checkpoints are needed:
+Start by watching the engine process requests. This example needs only Python 3.10+, with no dependencies or model weights to install. Run in a terminal:
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
 cd mini-deepinfer
-python -m minideepinfer.step_demo
+python -m minideepinfer
 ```
 
-A is cancelled while the device still needs its cache. B changes batch rows but must retain its previous result. Manual completion events separate issued computation, committed output and cache release. Terminal explanations are in Chinese.
+The example replaces the model with simple arithmetic: add one to the last input number. It prints the inputs, outputs and slot assignments for each step, ending with:
 
-For a fixed learning version, use [v0.5.0](docs/RELEASE_v0.5.md#english-release-notes), which the [setup guide](docs/START_HERE.en.md) also follows. It includes dual-model text generation, streaming, cancellation, temperature and top-k/top-p sampling.
-
-On main, [`generate --single`](docs/SINGLE_MODEL.md#english-quick-start) also supports sampling, streaming and cancellation with just one Qwen3.5 checkpoint. This entry point belongs to v0.6 development; use main to try it.
-
-With PyTorch installed, run a randomly initialized tiny Qwen3.5 to see model execution join the scheduling loop:
-
-```bash
-python -m minideepinfer.pipeline_demo
+```text
+req-0: [12, 13, 14] (length)
+req-1: [21, 22] (eos)
+Free slots: 8/8
 ```
 
-![Actual CPU output: B finishes and C reuses its cache slots](docs/assets/cache-reuse.svg)
+The first request stops after producing three numbers. The second stops at its configured end marker, `22`. All eight slots are returned when both requests finish. This lets you follow submission, execution, output handling and cleanup before loading a language model.
 
-B has just finished and C already holds its cache slots, so the free count is still zero. Meanwhile, A's long prompt is being processed in chunks. [Follow A, B and C through the code](docs/WALKTHROUGH.en.md) to connect each scheduling decision with a cache change, or read the [full terminal output](docs/assets/pipeline-demo.txt). The model is untrained; the example is about execution.
+Next, open [`demo.py`](minideepinfer/demo.py) and follow `engine.submit()` into [`Engine.step()`](minideepinfer/engine.py). [Lesson one](docs/FIRST_REQUEST.md) explains the output step by step in Chinese. Then use the [DeepInfer source map](docs/SOURCE_MAP.md) to connect the teaching implementation to the upstream design.
 
 ## Where to go next
 
@@ -61,6 +57,21 @@ B has just finished and C already holds its cache slots, so the free count is st
 | Understand recovery after a wrong proposal | [Round walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) → [Probability sampling](docs/SAMPLING.md#english-usage) |
 
 The [lesson index](docs/LEARNING_PATH.md) lists the full sequence, commands and code locations in Chinese. English setup and the A/B/C walkthrough are also available.
+
+<details>
+<summary>Try batching: new requests arrive while a long prompt is still running</summary>
+
+After the minimal loop, install PyTorch using [setup](docs/START_HERE.en.md), then run a randomly initialized tiny Qwen3.5. No checkpoint download is needed:
+
+```bash
+python -m minideepinfer.pipeline_demo
+```
+
+![Actual CPU output: B finishes and C reuses its cache slots](docs/assets/cache-reuse.svg)
+
+A's long prompt is processed in chunks, B finishes first, and C reuses B's released cache slots. The [A/B/C walkthrough](docs/WALKTHROUGH.en.md) connects each round to the scheduling and cache changes. The [full terminal output](docs/assets/pipeline-demo.txt) is also saved. The model is untrained; the example is about execution.
+
+</details>
 
 <details>
 <summary>Follow a rejected proposal and cache recovery on CPU</summary>
@@ -150,6 +161,8 @@ The [fourteen-lesson index](docs/LEARNING_PATH.md) provides the full sequence. T
 The records preserve inputs, configuration, raw output and source hashes for [verification at the corresponding commit](docs/EVIDENCE.md). Performance experiments cover [sync versus pipeline](docs/PIPELINE_BENCHMARK.md#english-summary), [first commit](docs/FIRST_RESULT.md#english-summary) and [dual-model costs](docs/MODEL_DRAFT.md#english-summary), including short workloads that got slower. Accepting more tokens or making fewer forward calls does not always shorten a request; recovery, copies and waits also take time.
 
 ## Scope and sources
+
+The commands on this page use main. For a fixed learning version, use [v0.5.0](docs/RELEASE_v0.5.md#english-release-notes), which the [setup guide](docs/START_HERE.en.md) follows. The [single-model entry point](docs/SINGLE_MODEL.md#english-quick-start) on main belongs to v0.6 development and supports sampling, streaming and cancellation with one Qwen3.5 checkpoint.
 
 The main learning path uses one device, FP32, eager execution and short contexts. Greedy, temperature and top-k/top-p sampling, streaming and cancellation are implemented. See [BF16 notes](docs/BF16_REFERENCE.md) for reference checks and chunk-path differences. The earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in regression checks. DeepSeek-V4.1 architecture, MLA/MoE, MTP, bounded replay, graphs and distributed execution are not yet implemented; see the [roadmap](docs/ROADMAP.md).
 
