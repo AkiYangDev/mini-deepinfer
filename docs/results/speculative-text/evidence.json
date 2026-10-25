@@ -5,7 +5,8 @@
       "path": "docs/results/2026-10-25/qwen35-speculative-text.json",
       "sha256": "fd84680be882558110a4b8da5a9e95cce0528634649825b083ebe4acb5eef705",
       "scope": "Ascend 910C FP32 custom chat input through generate --speculative; 0.8B draft and 2B target; exact output IDs and EOS match a fresh target-only greedy run; both pools return 35 slots. Eight total forwards, each checkpoint loaded once.",
-      "limits": "Single request, 20 prompt tokens, two output tokens, width 3, acceptance 0/3. No timing, cold-logit comparison, weight download, profiling, raw-input NPU check or new performance claim. Broader input and failure cases are CPU-tested."
+      "limits": "Single request, 20 prompt tokens, two output tokens, width 3, acceptance 0/3. No timing, cold-logit comparison, weight download, profiling, raw-input NPU check or new performance claim. Broader input and failure cases are CPU-tested.",
+      "source_revision": "30e3b48cc323d5a570224de5c94b45dff520a52f"
     }
   ]
 }

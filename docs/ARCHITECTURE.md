@@ -149,4 +149,4 @@ tests/
 
 独立实验与主引擎通过同一套数值和状态约定连接。只有机制验证与模型兼容性均完成后，才将实验能力标记为引擎功能。
 
-main 的[双模型文本入口](SPECULATIVE_TEXT.md)复用 `ModelDraft` 与 `speculative.generate()`，不经过同步/跨轮批调度器。文本编码、EOS 与可选的独立 greedy 对照放在接入层；候选验证、状态回退和槽位归还仍由原有执行代码负责。
+main 的[双模型文本入口](SPECULATIVE_TEXT.md)复用 `ModelDraft` 与 `speculative.generate()`，不经过同步/跨轮批调度器。文本编码、流式解码与可选的独立 greedy 对照放在接入层；候选验证、状态回退和槽位归还仍由原有执行代码负责。取消在 prefill 前和提交回调后检查，不打断已开始的一轮；已提交的组完整交付后再清理，EOS 与长度结束优先。

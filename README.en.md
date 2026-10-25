@@ -22,7 +22,7 @@ v0.3 adds a [three-step walkthrough](docs/RELEASE_v0.3.md#english-release-notes)
 
 The v0.4 [dual-model walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) follows a rejected proposal: what the draft predicts, what the target commits, and how both caches continue. Tiny CPU models need no checkpoints; real Qwen3.5-0.8B-to-2B output and cache checks pass on Ascend 910C. The [implementation and experiments](docs/MODEL_DRAFT.md#english-summary) preserve earlier slower results and the small change from removing unnecessary snapshots, without a speculative speedup claim.
 
-On main, [speculative text generation](docs/SPECULATIVE_TEXT.md#english-usage) accepts your own prompt through `generate --speculative`, with chat templates, EOS, and an optional independent greedy output check. This frontend is absent from v0.4.0 assets.
+On main, [speculative text generation](docs/SPECULATIVE_TEXT.md#english-usage) accepts your own prompt through `generate --speculative`, with chat templates, EOS, streaming, cancellation at commit boundaries, and an optional independent greedy check. This frontend is absent from v0.4.0 assets.
 
 ## Start small
 

@@ -43,7 +43,12 @@ class DraftTrace:
 def print_trace(report):
     """Print token IDs and logical lengths, not a device execution timeline."""
     print(f"\n{report['path']}，候选宽度 {report['width']}：")
-    print(f"  prompt {report['prompt_ids']}；target 首次输出 {report['initial_output']}，末尾 token 待下一轮消费。")
+    if report['initial_output']:
+        ending = ('请求已结束，不再输入模型' if not report['rounds'] and report.get('finish_reason')
+                  else '末尾 token 待下一轮消费')
+        print(f"  prompt {report['prompt_ids']}；target 首次输出 {report['initial_output']}，{ending}。")
+    else:
+        print(f"  prompt {report['prompt_ids']}；计算前已取消，target 没有输出。")
     for number,row in enumerate(report['rounds'],1):
         state = row['draft_state']
         print(f"第 {number} 轮，已提交前缀 {state['prefix_ids']}")
@@ -57,7 +62,8 @@ def print_trace(report):
         print(f"  target 输入 {row['input_ids']}，预测 {row['target']}。")
         role = dict(correction='target 改正',bonus='target 补 bonus',target='target 直接输出').get(row['final_role'],'候选中的 EOS')
         print(f"  接受 {row['accepted_draft']} 个候选，提交 {row['committed']}（{role}）。")
-        ending = (f"最后输出 token={row['pending_token']}；请求结束，不再输入模型"
+        stopped = '请求已取消' if row['finish_reason']=='cancelled' else '请求结束'
+        ending = (f"最后输出 token={row['pending_token']}；{stopped}，不再输入模型"
                   if row['finish_reason'] else f"末尾待计算 token={row['pending_token']}")
         print(f"  target KV 暂存 {row['tentative_cached']} → 保留 {row['retained_cached']}；"
               f"失效槽位 {row['invalidated_slots']}，恢复后重算 {row['replay_tokens']} 个输入；{ending}。")

@@ -1,0 +1,11 @@
+{
+  "version": "0.5.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-25/qwen35-stream-cancel.json",
+      "sha256": "f2d8abeca21d8d0d46a31b981e5232f8d28e8a1474e55775e6ab69c711b7eae0",
+      "scope": "Ascend 910C FP32 CLI streaming with cancellation after a whole commit group crosses two output tokens. Four committed IDs match an independent target-only greedy prefix. Both pools return 14 slots. Ten total forwards, each existing checkpoint loaded once.",
+      "limits": "One raw five-token prompt, width 3, acceptance 2/3, cancelled after four output tokens. Greedy check scope is committed_prefix and does not certify full generation or EOS. No timing, cold-logit comparison, new weight download, profiling, asynchronous kernel interruption, or performance claim. Early cancellation, natural-stop priority, Unicode buffering and failure paths are CPU-tested."
+    }
+  ]
+}

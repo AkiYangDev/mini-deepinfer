@@ -364,7 +364,7 @@ NPU 异步执行下，主机函数返回不代表计算完成。微基准采用�
 
 ## CI 与硬件回归
 
-main 的[`generate --speculative`](SPECULATIVE_TEXT.md)另有 8 项 CPU 测试，覆盖文本编码、EOS、输出边界、观察开关不改变计算、异常和中断清理，以及 CLI 从加载到保存报告的路径。一次 Ascend 910C FP32 自定义聊天输入与独立 greedy 的输出 ID、EOS 停止原因一致，缓存全部归还；这次只检查入口与状态，没有重测冷缓存数值或性能。源码与原始结果通过 `python scripts/check_evidence.py --index docs/results/speculative-text/evidence.json` 核对。
+main 的[`generate --speculative`](SPECULATIVE_TEXT.md)现有 17 项 CPU 测试，覆盖文本编码、EOS、输出边界、观察开关、异常和中断清理，以及 CLI 加载、流式输出、正常取消和报告保存。最初的 Ascend 910C 聊天输入与独立 greedy 的输出 ID、EOS 一致，报告按 `30e3b48` 核对：`python scripts/check_evidence.py --index docs/results/speculative-text/evidence.json`。本轮流式取消检查交付 4 个 token，独立前缀对照通过，两份缓存各归还全部 14 个槽位；核对 `--index docs/results/stream-cancel/evidence.json`。后者不验证完整生成或 EOS，两次都没有新的计时或冷缓存 logits 对照。
 
 v0.2 的 A、B、C 演示在 CPU 上运行，与独立缓存的同步整段 prompt 输出核对，同时检查等待、预算、槽位独占与复用。该版本真实文本入口的 Ascend 910C 报告按固定 commit 核对十八份相关执行源码，不用于认证后续修改。检查范围和命令见[v0.2 说明](RELEASE_v0.2.md)，观察输出的含义见[完整演示](WALKTHROUGH.md)。
 

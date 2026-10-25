@@ -22,7 +22,7 @@ v0.3 围绕“候选猜错后，怎样继续生成”增加一条[三步学习�
 
 v0.4 的[双模型逐轮演示](docs/MODEL_DRAFT_WALKTHROUGH.md)继续跟踪一次候选拒绝：draft 提出什么、target 提交什么、下一轮两边怎样恢复。CPU 小模型无需权重；真实 Qwen3.5-0.8B→2B 已通过 Ascend 910C 输出与缓存验收。[实现与实验](docs/MODEL_DRAFT.md)同时保留早期更慢的结果和省去多余快照的小幅变化，没有投机加速承诺。
 
-main 新增[自定义文本的双模型生成](docs/SPECULATIVE_TEXT.md)：`generate --speculative` 支持聊天模板、EOS 和可选的独立 greedy 输出对照；v0.4.0 制品不包含这一入口。
+main 新增[自定义文本的双模型生成](docs/SPECULATIVE_TEXT.md)：`generate --speculative` 支持聊天模板、EOS、流式输出、提交后取消和可选的独立 greedy 对照；v0.4.0 制品不包含这一入口。
 
 ## 先跑起来
 

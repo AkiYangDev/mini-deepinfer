@@ -28,13 +28,13 @@ class Tokenizer:
 class SpeculativeArgumentsTests(unittest.TestCase):
     def test_bad_combinations_stop_before_loading(self):
         bad = (['--speculative'], ['--draft-model', 'draft'], ['--draft-width', '3'],
-               ['--output', 'out.json'], ['--check-greedy'],
+               ['--output', 'out.json'], ['--check-greedy'], ['--stream'], ['--cancel-after-tokens', '2'],
                ['--speculative', '--draft-model', 'draft', '--pipeline'],
                ['--speculative', '--draft-model', 'draft', '--deferred'])
         extra = (['--dtype', 'bfloat16'], ['--prepare-during-step'], ['--chunked-prefill'],
                  ['--max-num-seqs', '1'], ['--max-batched-tokens', '8'], ['--stagger-prompts'],
                  ['--prompt', 'a', '--prompt', 'b'], ['--draft-width', '0'], ['--draft-width', '9'],
-                 ['--max-new-tokens', '0'], ['--cache-capacity', '0'])
+                 ['--max-new-tokens', '0'], ['--cache-capacity', '0'], ['--cancel-after-tokens', '0'])
         for options in (*bad, *(['--speculative', '--draft-model', 'draft', *o] for o in extra)):
             with self.subTest(options=options), contextlib.redirect_stderr(io.StringIO()), \
                     patch('minideepinfer.model_draft.check_tokenizer_pair') as contract:
@@ -88,6 +88,252 @@ class SpeculativeTextTests(unittest.TestCase):
         self.assertTrue(result['draft_work']['closed'])
         self.assertEqual(result['draft_work']['linear_states_remaining'], 0)
         self.assertFalse(result['draft_work']['snapshot_retained'])
+
+    @contextlib.contextmanager
+    def cli_fixture(self, target, small, tokenizer, *options):
+        from minideepinfer.model_runner import ModelRunner
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            paths = [root/'target', root/'draft']
+            for path in paths:
+                path.mkdir()
+                (path/'config.json').write_text(json.dumps(dict(vocab_size=97)))
+                (path/'tokenizer.json').write_text('{}')
+                (path/'tokenizer_config.json').write_text('{}')
+            output, stdout = root/'report.json', io.StringIO()
+            argv = ['--model', str(paths[0]), '--speculative', '--draft-model', str(paths[1]),
+                    '--device', 'cpu', '--raw', '--prompt', '3 4', '--max-new-tokens', '8',
+                    '--cache-capacity', '32', '--output', str(output), *options]
+            with patch('transformers.AutoTokenizer.from_pretrained', return_value=tokenizer), \
+                    patch.object(ModelRunner, 'from_pretrained', side_effect=[ModelRunner(target, 1), ModelRunner(small, 1)]), \
+                    contextlib.redirect_stdout(stdout):
+                yield argv, stdout, output
+
+    def test_pre_cancel_has_no_model_work_and_no_empty_greedy_run(self):
+        from threading import Event
+        from minideepinfer.model_draft_trace import print_trace
+        target, small = self.models()
+        stop = Event()
+        stop.set()
+        with patch.object(target, 'forward') as large, patch.object(small, 'forward') as little:
+            result = run_speculative_text(target, small, Tokenizer(), '3 4', raw=True,
+                         max_new_tokens=8, cache_capacity=16, trace_rounds=True,
+                         check_greedy=True, should_cancel=stop.is_set)
+            large.assert_not_called()
+            little.assert_not_called()
+        self.assertEqual(result['finish_reason'], 'cancelled')
+        self.assertEqual(result['output_ids'], [])
+        self.assertEqual(result['target_forward_calls'], 0)
+        self.assertEqual(result['direct_target_tokens'], 0)
+        self.assertEqual(result['greedy_check'], dict(status='not_run', reason='no_committed_tokens'))
+        self.assert_clean(result)
+        rendered = io.StringIO()
+        with contextlib.redirect_stdout(rendered):
+            print_trace(result['trace'])
+        self.assertIn('计算前已取消', rendered.getvalue())
+        self.assertNotIn('待下一轮消费', rendered.getvalue())
+
+    def test_cancel_after_prefill_never_starts_draft_and_checks_only_the_prefix(self):
+        from threading import Event
+        target, small = self.models()
+        stop, groups = Event(), []
+        def committed(tokens):
+            groups.append(tokens)
+            stop.set()
+        result = run_speculative_text(target, small, Tokenizer(), '3 4', raw=True,
+                     max_new_tokens=8, cache_capacity=16, trace_rounds=True,
+                     check_greedy=True, on_commit=committed, should_cancel=stop.is_set)
+        self.assertEqual(result['finish_reason'], 'cancelled')
+        self.assertEqual(len(result['output_ids']), 1)
+        self.assertEqual(len(groups), 1)
+        self.assertEqual(result['target_forward_calls'], 1)
+        self.assertEqual(result['draft_work']['forward_calls'], 0)
+        self.assertEqual(result['greedy_check']['scope'], 'committed_prefix')
+        self.assertEqual(result['greedy_check']['finish_reason'], 'length')
+        self.assertEqual(result['greedy_check']['output_ids'], result['output_ids'])
+        self.assert_clean(result)
+
+    def test_cancel_keeps_the_entire_accepted_group_and_never_starts_another_round(self):
+        import copy
+        from threading import Event
+        for hybrid in (False, True):
+            target, _ = self.models(hybrid)
+            small = copy.deepcopy(target)
+            stop, groups = Event(), []
+            def committed(tokens):
+                groups.append(tokens)
+                if sum(map(len, groups)) >= 2:
+                    stop.set()
+            result = run_speculative_text(target, small, Tokenizer(), '3 4', raw=True,
+                         max_new_tokens=10, cache_capacity=16, width=3, trace_rounds=True,
+                         check_greedy=True, on_commit=committed, should_cancel=stop.is_set)
+            self.assertEqual(list(map(len, groups)), [1, 4])
+            self.assertEqual(result['output_ids'], [t for group in groups for t in group])
+            self.assertEqual(result['accepted_draft_tokens'], 3)
+            self.assertEqual(result['target_forward_calls'], 2)
+            self.assertEqual(result['draft_work']['calls'], 1)
+            self.assertEqual(result['rounds'][0]['finish_reason'], 'cancelled')
+            self.assertEqual(result['trace']['rounds'][0]['finish_reason'], 'cancelled')
+            self.assertEqual(result['greedy_check']['status'], 'passed')
+            self.assert_clean(result)
+
+    def test_cancel_after_rejection_exposes_only_the_rolled_back_valid_cache(self):
+        from threading import Event
+        from minideepinfer.spec_demo import compare_cache
+        from minideepinfer.speculative import CachedTarget
+        target, small = self.models()
+        stop, groups, checks = Event(), [], []
+        rollback = CachedTarget.rollback
+        def checked(cache, retained):
+            invalidated = rollback(cache, retained)
+            checks.append(compare_cache(cache))
+            return invalidated
+        def committed(tokens):
+            groups.append(tokens)
+            if len(groups) == 2:
+                stop.set()
+        with patch.object(CachedTarget, 'rollback', checked):
+            result = run_speculative_text(target, small, Tokenizer(), '3 4', raw=True,
+                         max_new_tokens=8, cache_capacity=16, width=3, check_greedy=True,
+                         on_commit=committed, should_cancel=stop.is_set)
+        self.assertEqual(result['finish_reason'], 'cancelled')
+        self.assertTrue(result['rounds'][0]['invalidated_slots'])
+        self.assertGreater(result['replay_forward_calls'], 0)
+        self.assertTrue(checks and all(row['passed'] for row in checks))
+        self.assertEqual(result['greedy_check']['status'], 'passed')
+        self.assert_clean(result)
+
+    def test_natural_eos_and_length_completion_win_over_a_simultaneous_cancel(self):
+        import copy
+        from threading import Event
+        target, _ = self.models()
+        small = copy.deepcopy(target)
+        plain = run_speculative_text(target, small, Tokenizer(), '3 4', raw=True,
+                                      max_new_tokens=5, cache_capacity=16)
+        self.assertNotEqual(plain['output_ids'][0], plain['output_ids'][1])
+        for eos, count, boundary, expected in ((None, 1, 1, 'length'),
+                (plain['output_ids'][0], 8, 1, 'eos'), (None, 2, 2, 'length'),
+                (plain['output_ids'][1], 8, 2, 'eos')):
+            tokenizer = Tokenizer()
+            tokenizer.eos_token_id = eos
+            stop, groups = Event(), []
+            def committed(tokens):
+                groups.append(tokens)
+                if len(groups) >= boundary:
+                    stop.set()
+            result = run_speculative_text(target, small, tokenizer, '3 4', raw=True,
+                         max_new_tokens=count, cache_capacity=16, width=3, check_greedy=True,
+                         on_commit=committed, should_cancel=stop.is_set)
+            self.assertTrue(stop.is_set())
+            self.assertEqual(result['finish_reason'], expected)
+            self.assertEqual(result['greedy_check']['status'], 'passed')
+            self.assertNotIn('scope', result['greedy_check'])
+            self.assert_clean(result)
+
+    def test_cancel_predicate_error_is_an_error_and_still_cleans_both_caches(self):
+        from minideepinfer.model_draft import ModelDraft
+        from minideepinfer.speculative import CachedTarget
+        target, small = self.models()
+        drafts, caches, polls = [], [], []
+        initialize = CachedTarget.__init__
+        def created(*args, **kwargs):
+            draft = ModelDraft(*args, **kwargs)
+            drafts.append(draft)
+            return draft
+        def capture(cache, *args, **kwargs):
+            initialize(cache, *args, **kwargs)
+            caches.append(cache)
+        def failed():
+            polls.append(1)
+            if len(polls) == 3:
+                raise RuntimeError('cancel source failed')
+            return False
+        with patch('minideepinfer.model_draft.ModelDraft', created), patch.object(CachedTarget, '__init__', capture):
+            with self.assertRaisesRegex(RuntimeError, 'cancel source failed'):
+                run_speculative_text(target, small, Tokenizer(), '3 4', raw=True,
+                         max_new_tokens=8, cache_capacity=16, should_cancel=failed)
+        self.assertEqual(len(caches), 2)
+        self.assertTrue(all(not cache.cache.linear_states and cache._snapshot is None for cache in caches))
+        self.assertTrue(drafts[0].closed)
+        self.assertEqual(drafts[0].pool.free_count, drafts[0].pool.capacity)
+
+    @unittest.skipUnless(importlib.util.find_spec('transformers'), 'install transformers for streaming CLI')
+    def test_streaming_cli_delivers_text_before_return_and_saves_full_or_cancelled_output(self):
+        from transformers import TextStreamer
+        target, small = self.models()
+        for options in ([], ['--cancel-after-tokens', '2']):
+            active, events = [False], []
+            class ObservedStreamer(TextStreamer):
+                def on_finalized_text(self, text, stream_end=False):
+                    events.append((text, stream_end, active[0]))
+                    super().on_finalized_text(text, stream_end)
+            def running(*args, **kwargs):
+                active[0] = True
+                try:
+                    return run_speculative_text(*args, **kwargs)
+                finally:
+                    active[0] = False
+            with self.cli_fixture(target, small, Tokenizer(), '--stream', '--check-greedy', *options) as (argv, stdout, output), \
+                    patch('transformers.TextStreamer', ObservedStreamer), \
+                    patch('minideepinfer.speculative_text.run_speculative_text', running):
+                result = main(argv)
+                saved = json.loads(output.read_text(encoding='utf-8'))
+                rendered = stdout.getvalue()
+            self.assertEqual(saved, result)
+            self.assertEqual(result['status'], 'cancelled' if options else 'completed')
+            self.assertTrue(any(text and not ended and during for text, ended, during in events))
+            self.assertEqual(sum(ended for _, ended, _ in events), 1)
+            self.assertEqual(''.join(text for text, _, _ in events), result['text'])
+            self.assertTrue(rendered.startswith(result['text']+'\n\n['))
+            self.assertEqual(result['greedy_check']['status'], 'passed')
+            self.assert_clean(result)
+
+    @unittest.skipUnless(importlib.util.find_spec('transformers'), 'install transformers for streaming CLI')
+    def test_streamer_failure_flushes_once_and_does_not_write_a_success_report(self):
+        from transformers import TextStreamer
+        from minideepinfer.model_draft import ModelDraft
+        target, small = self.models()
+        drafts, ended, puts = [], [], []
+        class BrokenStreamer(TextStreamer):
+            def put(self, tokens):
+                super().put(tokens)
+                puts.append(1)
+                if len(puts) == 2:
+                    raise OSError('output consumer failed')
+            def end(self):
+                ended.append(1)
+                super().end()
+        def created(*args, **kwargs):
+            draft = ModelDraft(*args, **kwargs)
+            drafts.append(draft)
+            return draft
+        with self.cli_fixture(target, small, Tokenizer(), '--stream') as (argv, stdout, output), \
+                patch('transformers.TextStreamer', BrokenStreamer), patch('minideepinfer.model_draft.ModelDraft', created):
+            with self.assertRaisesRegex(OSError, 'output consumer failed'):
+                main(argv)
+            self.assertFalse(output.exists())
+        self.assertEqual(ended, [1])
+        self.assertTrue(drafts[0].closed)
+        self.assertEqual(drafts[0].pool.free_count, drafts[0].pool.capacity)
+
+    @unittest.skipUnless(importlib.util.find_spec('transformers'), 'install transformers for Unicode streaming')
+    def test_streaming_cli_buffers_a_character_split_across_tokens(self):
+        target, small = self.models()
+        plain = run_speculative_text(target, small, Tokenizer(), '3 4', raw=True,
+                                     max_new_tokens=3, cache_capacity=16)
+        ids = plain['output_ids']
+        self.assertEqual(len(set(ids)), 3)
+        byte_for_token = dict(zip(ids, '你'.encode('utf-8')))
+        class ByteTokenizer(Tokenizer):
+            def decode(self, tokens, **options):
+                return bytes(byte_for_token[t] for t in tokens).decode('utf-8', errors='replace')
+        with self.cli_fixture(target, small, ByteTokenizer(), '--stream', '--max-new-tokens', '3') as (argv, stdout, output):
+            result = main(argv)
+            rendered = stdout.getvalue()
+        self.assertEqual(result['text'], '你')
+        self.assertTrue(rendered.startswith('你\n\n['))
+        self.assertNotIn('\ufffd', rendered)
+        self.assert_clean(result)
 
     def test_raw_chat_and_length_boundaries_match_independent_greedy(self):
         for hybrid in (False, True):

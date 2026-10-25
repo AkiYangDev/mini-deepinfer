@@ -131,13 +131,15 @@ class CachedTarget:
 
 
 def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=None,
-             cache_capacity=None, on_round=None, on_cache=None, on_commit=None):
+             cache_capacity=None, on_round=None, on_cache=None, on_commit=None, should_cancel=None):
     """draft(committed_prefix, limit) supplies up to limit candidates after pending.
 
     The last committed output is pending: it has not yet been consumed by target.
     Each verify forward consumes pending+draft, then keeps only the valid prefix.
     This synchronous function owns its cache and slots for the duration of one call.
     on_commit receives each CPU-visible group of committed output tokens.
+    should_cancel is polled before prefill and after each commit callback. A
+    committed group is atomic; EOS and length completion take precedence.
     """
     from .engine import validate_request
     from .kv_cache import SlotPool
@@ -147,6 +149,8 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
         raise ValueError('provide a draft callback and an integer width between 0 and 8')
     if type(max_new_tokens) is not int or max_new_tokens < 1:
         raise ValueError('max_new_tokens must be a positive integer')
+    if should_cancel is not None and not callable(should_cancel):
+        raise ValueError('should_cancel must be a callable or None')
     capacity = len(prompt)+max_new_tokens-1 if cache_capacity is None else cache_capacity
     pool = SlotPool(capacity)
     prompt = validate_request(prompt,max_new_tokens,eos_token_id,capacity)
@@ -157,13 +161,19 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
     slots = pool.reserve('spec',len(prompt)+max_new_tokens-1)
     target, output, rounds = None, [], []
     proposed = accepted = corrections = bonuses = 0
-    direct = 1  # The first output comes from prompt prefill, not draft verification.
+    direct = 0
+    def stop_reason(natural):
+        return natural or ('cancelled' if should_cancel is not None and should_cancel() else None)
     try:
-        target = CachedTarget(model,slots,capacity)
-        output.append(int(target.forward(prompt)[-1].argmax()))
-        reason = 'eos' if output[-1]==eos_token_id else 'length' if max_new_tokens==1 else None
-        if on_commit is not None:
-            on_commit(tuple(output))
+        reason = stop_reason(None)
+        if reason is None:
+            target = CachedTarget(model,slots,capacity)
+            output.append(int(target.forward(prompt)[-1].argmax()))
+            direct = 1  # Prefill supplies the first output, without draft verification.
+            reason = 'eos' if output[-1]==eos_token_id else 'length' if max_new_tokens==1 else None
+            if on_commit is not None:
+                on_commit(tuple(output))
+            reason = stop_reason(reason)
         while reason is None:
             remaining = max_new_tokens-len(output)
             count = min(width,remaining-1)
@@ -199,19 +209,23 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
             rounds.append(record)
             if on_commit is not None:
                 on_commit(decision.tokens)
+            reason = stop_reason(decision.finish_reason)
+            record['finish_reason'] = reason
             if on_cache is not None:
                 on_cache(target)
             if on_round is not None:
                 on_round(record)
-            reason = decision.finish_reason
         result = dict(output_ids=output,finish_reason=reason,rounds=rounds,
-                      cached_tokens=len(target.tokens), proposed_draft_tokens=proposed,
+                      cached_tokens=len(target.tokens) if target is not None else 0, proposed_draft_tokens=proposed,
                       accepted_draft_tokens=accepted, correction_tokens=corrections, bonus_tokens=bonuses,
                       direct_target_tokens=direct,
-                      target_forward_calls=target.forward_calls,target_input_tokens=target.input_tokens,
-                      replay_forward_calls=target.replay_calls,replayed_input_tokens=target.replay_tokens,
-                      snapshot_count=target.snapshots,snapshot_bytes_total=target.snapshot_bytes,
-                      peak_snapshot_bytes=target.peak_snapshot_bytes)
+                      target_forward_calls=target.forward_calls if target is not None else 0,
+                      target_input_tokens=target.input_tokens if target is not None else 0,
+                      replay_forward_calls=target.replay_calls if target is not None else 0,
+                      replayed_input_tokens=target.replay_tokens if target is not None else 0,
+                      snapshot_count=target.snapshots if target is not None else 0,
+                      snapshot_bytes_total=target.snapshot_bytes if target is not None else 0,
+                      peak_snapshot_bytes=target.peak_snapshot_bytes if target is not None else 0)
     finally:
         if target is not None:
             target.synchronize()  # If draining fails, do not return the slots to the pool.

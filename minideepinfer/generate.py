@@ -23,7 +23,10 @@ def parse_args(argv=None):
     parser.add_argument("--draft-model", help="local draft checkpoint; requires --speculative")
     parser.add_argument("--draft-width", type=int, default=None, help="1..8 candidates per speculative round (default: 1)")
     parser.add_argument("--check-greedy", action="store_true", help="with --speculative, compare against a fresh target-only run")
-    parser.add_argument("--output", help="with --speculative, save a successful generation report as JSON")
+    parser.add_argument("--output", help="with --speculative, save a generation or cancellation report as JSON")
+    parser.add_argument("--stream", action="store_true", help="with --speculative, print committed text during generation")
+    parser.add_argument("--cancel-after-tokens", type=int,
+                        help="with --speculative, request cancellation after a commit reaches this output count")
     parser.add_argument("--prepare-during-step", action="store_true",
                         help="tokenize one new prompt before collecting a batch; enables --deferred")
     parser.add_argument("--stagger-prompts", action="store_true",
@@ -49,8 +52,11 @@ def parse_args(argv=None):
         if args.max_new_tokens < 1 or args.cache_capacity < 1 or args.draft_width is not None and not 1 <= args.draft_width <= 8:
             parser.error('choose positive token/cache limits and a draft width from 1 to 8')
         args.draft_width = 1 if args.draft_width is None else args.draft_width
-    elif args.draft_model is not None or args.draft_width is not None or args.check_greedy or args.output is not None:
-        parser.error('--draft-model, --draft-width, --check-greedy and --output require --speculative')
+        if args.cancel_after_tokens is not None and args.cancel_after_tokens < 1:
+            parser.error('--cancel-after-tokens must be positive')
+    elif (args.draft_model is not None or args.draft_width is not None or args.check_greedy or args.output is not None
+          or args.stream or args.cancel_after_tokens is not None):
+        parser.error('draft, stream, cancellation, greedy-check and report options require --speculative')
     args.max_num_seqs = 4 if args.max_num_seqs is None else args.max_num_seqs
     return args
 
@@ -113,11 +119,31 @@ def main(argv=None):
         # Only the loaded models survive here; the Runner's unused caches do not.
         target = ModelRunner.from_pretrained(args.model, args.device, torch.float32, 1).model
         small = ModelRunner.from_pretrained(args.draft_model, args.device, torch.float32, 1).model
-        result = run_speculative_text(target, small, tokenizer, args.prompt[0],
+        from threading import Event
+        cancel = Event()
+        committed_count = 0
+        streamer = None
+        if args.stream:
+            from transformers import TextStreamer
+            streamer = TextStreamer(tokenizer, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        def committed(tokens):
+            nonlocal committed_count
+            committed_count += len(tokens)
+            if streamer is not None:
+                streamer.put(torch.tensor(tokens, dtype=torch.long))
+            if args.cancel_after_tokens is not None and committed_count >= args.cancel_after_tokens:
+                cancel.set()
+        try:
+            result = run_speculative_text(target, small, tokenizer, args.prompt[0],
                     max_new_tokens=args.max_new_tokens, cache_capacity=args.cache_capacity,
                     width=args.draft_width, raw=args.raw, thinking=args.thinking,
-                    trace_rounds=args.trace_rounds, check_greedy=args.check_greedy)
-        result.update(status='completed', tokenizer_contract=contract, raw=args.raw, thinking=args.thinking,
+                    trace_rounds=args.trace_rounds, check_greedy=args.check_greedy,
+                    on_commit=committed, should_cancel=cancel.is_set)
+        finally:
+            if streamer is not None:
+                streamer.end()
+        result.update(status='cancelled' if result['finish_reason']=='cancelled' else 'completed',
+                      tokenizer_contract=contract, raw=args.raw, thinking=args.thinking,
                       device=str(next(target.parameters()).device), dtype='float32',
                       target_model=Path(args.model).name, draft_model=Path(args.draft_model).name,
                       python=platform.python_version(), torch=torch.__version__, cpu_threads=torch.get_num_threads(),
@@ -126,7 +152,9 @@ def main(argv=None):
             import torch_npu
             result.update(torch_npu=torch_npu.__version__,
                           hf32=dict(matmul=torch.npu.matmul.allow_hf32, conv=torch.npu.conv.allow_hf32))
-        if args.check_greedy:
+        if args.stream or args.cancel_after_tokens is not None:
+            result.update(stream=args.stream, cancel_after_tokens=args.cancel_after_tokens)
+        if result['greedy_check']['status'] == 'passed':
             result['passed'] = True
         sources = ('generate.py', 'speculative_text.py', 'text_loop.py', 'model_draft.py',
                    'model_draft_trace.py', 'speculative.py', 'model_runner.py', 'models/qwen2.py',
@@ -139,7 +167,8 @@ def main(argv=None):
             temporary = path.with_name(path.name+'.tmp')
             temporary.write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
             temporary.replace(path)
-        print(result['text'])
+        if not args.stream:
+            print(result['text'])
         print(f"\n[{result['finish_reason']}; {len(result['output_ids'])} output tokens; "
               f"accepted draft {result['accepted_draft_tokens']}/{result['proposed_draft_tokens']}; "
               f"target/draft free slots {result['free_slots']}/{result['draft_work']['free_slots']} "
