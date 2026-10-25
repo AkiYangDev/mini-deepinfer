@@ -17,7 +17,7 @@ def main():
     write('readme-hero.svg', '''
 <svg xmlns="http://www.w3.org/2000/svg" width="1280" height="300" viewBox="0 0 1280 300" role="img" aria-labelledby="title desc">
   <title id="title">mini-DeepInfer</title>
-  <desc id="desc">Learn the engine. Run it on Ascend 910C. CPU walkthroughs, real models and cache recovery. The state blocks are a brand illustration, not a hardware or timing diagram.</desc>
+  <desc id="desc">DeepInfer design. Real models. Ascend 910C. CPU walkthroughs, Qwen3.5 and speculative decoding. The state blocks are a brand illustration, not a hardware or timing diagram.</desc>
   <defs>
     <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#0b1323"/><stop offset="1" stop-color="#142941"/></linearGradient>
     <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse"><path d="M 32 0 H 0 V 32" fill="none" stroke="#a1c8ed" stroke-opacity=".055"/></pattern>
@@ -28,11 +28,11 @@ def main():
   <g font-family="Arial, Helvetica, sans-serif">
     <text x="56" y="59" fill="#86cdec" font-size="15" font-weight="700" letter-spacing="3">INFERENCE, STEP BY STEP</text>
     <text x="52" y="135" font-size="68" font-weight="700" letter-spacing="-2"><tspan fill="#93b2cf">mini-</tspan><tspan fill="#f0f7ff">DeepInfer</tspan></text>
-    <text x="56" y="179" fill="#c2d3e4" font-size="24">Learn the engine. Run it on Ascend 910C.</text>
+    <text x="56" y="179" fill="#c2d3e4" font-size="24">DeepInfer design. Real models. Ascend 910C.</text>
     <g font-size="16" font-weight="700">
-      <rect x="56" y="219" width="177" height="36" rx="18" fill="#17334a"/><text x="77" y="243" fill="#76d5fa">CPU walkthroughs</text>
-      <rect x="245" y="219" width="136" height="36" rx="18" fill="#263642"/><text x="267" y="243" fill="#fdba74">Real models</text>
-      <rect x="393" y="219" width="168" height="36" rx="18" fill="#163e42"/><text x="414" y="243" fill="#79dfcb">Cache recovery</text>
+      <rect x="56" y="219" width="149" height="36" rx="18" fill="#17334a"/><text x="77" y="243" fill="#76d5fa">CPU to NPU</text>
+      <rect x="217" y="219" width="145" height="36" rx="18" fill="#263642"/><text x="248" y="243" fill="#fdba74">Qwen3.5</text>
+      <rect x="374" y="219" width="209" height="36" rx="18" fill="#163e42"/><text x="395" y="243" fill="#79dfcb">Speculative decoding</text>
     </g>
     <g transform="translate(927 39)">
       <rect width="295" height="222" rx="17" fill="#0c1a2b" stroke="#355878"/>
