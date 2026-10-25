@@ -65,6 +65,23 @@ finally:
 
 这条异常路径用 CPU 在第一层真实写入缓存后注入故障，覆盖首次计算、补齐前缀、临时候选和混合状态恢复重算；另检查 target 与 draft 出错时，两边都先完成同步再归还槽位。这些是 CPU 的状态与清理测试，没有把故障注入扩展为新的 Ascend 910C 实机结果。
 
+失败时也要保留能读懂的报告。`model_draft_demo` 现在会在退出前更新 JSON：普通异常记为 `failed`，单独的 Ctrl+C 记为 `interrupted`；中断后清理又失败时，记录最终失败和原中断。它们都不会写成检查通过，也不会自动补跑后面的预热或计时。先看以下字段：
+
+| 字段 | 用来回答什么 |
+| --- | --- |
+| `failure_phase` | 出错时在正确性检查、预热还是哪一组正式运行 |
+| `failed_operation` | 被捕获的 forward 或缓存对照属于 target 还是 draft；未捕获到这类操作时没有该字段 |
+| `failed_run.generation_error` | 生成阶段为什么退出；生成正常返回时为 `null` |
+| `failed_run.draft_cleanup` | draft 关闭是否成功，以及关闭后的失败标记、槽位和剩余状态 |
+| `failed_run.target_cleanup` | target 是否已经返回可核对的槽位归还结果 |
+| `error_chain` | 按最终异常到原始原因的顺序，保留生成与清理中先后发生的错误 |
+
+`failed_run` 只在双模型生成或 draft 关闭出错时记录。已完成运行的后续检查失败，则在 `checked_runs`、`warmups` 或 `trials` 中查看对应结果。
+
+例如，生成已经结束、draft 等待设备却失败，报告会同时写出 target 已归还的槽位和 draft 仍持有的资源。如果生成没有返回，当前接口无法直接观察 target 的最终清理结果，就写 `NOT_OBSERVED`；它既不代表成功，也不代表失败。不会因为 draft 清理完成，就顺便把 target 也算作完成。
+
+出错后的 `model_work` 和 `total_forward_calls` 按进入 forward 的次数计数，包含抛异常的那一次；输入 token 数也是尝试提交的数量。它们不证明设备已经算完。`draft_work` 的 forward 计数则仍只在一次调用成功返回后增加，所以两者在失败报告中可能不同。生成错误和清理错误会分别保存；两条错误不等于两次请求失败。
+
 这套回调复用已有接受、提交和长度修正的分工，是对原[DeepInfer 来源映射](SPECULATIVE.md#这和-deepinfer-怎样对应)的延伸。双模型草稿器是本项目的简化实现，不是 DeepInfer 的 MTP，也没有实现概率接受、残差采样或 SWA Bounded Replay。
 
 ## 首轮 Ascend 910C 固定实验
@@ -191,5 +208,7 @@ Target calls fell from ten to seven, but the draft made five additional calls; e
 Those initial reports are pinned to `7b27e8e`. Current main skips draft snapshots when only one candidate is requested: argmax reads the committed endpoint without feeding that candidate back into the draft. Target snapshots remain necessary. A separate same-load comparison (`--compare-draft-snapshots --width 1 --repeats 3`) removed five draft snapshots, or 101,007,360 cloned bytes per request, while preserving outputs, acceptance, model work and cleanup. All 32 cold-cache checks passed. Width-3 checks use the current policy in both runs; they are not an old-policy comparison.
 
 The snapshot reports are pinned to `ed767bc`. Current main additionally marks a draft as failed after an exception during cache initialization, alignment, proposal computation or observation. A forward may have updated some layers before raising, even when the recorded token count did not advance. Failed drafts reject further proposal calls; `close()` must still drain, clear state and return slots. A failed drain retains ownership and permits retrying `close()`. Input validation before computation remains retryable. CPU fault injection covers real partial writes, prefill, prefix alignment, proposal and replay, interruption, and cleanup of both models. This exception handling change has no new NPU fault-injection or performance measurement.
+
+The demo also saves exceptions and Ctrl+C as `failed` or `interrupted` reports, then re-raises them. Failure fields preserve the phase, an observed forward/cache-check role, the generation error, draft cleanup statistics and the exception chain. Target cleanup is marked completed only when `generate` returned its free-slot result; otherwise it is `NOT_OBSERVED`. If generation and draft cleanup both fail, both errors remain visible. Failed-run model-work counters count attempted forward entries and input tokens, including the call that raised; they do not establish device completion. These report paths are checked with CPU fault injection, without new hardware or timing claims.
 
 Three alternating-order pairs had median whole latency of 502.466 ms with the old width-1 snapshots versus 499.026 ms without them, about 0.7% lower. Median TTFT/TPOT/E2E were 51.107/50.120/502.276 ms versus 51.178/49.745/498.879 ms; throughput was 19.902 versus 20.039 tokens/s. All six requests succeeded, each accepting 4/5 proposals with AL 1.8. This small fixed-workload change is not evidence of general speculative speedup. The new program made 186 forward calls and loaded each existing checkpoint once; ordinary greedy was checked for correctness but not retimed. Do not compare timings across the two experiments as a paired result.

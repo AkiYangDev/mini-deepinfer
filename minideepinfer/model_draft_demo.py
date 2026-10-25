@@ -92,7 +92,10 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
             def capture(*args,_original=original,_role=role,**kwargs):
                 row=report['model_work'].setdefault(phase,{}).setdefault(_role,dict(forward_calls=0,input_tokens=0))
                 row['forward_calls']+=1;row['input_tokens']+=len(args[0].input_ids)
-                return _original(*args,**kwargs)
+                try:return _original(*args,**kwargs)
+                except BaseException:
+                    report['failed_operation']=dict(phase=phase,role=_role,operation='forward')
+                    raise
             model.forward=capture
         prompt=tuple(report['prompt_ids']);count=report['output_length'];capacity=len(prompt)+count-1
         def check_cache(cache,role,active_width):
@@ -105,6 +108,7 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
             report['checks'].append(dict(role=role,width=active_width,**values))
             save()
             if not values['passed']:
+                report['failed_operation']=dict(phase=phase,role=role,operation='cache_check')
                 raise RuntimeError(role+' cache differs from cold full-prefix reference')
         def baseline():
             stamps=[]
@@ -126,11 +130,29 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
                 # policies call this observer; the execution and target are identical.
                 if snapshot_reference and active_width==1:cache.checkpoint()
             draft=ModelDraft(small,capacity,on_cache=aligned)
+            result=generation_error=cleanup_error=None
             try:
-                result=generate(target,prompt,count,draft,width=active_width,
-                                on_cache=(lambda c:check_cache(c,'target',active_width)) if checking else None,
-                                on_commit=lambda tokens:stamps.extend([perf_counter_ns()]*len(tokens)))
-            finally:draft.close()
+                try:
+                    result=generate(target,prompt,count,draft,width=active_width,
+                                    on_cache=(lambda c:check_cache(c,'target',active_width)) if checking else None,
+                                    on_commit=lambda tokens:stamps.extend([perf_counter_ns()]*len(tokens)))
+                except BaseException as error:
+                    generation_error=error
+                    raise
+            finally:
+                try:draft.close()
+                except BaseException as error:
+                    cleanup_error=error
+                    raise
+                finally:
+                    if generation_error is not None or cleanup_error is not None:
+                        report['failed_run']=dict(width=active_width,phase=phase,
+                            snapshot_reference=snapshot_reference,generation_returned=result is not None,
+                            generation_error=f'{type(generation_error).__name__}: {generation_error}' if generation_error is not None else None,
+                            target_cleanup=dict(status='completed',free_slots=result['free_slots']) if result is not None else dict(status='NOT_OBSERVED'),
+                            draft_cleanup=dict(status='failed' if cleanup_error is not None else 'completed',
+                                error=f'{type(cleanup_error).__name__}: {cleanup_error}' if cleanup_error is not None else None,
+                                stats=draft.stats()))
             ended=perf_counter_ns()
             result['draft_work']=draft.stats()
             rows=[row for row in result['rounds'] if row['draft']]
@@ -188,8 +210,17 @@ def run(output=None, *, target_directory=None,draft_directory=None,device='cpu',
         report['total_forward_calls']=sum(row['forward_calls'] for roles in report['model_work'].values() for row in roles.values())
         report.update(passed=True,status='passed');save()
         return report
-    except Exception as error:
-        report.update(status='failed',failure_count=1,error=f'{type(error).__name__}: {error}')
+    except BaseException as error:
+        chain=[];seen=set();current=error
+        while current is not None and id(current) not in seen:
+            seen.add(id(current));chain.append(f'{type(current).__name__}: {current}')
+            if current.__cause__ is not None:current=current.__cause__
+            elif current.__suppress_context__:break
+            else:current=current.__context__
+        report.update(status='interrupted' if isinstance(error,KeyboardInterrupt) else 'failed',
+                      failure_count=1,error=f'{type(error).__name__}: {error}',error_chain=chain,failure_phase=phase,
+                      total_forward_calls=sum(row['forward_calls'] for roles in report['model_work'].values() for row in roles.values()),
+                      model_work_scope='Forward entries and input tokens count attempts, including a forward that raised; they do not certify completed computation.')
         save()
         raise
 

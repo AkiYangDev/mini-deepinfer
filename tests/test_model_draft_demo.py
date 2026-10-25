@@ -21,6 +21,107 @@ class CommitMetricsTests(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec('torch') is not None,'install torch for model draft demo')
 class ModelDraftDemoTests(unittest.TestCase):
+    def test_interrupt_is_saved_after_draft_cleanup_without_starting_timings(self):
+        from minideepinfer.model_draft_demo import run
+        original=KeyboardInterrupt()
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'interrupt.json'
+            with patch('minideepinfer.spec_demo.compare_cache',side_effect=original):
+                with self.assertRaises(KeyboardInterrupt) as raised:run(output,repeats=1)
+            self.assertIs(raised.exception,original)
+            report=json.loads(output.read_text(encoding='utf-8'))
+            self.assertEqual(report['status'],'interrupted')
+            self.assertFalse(report['passed'])
+            self.assertEqual(report['failure_count'],1)
+            self.assertEqual(report['failure_phase'],'check_width1_conditional')
+            self.assertTrue(report['error_chain'][0].startswith('KeyboardInterrupt'))
+            failed=report['failed_run']
+            self.assertFalse(failed['generation_returned'])
+            self.assertEqual(failed['target_cleanup']['status'],'NOT_OBSERVED')
+            self.assertEqual(failed['draft_cleanup']['status'],'completed')
+            stats=failed['draft_cleanup']['stats']
+            self.assertTrue(stats['failed'] and stats['closed'])
+            self.assertEqual(stats['free_slots'],12)
+            self.assertEqual(stats['linear_states_remaining'],0)
+            self.assertFalse(stats['snapshot_retained'])
+            self.assertEqual(report['warmups'],[]);self.assertEqual(report['trials'],[])
+
+    def test_generation_and_cleanup_errors_both_survive_in_report(self):
+        from minideepinfer.model_draft import ModelDraft
+        from minideepinfer.model_draft_demo import run
+        close=ModelDraft.close;drafts=[];original=RuntimeError('draft drain failed')
+        def fail_close(draft):
+            drafts.append(draft)
+            with patch.object(draft.cache,'synchronize',side_effect=original):close(draft)
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'two-errors.json'
+            try:
+                with patch.object(ModelDraft,'close',fail_close), \
+                        patch('minideepinfer.spec_demo.compare_cache',return_value=dict(passed=False)):
+                    with self.assertRaises(RuntimeError) as raised:run(output,repeats=1)
+                self.assertIs(raised.exception,original)
+                report=json.loads(output.read_text(encoding='utf-8'))
+                self.assertEqual(report['status'],'failed')
+                self.assertEqual(report['error_chain'][0],'RuntimeError: draft drain failed')
+                self.assertIn('cold full-prefix',report['error_chain'][1])
+                failed=report['failed_run']
+                self.assertIn('cold full-prefix',failed['generation_error'])
+                self.assertEqual(failed['target_cleanup']['status'],'NOT_OBSERVED')
+                cleanup=failed['draft_cleanup']
+                self.assertEqual(cleanup['error'],'RuntimeError: draft drain failed')
+                self.assertEqual(cleanup['status'],'failed')
+                self.assertFalse(cleanup['stats']['closed'])
+                self.assertTrue(cleanup['stats']['failed'])
+                self.assertEqual(cleanup['stats']['free_slots'],0)
+                self.assertGreater(cleanup['stats']['linear_states_remaining'],0)
+                self.assertEqual(report['warmups'],[]);self.assertEqual(report['trials'],[])
+            finally:
+                for draft in drafts:close(draft)
+
+    def test_cleanup_failure_after_generation_keeps_observed_target_release(self):
+        from minideepinfer.model_draft import ModelDraft
+        from minideepinfer.model_draft_demo import run
+        close=ModelDraft.close;drafts=[]
+        def fail_close(draft):
+            drafts.append(draft)
+            with patch.object(draft.cache,'synchronize',side_effect=RuntimeError('draft drain failed')):close(draft)
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'cleanup.json'
+            try:
+                with patch.object(ModelDraft,'close',fail_close):
+                    with self.assertRaisesRegex(RuntimeError,'draft drain failed'):run(output,repeats=1)
+                report=json.loads(output.read_text(encoding='utf-8'))
+                failed=report['failed_run']
+                self.assertTrue(failed['generation_returned'])
+                self.assertIsNone(failed['generation_error'])
+                self.assertEqual(failed['target_cleanup'],dict(status='completed',free_slots=12))
+                self.assertEqual(failed['draft_cleanup']['status'],'failed')
+                self.assertFalse(report['passed'])
+                self.assertEqual(report['warmups'],[]);self.assertEqual(report['trials'],[])
+            finally:
+                for draft in drafts:close(draft)
+
+    def test_forward_failure_records_role_and_attempted_work(self):
+        from minideepinfer.model_draft_demo import run
+        from minideepinfer.models.qwen3_5 import Qwen3_5ForCausalLM
+        forward=Qwen3_5ForCausalLM.forward;original=RuntimeError('draft forward failed')
+        def fail_after_write(model,*args,**kwargs):
+            result=forward(model,*args,**kwargs)
+            if model.config.hidden_size==16:raise original
+            return result
+        with tempfile.TemporaryDirectory() as directory:
+            output=Path(directory)/'forward.json'
+            with patch.object(Qwen3_5ForCausalLM,'forward',fail_after_write):
+                with self.assertRaises(RuntimeError) as raised:run(output,repeats=1)
+            self.assertIs(raised.exception,original)
+            report=json.loads(output.read_text(encoding='utf-8'))
+            self.assertEqual(report['failed_operation'],dict(phase='check_width1_conditional',role='draft',operation='forward'))
+            self.assertEqual(report['total_forward_calls'],12)
+            self.assertEqual(report['model_work']['check_width1_conditional']['draft']['forward_calls'],1)
+            self.assertEqual(report['failed_run']['draft_cleanup']['stats']['forward_calls'],0)
+            self.assertIn('attempts',report['model_work_scope'])
+            self.assertEqual(report['failed_run']['draft_cleanup']['stats']['free_slots'],12)
+
     def test_snapshot_comparison_keeps_model_work_and_swaps_order(self):
         from minideepinfer.model_draft_demo import run
         report=run(repeats=2,compare_draft_snapshots=True)
