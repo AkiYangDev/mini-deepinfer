@@ -20,42 +20,48 @@ def parse_args(argv=None):
     modes.add_argument("--deferred", action="store_true", help="launch and collect each batch separately")
     modes.add_argument("--pipeline", action="store_true", help="use cross-round device-token execution (FP32)")
     modes.add_argument("--speculative", action="store_true", help="use a separate greedy draft model (one prompt, FP32)")
+    modes.add_argument("--single", action="store_true", help="one model, one prompt, FP32; supports sampling and streaming")
     parser.add_argument("--draft-model", help="local draft checkpoint; requires --speculative")
     parser.add_argument("--draft-width", type=int, default=None, help="1..8 candidates per speculative round (default: 1)")
-    parser.add_argument("--temperature", type=float, help="positive temperature; speculative FP32 reference (default: greedy)")
+    parser.add_argument("--temperature", type=float, help="positive temperature; --single or --speculative (default: greedy)")
     parser.add_argument("--seed", type=int, help="request-local sampling seed (default: 2026); requires --temperature")
     parser.add_argument("--top-k", type=int, help="keep at most k tokens; 0 disables; requires --temperature")
     parser.add_argument("--top-p", type=float, help="nucleus threshold in (0,1]; applied after top-k; requires --temperature")
     parser.add_argument("--check-greedy", action="store_true", help="with --speculative, compare against a fresh target-only run")
-    parser.add_argument("--output", help="with --speculative, save a generation or cancellation report as JSON")
-    parser.add_argument("--stream", action="store_true", help="with --speculative, print committed text during generation")
+    parser.add_argument("--output", help="with --single or --speculative, save a generation or cancellation report as JSON")
+    parser.add_argument("--stream", action="store_true", help="with --single or --speculative, print committed text during generation")
     parser.add_argument("--cancel-after-tokens", type=int,
-                        help="with --speculative, request cancellation after a commit reaches this output count")
+                        help="with --single or --speculative, cancel after a commit reaches this output count")
     parser.add_argument("--prepare-during-step", action="store_true",
                         help="tokenize one new prompt before collecting a batch; enables --deferred")
     parser.add_argument("--stagger-prompts", action="store_true",
                         help="with --pipeline, submit one more prompt per collected result")
     parser.add_argument("--trace-rounds", action="store_true",
-                        help="with --pipeline or --speculative, print result rounds and cache state")
+                        help="with --pipeline, --single or --speculative, print result rounds and cache state")
     args = parser.parse_args(argv)
     if args.pipeline and (args.prepare_during_step or args.dtype != 'float32'):
         parser.error('--pipeline requires float32 and cannot use --prepare-during-step')
     if args.stagger_prompts and not args.pipeline:
         parser.error('--stagger-prompts requires --pipeline')
-    if args.trace_rounds and not (args.pipeline or args.speculative):
-        parser.error('--trace-rounds requires --pipeline or --speculative')
+    if args.trace_rounds and not (args.pipeline or args.speculative or args.single):
+        parser.error('--trace-rounds requires --pipeline, --single or --speculative')
     args.deferred = args.deferred or args.prepare_during_step
     args.prompt = args.prompt or ["Explain what a KV cache does in two sentences."]
-    if args.speculative:
-        if not args.draft_model:
+    if args.speculative or args.single:
+        mode = '--single' if args.single else '--speculative'
+        if args.speculative and not args.draft_model:
             parser.error('--speculative requires --draft-model')
+        if args.single and (args.draft_model is not None or args.draft_width is not None or args.check_greedy):
+            parser.error('--draft-model, --draft-width and --check-greedy require --speculative')
+        if args.single and args.device != 'cpu' and not (args.device.startswith('npu:') and args.device[4:].isdigit()):
+            parser.error('--single requires CPU or NPU')
         if (args.dtype != 'float32' or len(args.prompt) != 1 or args.prepare_during_step
                 or args.stagger_prompts or args.chunked_prefill or args.max_batched_tokens is not None
                 or args.max_num_seqs is not None):
-            parser.error('--speculative requires one prompt and float32; batch/prefill/deferred options are unsupported')
+            parser.error(mode+' requires one prompt and float32; batch/prefill/deferred options are unsupported')
         if args.max_new_tokens < 1 or args.cache_capacity < 1 or args.draft_width is not None and not 1 <= args.draft_width <= 8:
             parser.error('choose positive token/cache limits and a draft width from 1 to 8')
-        args.draft_width = 1 if args.draft_width is None else args.draft_width
+        args.draft_width = 0 if args.single else 1 if args.draft_width is None else args.draft_width
         if args.cancel_after_tokens is not None and args.cancel_after_tokens < 1:
             parser.error('--cancel-after-tokens must be positive')
         if args.temperature is not None:
@@ -74,15 +80,15 @@ def parse_args(argv=None):
     elif (args.draft_model is not None or args.draft_width is not None or args.check_greedy or args.output is not None
           or args.stream or args.cancel_after_tokens is not None or args.temperature is not None or args.seed is not None
           or args.top_k is not None or args.top_p is not None):
-        parser.error('draft, stream, cancellation, greedy-check and report options require --speculative')
+        parser.error('sampling, stream, cancellation and report options require --single or --speculative; draft options require --speculative')
     args.max_num_seqs = 4 if args.max_num_seqs is None else args.max_num_seqs
     return args
 
 
 def run_generation(runner, tokenizer, args, *, on_round=None):
     """Use the same frontend with a loaded runner in the CLI and numerical checks."""
-    if args.speculative:
-        raise ValueError('use run_speculative_text with both loaded models')
+    if args.speculative or args.single:
+        raise ValueError('use run_target_text or run_speculative_text with loaded models')
     from . import BatchEngine, Engine
     from .text_loop import encode_prompt, run_text_requests
 
@@ -126,17 +132,19 @@ def main(argv=None):
     from .pipeline_text import print_round
 
     tokenizer = AutoTokenizer.from_pretrained(args.model, local_files_only=True)
-    if args.speculative:
+    if args.speculative or args.single:
         import hashlib
         import json
         import platform
         from pathlib import Path
         from .model_draft_trace import print_trace
         from .speculative_text import run_speculative_text
+        from .target_text import run_target_text
 
         # Only the loaded models survive here; the Runner's unused caches do not.
         target = ModelRunner.from_pretrained(args.model, args.device, torch.float32, 1).model
-        small = ModelRunner.from_pretrained(args.draft_model, args.device, torch.float32, 1).model
+        small = (ModelRunner.from_pretrained(args.draft_model, args.device, torch.float32, 1).model
+                 if args.speculative else None)
         from threading import Event
         cancel = Event()
         committed_count = 0
@@ -152,36 +160,50 @@ def main(argv=None):
             if args.cancel_after_tokens is not None and committed_count >= args.cancel_after_tokens:
                 cancel.set()
         try:
-            result = run_speculative_text(target, small, tokenizer, args.prompt[0],
+            options = dict(
                     max_new_tokens=args.max_new_tokens, cache_capacity=args.cache_capacity,
-                    width=args.draft_width, raw=args.raw, thinking=args.thinking,
-                    trace_rounds=args.trace_rounds, check_greedy=args.check_greedy,
+                    raw=args.raw, thinking=args.thinking,
                     on_commit=committed, should_cancel=cancel.is_set,
                     temperature=args.temperature, seed=2026 if args.seed is None else args.seed,
                     top_k=0 if args.top_k is None else args.top_k,
                     top_p=1.0 if args.top_p is None else args.top_p)
+            if args.single:
+                result = run_target_text(target, tokenizer, args.prompt[0], **options)
+            else:
+                result = run_speculative_text(target, small, tokenizer, args.prompt[0],
+                         width=args.draft_width, trace_rounds=args.trace_rounds,
+                         check_greedy=args.check_greedy, **options)
         finally:
             if streamer is not None:
                 streamer.end()
         result.update(status='cancelled' if result['finish_reason']=='cancelled' else 'completed',
                       tokenizer_contract=contract, raw=args.raw, thinking=args.thinking,
                       device=str(next(target.parameters()).device), dtype='float32',
-                      target_model=Path(args.model).name, draft_model=Path(args.draft_model).name,
+                      target_model=Path(args.model).name,
                       python=platform.python_version(), torch=torch.__version__, cpu_threads=torch.get_num_threads(),
                       scope='single-request eager greedy; independent draft cache; no timing or speedup claim')
         if args.temperature is not None:
             result['scope'] = 'single-request FP32 temperature sampling with CPU FP64 probabilities; independent draft cache; no distribution certification or speedup claim'
+        if args.single:
+            result['scope'] = ('single-model FP32 eager generation; width zero; no draft model or cache; '
+                               'CPU FP64 probabilities when sampling; no timing or speedup claim')
+        else:
+            result['draft_model'] = Path(args.draft_model).name
         if args.device.startswith('npu'):
             import torch_npu
             result.update(torch_npu=torch_npu.__version__,
                           hf32=dict(matmul=torch.npu.matmul.allow_hf32, conv=torch.npu.conv.allow_hf32))
         if args.stream or args.cancel_after_tokens is not None:
             result.update(stream=args.stream, cancel_after_tokens=args.cancel_after_tokens)
-        if result['greedy_check']['status'] == 'passed':
+        if result.get('greedy_check', {}).get('status') == 'passed':
             result['passed'] = True
         sources = ('generate.py', 'speculative_text.py', 'text_loop.py', 'model_draft.py',
                    'model_draft_trace.py', 'speculative.py', 'sampling.py', 'model_runner.py', 'models/qwen2.py',
                    'models/qwen3_5.py', 'tensor_cache.py', 'hybrid_cache.py', 'engine.py', 'kv_cache.py')
+        if args.single:
+            sources = ('generate.py', 'target_text.py', 'text_loop.py', 'speculative.py', 'sampling.py',
+                       'model_runner.py', 'models/qwen2.py', 'models/qwen3_5.py',
+                       'tensor_cache.py', 'hybrid_cache.py', 'engine.py', 'kv_cache.py')
         result['source_sha256'] = {'minideepinfer/'+name: hashlib.sha256((Path(__file__).parent/name).read_bytes()).hexdigest()
                                   for name in sources}
         if args.output:
@@ -192,12 +214,22 @@ def main(argv=None):
             temporary.replace(path)
         if not args.stream:
             print(result['text'])
-        print(f"\n[{result['finish_reason']}; {len(result['output_ids'])} output tokens; "
-              f"accepted draft {result['accepted_draft_tokens']}/{result['proposed_draft_tokens']}; "
-              f"target/draft free slots {result['free_slots']}/{result['draft_work']['free_slots']} "
-              f"of {result['cache_capacity']} each; greedy check {result['greedy_check']['status']}]")
+        if args.single:
+            print(f"\n[{result['finish_reason']}; {len(result['output_ids'])} output tokens; "
+                  f"target free slots {result['free_slots']}/{result['cache_capacity']}]")
+        else:
+            print(f"\n[{result['finish_reason']}; {len(result['output_ids'])} output tokens; "
+                  f"accepted draft {result['accepted_draft_tokens']}/{result['proposed_draft_tokens']}; "
+                  f"target/draft free slots {result['free_slots']}/{result['draft_work']['free_slots']} "
+                  f"of {result['cache_capacity']} each; greedy check {result['greedy_check']['status']}]")
         if args.trace_rounds:
-            print_trace(result['trace'])
+            if args.single:
+                for index, row in enumerate(result['rounds'], 1):
+                    print(f"round {index}: input={row['input_ids']} committed={row['committed']} "
+                          f"cached={row['retained_cached']} pending={row['pending_token']} "
+                          f"finish={row['finish_reason']}")
+            else:
+                print_trace(result['trace'])
         return result
     runner = ModelRunner.from_pretrained(
         args.model, args.device, getattr(torch, args.dtype), args.cache_capacity

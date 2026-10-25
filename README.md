@@ -43,6 +43,8 @@ python -m minideepinfer.step_demo
 
 固定学习版本为 **[v0.5.0](docs/RELEASE_v0.5.md)**，包含自己的投机文本、流式取消、温度与 top-k / top-p 采样。[运行指南](docs/START_HERE.md)使用同一个 tag；旧版本与报告继续保留。
 
+**只有一份权重，也能开始。** main 新增 [`generate --single`](docs/SINGLE_MODEL.md)：一份 Qwen3.5 就能做温度与 top-k / top-p 采样、流式输出和取消，再沿着同一生成循环读懂双模型多做了什么。
+
 **想跑真实 forward？** 已有 PyTorch 时，继续运行无需权重的随机 Qwen3.5 小模型：
 
 ```bash

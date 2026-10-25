@@ -43,6 +43,8 @@ A is cancelled while the device still needs its cache. B changes batch rows but 
 
 Use **[v0.5.0](docs/RELEASE_v0.5.md#english-release-notes)** as the fixed learning version. It includes custom speculative text, streaming cancellation, temperature and top-k / top-p sampling. The [setup guide](docs/START_HERE.en.md) uses the same tag; older releases and reports remain available.
 
+**Start with one checkpoint.** On main, [`generate --single`](docs/SINGLE_MODEL.md#english-quick-start) adds temperature and top-k/top-p sampling, streaming and cancellation with one Qwen3.5 model. Follow the same generation loop to see what dual-model speculation adds.
+
 **Ready for real forward passes?** With PyTorch installed, run a random tiny Qwen3.5 model without downloading weights:
 
 ```bash

@@ -4,6 +4,12 @@
 
 本文记录实际结果和对应的模型、输入及源码版本。Qwen3.5-0.8B / 2B 已通过 CPU 与 Ascend 910C 的 FP32 检查；BF16 在逐 token / FP32 状态的独立参考下也已通过固定轨迹检查。原生分块与完整生成的差异分别记录，不合并成同一个通过结论。
 
+## 2026-10-25：单模型文本采样
+
+main 的 [`generate --single`](SINGLE_MODEL.md)复用已有循环的宽度零路径。CPU 新增 9 项测试，两种缓存逐 token 对照完整前缀重算，另检查 CLI 单次加载、流式、取消和异常清理。完整 260 项：Transformers 5 全过，Transformers 4 为 248 过、12 跳过，标准库环境为 80 过、180 跳过。
+
+[Ascend 910C 原始报告](results/2026-10-25/qwen35-target-text.json)检查单模型 API，现有 Qwen3.5-2B 只加载一次。raw 五输入、六输出上限，FP32/HF32 关闭，温度 0.7、top-k 20、top-p 0.9、seed 2026；六个采样输出与独立完整前缀重算一致，取消交付两个、配置 EOS 交付一个，三次各归还十个槽位。完整 15 次 forward、66 个输入包含参考，无计时或 NPU 流式 CLI 验收。此处没有 draft，不把它计为新的投机接受率结果。报告核对入口为 `--index docs/results/target-text/evidence.json`。
+
 ## 2026-10-25：v0.5 固定学习版本
 
 [v0.5.0](RELEASE_v0.5.md) 收拢自己的双模型文本、流式取消、温度与 top-k / top-p 采样。发布整理只修改包版本和文档，运行模块与 `f40f6af` 一致，沿用固定提交的实机记录，不重新加载模型或重测性能。
