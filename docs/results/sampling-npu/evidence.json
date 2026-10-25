@@ -5,7 +5,8 @@
       "path": "docs/results/2026-10-25/qwen35-sampling.json",
       "sha256": "4289c878f9f7dfbc35bf31b8ac7b4ebf521f74fd035dc1023a6507d533b9d683",
       "scope": "Ascend 910C FP32 Qwen3.5-0.8B/2B sampling, CPU FP64 probabilities. 28 conditional probability comparisons, six cold-cache checks, length/cancellation/configured-EOS stops; 54 forwards and 294 input tokens across all generation and references; existing checkpoints loaded once each.",
-      "limits": "One raw five-token input and fixed short cases. Configured EOS is the first sampled ID, not a natural EOS test. Does not establish a general sampling-distribution proof, end-to-end NPU streaming CLI validation, speedup or throughput. No new weight download or profiling."
+      "limits": "One raw five-token input and fixed short cases. Configured EOS is the first sampled ID, not a natural EOS test. Does not establish a general sampling-distribution proof, end-to-end NPU streaming CLI validation, speedup or throughput. No new weight download or profiling.",
+      "source_revision": "0ec4eba68150672410e267d7386e4ffa66fcc41a"
     }
   ]
 }

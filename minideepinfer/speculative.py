@@ -258,4 +258,7 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
     if sampler is not None:
         result['sampling'] = dict(temperature=sampler.temperature, seed=sampler.seed,
                                   probability_device='cpu', probability_dtype='float64')
+        if sampler.top_k or sampler.top_p != 1:
+            result['sampling'].update(top_k=sampler.top_k, top_p=sampler.top_p,
+                                      filter_order='temperature,top_k,top_p')
     return result

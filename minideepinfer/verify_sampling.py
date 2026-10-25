@@ -7,7 +7,7 @@ from pathlib import Path
 import random
 
 
-def check_pair(target, small, prompt, report, *, count=6, temperature=.7, seed=2026):
+def check_pair(target, small, prompt, report, *, count=6, temperature=.7, seed=2026, top_k=0, top_p=1.0):
     """Reuse weights; each case owns fresh caches, probabilities and random state."""
     import torch
     from .model_draft import ModelDraft
@@ -17,10 +17,12 @@ def check_pair(target, small, prompt, report, *, count=6, temperature=.7, seed=2
 
     prompt = tuple(prompt)
     capacity = len(prompt)+count-1
-    reference_sampler = TemperatureSampler(temperature, seed)
+    reference_sampler = TemperatureSampler(temperature, seed, top_k=top_k, top_p=top_p)
     report.update(prompt_ids=list(prompt),max_new_tokens=count,capacity=capacity,
                   temperature=temperature,target_seed=seed,draft_seed=seed+1,
                   probability_checks=[],cache_checks=[],cold_work=[],cases={})
+    if top_k or top_p != 1:
+        report.update(top_k=top_k,top_p=top_p,filter_order='temperature,top_k,top_p')
 
     def cold(model, prefix, label):
         cache = CachedTarget(model, tuple(range(capacity)), capacity)
@@ -55,7 +57,7 @@ def check_pair(target, small, prompt, report, *, count=6, temperature=.7, seed=2
 
     class ObservedSampler(TemperatureSampler):
         def __init__(self):
-            super().__init__(temperature, seed)
+            super().__init__(temperature, seed, top_k=top_k, top_p=top_p)
             self.rows = []
 
         def probabilities(self, logits):
@@ -81,7 +83,7 @@ def check_pair(target, small, prompt, report, *, count=6, temperature=.7, seed=2
 
     for name in ('sampled','cancelled','configured_eos'):
         sampler = ObservedSampler()
-        draft = ModelDraft(small,capacity,sampler=TemperatureSampler(temperature,seed+1),
+        draft = ModelDraft(small,capacity,sampler=TemperatureSampler(temperature,seed+1,top_k=top_k,top_p=top_p),
                            on_cache=lambda cache: state(cache,'draft_aligned'))
         committed, pending = [], {}
 
@@ -153,7 +155,11 @@ def main(argv=None):
     parser.add_argument('--draft-model',required=True)
     parser.add_argument('--device',default='npu:0')
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--top-k',type=int,default=0)
+    parser.add_argument('--top-p',type=float,default=1.0)
     args = parser.parse_args(argv)
+    from .sampling import TemperatureSampler
+    TemperatureSampler(top_k=args.top_k,top_p=args.top_p)  # Before loading weights.
     from .model_draft import check_tokenizer_pair
     contract = check_tokenizer_pair(args.draft_model,args.model)
     import torch
@@ -188,7 +194,8 @@ def main(argv=None):
             report.update(torch_npu=torch_npu.__version__,npu_name=torch.npu.get_device_name(0),
                           hf32=dict(matmul=torch.npu.matmul.allow_hf32,conv=torch.npu.conv.allow_hf32))
         phase = 'numerical_checks'
-        check_pair(target,small,tokenizer.encode('The capital of France is'),report)
+        check_pair(target,small,tokenizer.encode('The capital of France is'),report,
+                   top_k=args.top_k,top_p=args.top_p)
     except BaseException as error:
         report['failure'] = dict(phase=phase,type=type(error).__name__,message=str(error))
         save()

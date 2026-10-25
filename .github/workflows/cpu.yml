@@ -35,6 +35,7 @@ jobs:
       - run: python scripts/check_evidence.py --index docs/results/stream-cancel/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/sampling/evidence.json
       - run: python scripts/check_evidence.py --index docs/results/sampling-npu/evidence.json
+      - run: python scripts/check_evidence.py --index docs/results/sampling-filters/evidence.json
       - run: python -m minideepinfer
       - run: python -m minideepinfer.batch_demo
       - run: python -m minideepinfer.step_demo
@@ -42,6 +43,7 @@ jobs:
       - run: python -m minideepinfer.spec_demo --help
       - run: python -m minideepinfer.model_draft_demo --help
       - run: python -m minideepinfer.sampling_demo --help
+      - run: python -m minideepinfer.sampling_filters_demo --help
       - run: python -m minideepinfer.verify_sampling --help
       - run: python -m minideepinfer.npu_step_demo --help
       - run: python -m minideepinfer.verify_deferred --help
@@ -81,6 +83,7 @@ jobs:
       - run: python -m minideepinfer.model_draft_demo --compare-draft-snapshots --repeats 1 --output outputs/draft-snapshot.json
       - run: python -m minideepinfer.model_draft_demo --cpu-example rejection --trace-rounds --width 3 --output outputs/draft-rejection.json
       - run: python -m minideepinfer.sampling_demo --output outputs/sampling-cpu.json
+      - run: python -m minideepinfer.sampling_filters_demo --output outputs/sampling-filters-cpu.json
       - run: python -m minideepinfer.verify_deferred --device cpu --output outputs/deferred-cpu.json
       - run: python -m minideepinfer.verify_deferred_engine --device cpu --output outputs/deferred-engine-cpu.json
       - run: python -m minideepinfer.verify_decode_pipeline --device cpu --output outputs/decode-pipeline-cpu.json
@@ -113,6 +116,10 @@ jobs:
       - run: python -I -m unittest discover -s "${{ github.workspace }}/tests" -p test_speculative_text.py -v
         working-directory: ${{ runner.temp }}
       - run: python -I -m unittest discover -s "${{ github.workspace }}/tests" -p test_sampling.py -v
+        working-directory: ${{ runner.temp }}
+      - run: python -I -m unittest discover -s "${{ github.workspace }}/tests" -p test_sampling_filters.py -v
+        working-directory: ${{ runner.temp }}
+      - run: python -I -m minideepinfer.sampling_filters_demo --output installed-sampling-filters.json
         working-directory: ${{ runner.temp }}
       - run: python -I -m minideepinfer.sampling_demo --output installed-sampling.json
         working-directory: ${{ runner.temp }}

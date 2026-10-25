@@ -4,7 +4,7 @@
 
 greedy 验证只问一个问题：小模型猜的 token，是不是大模型分数最高的那个？随机采样则不同。一个 token 不是第一名，也可能被正常抽中。继续比较 argmax，就会改变生成的概率。
 
-main 的 CPU 参考现在支持正温度采样。它复用已有的双模型循环、缓存回退、逐组提交和取消，只替换候选的生成与接受规则。正式版 v0.4.0 不包含这个入口；当前开发版本仍为 `0.5.0.dev0`。
+main 的参考实现支持正温度采样。它复用已有的双模型循环、缓存回退、逐组提交和取消，只替换候选的生成与接受规则。正式版 v0.4.0 不包含这个入口；当前开发版本仍为 `0.5.0.dev0`。本课记录未启用过滤的温度实验；新增的 top-k / top-p 见[过滤教程](SAMPLING_FILTERS.md)。
 
 ## 先运行，不下载权重
 
@@ -38,7 +38,7 @@ python -m minideepinfer.sampling_demo --output outputs/sampling-cpu.json
 
 ## 普通采样如何作参照
 
-`TemperatureSampler` 在 CPU 上把 FP32 logits 转成 FP64 概率，用请求自己的随机数对象采样。温度必须为有限正数；本轮没有 top-k、top-p、重复惩罚或概率截断。
+`TemperatureSampler` 在 CPU 上把 FP32 logits 转成 FP64 概率，用请求自己的随机数对象采样。温度必须为有限正数；本课保存记录没有启用 top-k、top-p 或其他概率截断，也没有重复惩罚。
 
 演示中的宽度 0 不生成候选，每次直接从 target 抽一个 token。它与独立的整段前缀重算使用相同 seed，输出一致，用于核对普通采样的计算与缓存。
 
@@ -97,6 +97,8 @@ python -m minideepinfer.verify_sampling \
 张量转换采用先 `logits.detach().cpu()`、再在 CPU 转 FP64 的顺序，并以三个数做过当前环境的实测，避免让 NPU 承担 FP64 转换。[官方版本对应表](https://github.com/Ascend/pytorch/blob/master/COMPATIBILITY.md)用于核对版本组合；接口文档页面未返回可用的方法表，实际搬运行为以这次固定环境的小输入实测为准。[原始运行日志](results/2026-10-25/qwen35-sampling.txt)保留了环境告警，没有隐藏 warning。
 
 ## English usage
+
+For top-k / top-p filtering, see the [filtering walkthrough](SAMPLING_FILTERS.md#english-usage). The historical records below use temperature only.
 
 Run `python -m minideepinfer.sampling_demo --output outputs/sampling-cpu.json` with PyTorch installed. It needs no checkpoint and generates no meaningful language: both Qwen3.5 models are untrained.
 

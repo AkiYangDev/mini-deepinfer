@@ -41,23 +41,43 @@ def draw(probabilities, rng):
 
 
 class TemperatureSampler:
-    def __init__(self, temperature=1.0, seed=2026):
+    def __init__(self, temperature=1.0, seed=2026, *, top_k=0, top_p=1.0):
         if (type(temperature) not in (int, float) or not math.isfinite(temperature)
                 or temperature <= 0):
             raise ValueError('temperature must be positive and finite')
         if type(seed) is not int or not 0 <= seed < 2**63:
             raise ValueError('seed must be an integer in [0, 2**63)')
+        if type(top_k) is not int or top_k < 0:
+            raise ValueError('top_k must be a nonnegative integer; zero disables it')
+        if type(top_p) not in (int, float) or not math.isfinite(top_p) or not 0 < top_p <= 1:
+            raise ValueError('top_p must be finite and in (0, 1]')
         self.temperature, self.seed = float(temperature), seed
+        self.top_k, self.top_p = top_k, float(top_p)
         self.rng = random.Random(seed)
 
     def probabilities(self, logits):
         import torch
         # Transfer FP32 first; the device never needs to represent FP64 tensors.
         logits = logits.detach().cpu().to(dtype=torch.float64)
-        if logits.ndim != 1 or not bool(torch.isfinite(logits).all()):
+        if logits.ndim != 1 or logits.numel() == 0 or not bool(torch.isfinite(logits).all()):
             raise ValueError('sampling requires finite one-dimensional logits')
         # Subtract first: a tiny positive temperature must not produce inf-inf.
-        return distribution(((logits-logits.max())/self.temperature).softmax(-1))
+        scaled = (logits-logits.max())/self.temperature
+        if not self.top_k and self.top_p == 1:
+            return distribution(scaled.softmax(-1))  # Preserve the original path.
+        # Stable order breaks equal-logit ties by ascending vocabulary ID.
+        order = torch.argsort(scaled, descending=True, stable=True)
+        if self.top_k:
+            order = order[:self.top_k]
+        weights = scaled[order].softmax(-1)
+        if self.top_p < 1:
+            # Keep the first token that reaches/exceeds p, even for tiny p.
+            before = torch.cat((weights.new_zeros(1), weights.cumsum(0)[:-1]))
+            keep = before < self.top_p
+            order, weights = order[keep], weights[keep]
+        probabilities = torch.zeros_like(scaled)
+        probabilities[order] = weights/weights.sum()
+        return distribution(probabilities)
 
     def sample(self, logits):
         return draw(self.probabilities(logits), self.rng)

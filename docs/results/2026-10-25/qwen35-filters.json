@@ -1,0 +1,1102 @@
+{
+  "passed": true,
+  "torch": "2.10.0+cpu",
+  "python": "3.12.13",
+  "device": "npu:0",
+  "dtype": "float32",
+  "cpu_threads": 1,
+  "tokenizer_contract": {
+    "compatible": true,
+    "token_ids": {
+      "vocab_size": 248320,
+      "bos_token_id": null,
+      "eos_token_id": 248044,
+      "pad_token_id": null
+    },
+    "shared_file_sha256": {
+      "tokenizer.json": "5f9e4d4901a92b997e463c1f46055088b6cca5ca61a6522d1b9f64c4bb81cb42",
+      "tokenizer_config.json": "49e2b6e395f959f077f1e992b338919c0d4a9732fc6e613995e06557f843500c",
+      "chat_template.jinja": "273d8e0e683b885071fb17e08d71e5f2a5ddfb5309756181681de4f5a1822d80",
+      "vocab.json": "ce99b4cb2983d118806ce0a8b777a35b093e2000a503ebde25853284c9dfa003"
+    },
+    "config_sha256": [
+      "b90b86f35c8e6925ef74ee04d0e758f0a845c83a42089ad82bbaa948de9b4204",
+      "ed1c1723241f23f7f4e23430759cbd7dcfb4103cbdfe052bfe7626b57c2615b4"
+    ]
+  },
+  "target_model": "Qwen3.5-2B",
+  "draft_model": "Qwen3.5-0.8B",
+  "weight_loads": 2,
+  "source_sha256": {
+    "minideepinfer/verify_sampling.py": "9ee25ee072010a02acceb0377774ff562bd5c0664ffa88a28b4acf9345a88541",
+    "minideepinfer/sampling.py": "90eaf74316608a9fa434220afc51af995f70662668314975016dc4f8ffe726b7",
+    "minideepinfer/model_draft.py": "849471dbc034fde08eee57f4d737c6428f372d92e4a2f23e3ffb411fd95b2de5",
+    "minideepinfer/speculative.py": "3886aff76ac7533eb64dfd6da79bc486fd0c71fbade67f53834f6a78689086ec",
+    "minideepinfer/spec_demo.py": "a55b298d3bcef6ca3efaaaa93fca0c2722b2cd9138e83706a6369db8e8d1331d",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5"
+  },
+  "scope": "Fixed short-input FP32 sampling and cold-prefix checks; probabilities on CPU FP64; no timing or speedup claim. Configured EOS is the first sampled ID, not a natural language EOS test.",
+  "torch_npu": "2.10.0.post6",
+  "npu_name": "Ascend910_9362",
+  "hf32": {
+    "matmul": false,
+    "conv": false
+  },
+  "prompt_ids": [
+    760,
+    6511,
+    314,
+    9338,
+    369
+  ],
+  "max_new_tokens": 6,
+  "capacity": 10,
+  "temperature": 0.7,
+  "target_seed": 2026,
+  "draft_seed": 2027,
+  "probability_checks": [
+    {
+      "kind": "ordinary_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "ordinary_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "ordinary_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "ordinary_probability",
+      "max_abs": 4.619256012750039e-06,
+      "total_variation": 4.619256012739631e-06,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "ordinary_probability",
+      "max_abs": 2.0323089414686635e-06,
+      "total_variation": 2.0323089413853967e-06,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "ordinary_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "draft_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "draft_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "draft_probability",
+      "max_abs": 1.9347747520770398e-06,
+      "total_variation": 1.9347747520909175e-06,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 1.2431165026249857e-06,
+      "total_variation": 1.3547323533744104e-06,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "sampled_prefill_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "draft_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "draft_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "draft_probability",
+      "max_abs": 1.9347747520770398e-06,
+      "total_variation": 1.9347747520909175e-06,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 1.2431165026249857e-06,
+      "total_variation": 1.3547323533744104e-06,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "target_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "cancelled_prefill_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    },
+    {
+      "kind": "configured_eos_prefill_probability",
+      "max_abs": 0.0,
+      "total_variation": 0.0,
+      "passed": true,
+      "atol": 1e-06,
+      "rtol": 0.0002
+    }
+  ],
+  "cache_checks": [
+    {
+      "cached_tokens": 6,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 6,
+      "passed": true,
+      "keys_max_abs": 0.0,
+      "values_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "conv_0_max_abs": 0.0,
+      "recurrence_0_max_abs": 0.0,
+      "conv_1_max_abs": 0.0,
+      "recurrence_1_max_abs": 0.0,
+      "conv_2_max_abs": 0.0,
+      "recurrence_2_max_abs": 0.0,
+      "conv_4_max_abs": 0.0,
+      "recurrence_4_max_abs": 0.0,
+      "conv_5_max_abs": 0.0,
+      "recurrence_5_max_abs": 0.0,
+      "conv_6_max_abs": 0.0,
+      "recurrence_6_max_abs": 0.0,
+      "conv_8_max_abs": 0.0,
+      "recurrence_8_max_abs": 0.0,
+      "conv_9_max_abs": 0.0,
+      "recurrence_9_max_abs": 0.0,
+      "conv_10_max_abs": 0.0,
+      "recurrence_10_max_abs": 0.0,
+      "conv_12_max_abs": 0.0,
+      "recurrence_12_max_abs": 0.0,
+      "conv_13_max_abs": 0.0,
+      "recurrence_13_max_abs": 0.0,
+      "conv_14_max_abs": 0.0,
+      "recurrence_14_max_abs": 0.0,
+      "conv_16_max_abs": 0.0,
+      "recurrence_16_max_abs": 0.0,
+      "conv_17_max_abs": 0.0,
+      "recurrence_17_max_abs": 0.0,
+      "conv_18_max_abs": 0.0,
+      "recurrence_18_max_abs": 0.0,
+      "conv_20_max_abs": 0.0,
+      "recurrence_20_max_abs": 0.0,
+      "conv_21_max_abs": 0.0,
+      "recurrence_21_max_abs": 0.0,
+      "conv_22_max_abs": 0.0,
+      "recurrence_22_max_abs": 0.0,
+      "kind": "draft_aligned"
+    },
+    {
+      "cached_tokens": 9,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 9,
+      "passed": true,
+      "keys_max_abs": 0.0,
+      "values_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "conv_0_max_abs": 0.0,
+      "recurrence_0_max_abs": 0.0,
+      "conv_1_max_abs": 0.0,
+      "recurrence_1_max_abs": 0.0,
+      "conv_2_max_abs": 0.0,
+      "recurrence_2_max_abs": 0.0,
+      "conv_4_max_abs": 0.0,
+      "recurrence_4_max_abs": 0.0,
+      "conv_5_max_abs": 0.0,
+      "recurrence_5_max_abs": 0.0,
+      "conv_6_max_abs": 0.0,
+      "recurrence_6_max_abs": 0.0,
+      "conv_8_max_abs": 0.0,
+      "recurrence_8_max_abs": 0.0,
+      "conv_9_max_abs": 0.0,
+      "recurrence_9_max_abs": 0.0,
+      "conv_10_max_abs": 0.0,
+      "recurrence_10_max_abs": 0.0,
+      "conv_12_max_abs": 0.0,
+      "recurrence_12_max_abs": 0.0,
+      "conv_13_max_abs": 0.0,
+      "recurrence_13_max_abs": 0.0,
+      "conv_14_max_abs": 0.0,
+      "recurrence_14_max_abs": 0.0,
+      "conv_16_max_abs": 0.0,
+      "recurrence_16_max_abs": 0.0,
+      "conv_17_max_abs": 0.0,
+      "recurrence_17_max_abs": 0.0,
+      "conv_18_max_abs": 0.0,
+      "recurrence_18_max_abs": 0.0,
+      "conv_20_max_abs": 0.0,
+      "recurrence_20_max_abs": 0.0,
+      "conv_21_max_abs": 0.0,
+      "recurrence_21_max_abs": 0.0,
+      "conv_22_max_abs": 0.0,
+      "recurrence_22_max_abs": 0.0,
+      "kind": "target_retained"
+    },
+    {
+      "cached_tokens": 10,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 10,
+      "passed": true,
+      "keys_max_abs": 0.0,
+      "values_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "conv_0_max_abs": 0.0,
+      "recurrence_0_max_abs": 0.0,
+      "conv_1_max_abs": 0.0,
+      "recurrence_1_max_abs": 0.0,
+      "conv_2_max_abs": 0.0,
+      "recurrence_2_max_abs": 0.0,
+      "conv_4_max_abs": 0.0,
+      "recurrence_4_max_abs": 0.0,
+      "conv_5_max_abs": 0.0,
+      "recurrence_5_max_abs": 0.0,
+      "conv_6_max_abs": 0.0,
+      "recurrence_6_max_abs": 0.0,
+      "conv_8_max_abs": 0.0,
+      "recurrence_8_max_abs": 0.0,
+      "conv_9_max_abs": 0.0,
+      "recurrence_9_max_abs": 0.0,
+      "conv_10_max_abs": 0.0,
+      "recurrence_10_max_abs": 0.0,
+      "conv_12_max_abs": 0.0,
+      "recurrence_12_max_abs": 0.0,
+      "conv_13_max_abs": 0.0,
+      "recurrence_13_max_abs": 0.0,
+      "conv_14_max_abs": 0.0,
+      "recurrence_14_max_abs": 0.0,
+      "conv_16_max_abs": 0.0,
+      "recurrence_16_max_abs": 0.0,
+      "conv_17_max_abs": 0.0,
+      "recurrence_17_max_abs": 0.0,
+      "conv_18_max_abs": 0.0,
+      "recurrence_18_max_abs": 0.0,
+      "conv_20_max_abs": 0.0,
+      "recurrence_20_max_abs": 0.0,
+      "conv_21_max_abs": 0.0,
+      "recurrence_21_max_abs": 0.0,
+      "conv_22_max_abs": 0.0,
+      "recurrence_22_max_abs": 0.0,
+      "kind": "target_retained"
+    },
+    {
+      "cached_tokens": 6,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 6,
+      "passed": true,
+      "keys_max_abs": 0.0,
+      "values_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "conv_0_max_abs": 0.0,
+      "recurrence_0_max_abs": 0.0,
+      "conv_1_max_abs": 0.0,
+      "recurrence_1_max_abs": 0.0,
+      "conv_2_max_abs": 0.0,
+      "recurrence_2_max_abs": 0.0,
+      "conv_4_max_abs": 0.0,
+      "recurrence_4_max_abs": 0.0,
+      "conv_5_max_abs": 0.0,
+      "recurrence_5_max_abs": 0.0,
+      "conv_6_max_abs": 0.0,
+      "recurrence_6_max_abs": 0.0,
+      "conv_8_max_abs": 0.0,
+      "recurrence_8_max_abs": 0.0,
+      "conv_9_max_abs": 0.0,
+      "recurrence_9_max_abs": 0.0,
+      "conv_10_max_abs": 0.0,
+      "recurrence_10_max_abs": 0.0,
+      "conv_12_max_abs": 0.0,
+      "recurrence_12_max_abs": 0.0,
+      "conv_13_max_abs": 0.0,
+      "recurrence_13_max_abs": 0.0,
+      "conv_14_max_abs": 0.0,
+      "recurrence_14_max_abs": 0.0,
+      "conv_16_max_abs": 0.0,
+      "recurrence_16_max_abs": 0.0,
+      "conv_17_max_abs": 0.0,
+      "recurrence_17_max_abs": 0.0,
+      "conv_18_max_abs": 0.0,
+      "recurrence_18_max_abs": 0.0,
+      "conv_20_max_abs": 0.0,
+      "recurrence_20_max_abs": 0.0,
+      "conv_21_max_abs": 0.0,
+      "recurrence_21_max_abs": 0.0,
+      "conv_22_max_abs": 0.0,
+      "recurrence_22_max_abs": 0.0,
+      "kind": "draft_aligned"
+    },
+    {
+      "cached_tokens": 9,
+      "reference_forward_calls": 1,
+      "reference_input_tokens": 9,
+      "passed": true,
+      "keys_max_abs": 0.0,
+      "values_max_abs": 0.0,
+      "logits_max_abs": 0.0,
+      "conv_0_max_abs": 0.0,
+      "recurrence_0_max_abs": 0.0,
+      "conv_1_max_abs": 0.0,
+      "recurrence_1_max_abs": 0.0,
+      "conv_2_max_abs": 0.0,
+      "recurrence_2_max_abs": 0.0,
+      "conv_4_max_abs": 0.0,
+      "recurrence_4_max_abs": 0.0,
+      "conv_5_max_abs": 0.0,
+      "recurrence_5_max_abs": 0.0,
+      "conv_6_max_abs": 0.0,
+      "recurrence_6_max_abs": 0.0,
+      "conv_8_max_abs": 0.0,
+      "recurrence_8_max_abs": 0.0,
+      "conv_9_max_abs": 0.0,
+      "recurrence_9_max_abs": 0.0,
+      "conv_10_max_abs": 0.0,
+      "recurrence_10_max_abs": 0.0,
+      "conv_12_max_abs": 0.0,
+      "recurrence_12_max_abs": 0.0,
+      "conv_13_max_abs": 0.0,
+      "recurrence_13_max_abs": 0.0,
+      "conv_14_max_abs": 0.0,
+      "recurrence_14_max_abs": 0.0,
+      "conv_16_max_abs": 0.0,
+      "recurrence_16_max_abs": 0.0,
+      "conv_17_max_abs": 0.0,
+      "recurrence_17_max_abs": 0.0,
+      "conv_18_max_abs": 0.0,
+      "recurrence_18_max_abs": 0.0,
+      "conv_20_max_abs": 0.0,
+      "recurrence_20_max_abs": 0.0,
+      "conv_21_max_abs": 0.0,
+      "recurrence_21_max_abs": 0.0,
+      "conv_22_max_abs": 0.0,
+      "recurrence_22_max_abs": 0.0,
+      "kind": "target_retained"
+    }
+  ],
+  "cold_work": [
+    {
+      "kind": "ordinary_full_prefix",
+      "forward_calls": 1,
+      "input_tokens": 5
+    },
+    {
+      "kind": "ordinary_full_prefix",
+      "forward_calls": 1,
+      "input_tokens": 6
+    },
+    {
+      "kind": "ordinary_full_prefix",
+      "forward_calls": 1,
+      "input_tokens": 7
+    },
+    {
+      "kind": "ordinary_full_prefix",
+      "forward_calls": 1,
+      "input_tokens": 8
+    },
+    {
+      "kind": "ordinary_full_prefix",
+      "forward_calls": 1,
+      "input_tokens": 9
+    },
+    {
+      "kind": "ordinary_full_prefix",
+      "forward_calls": 1,
+      "input_tokens": 10
+    },
+    {
+      "kind": "draft_aligned",
+      "forward_calls": 1,
+      "input_tokens": 6
+    },
+    {
+      "kind": "draft_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 6
+    },
+    {
+      "kind": "draft_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 7
+    },
+    {
+      "kind": "draft_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 8
+    },
+    {
+      "kind": "target_retained",
+      "forward_calls": 1,
+      "input_tokens": 9
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 6
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 7
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 8
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 9
+    },
+    {
+      "kind": "target_retained",
+      "forward_calls": 1,
+      "input_tokens": 10
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 10
+    },
+    {
+      "kind": "draft_aligned",
+      "forward_calls": 1,
+      "input_tokens": 6
+    },
+    {
+      "kind": "draft_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 6
+    },
+    {
+      "kind": "draft_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 7
+    },
+    {
+      "kind": "draft_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 8
+    },
+    {
+      "kind": "target_retained",
+      "forward_calls": 1,
+      "input_tokens": 9
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 6
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 7
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 8
+    },
+    {
+      "kind": "target_probability_reference",
+      "forward_calls": 1,
+      "input_tokens": 9
+    }
+  ],
+  "cases": {
+    "ordinary": {
+      "output_ids": [
+        11751,
+        13,
+        271,
+        248068,
+        198,
+        90700
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            11751
+          ],
+          "draft": [],
+          "target": [
+            13
+          ],
+          "committed": [
+            13
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 5,
+          "tentative_cached": 6,
+          "retained_cached": 6,
+          "invalidated_slots": [],
+          "pending_token": 13,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            13
+          ],
+          "draft": [],
+          "target": [
+            198
+          ],
+          "committed": [
+            271
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 6,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 271,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            271
+          ],
+          "draft": [],
+          "target": [
+            248068
+          ],
+          "committed": [
+            248068
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 7,
+          "tentative_cached": 8,
+          "retained_cached": 8,
+          "invalidated_slots": [],
+          "pending_token": 248068,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            248068
+          ],
+          "draft": [],
+          "target": [
+            198
+          ],
+          "committed": [
+            198
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 8,
+          "tentative_cached": 9,
+          "retained_cached": 9,
+          "invalidated_slots": [],
+          "pending_token": 198,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            198
+          ],
+          "draft": [],
+          "target": [
+            90700
+          ],
+          "committed": [
+            90700
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 9,
+          "tentative_cached": 10,
+          "retained_cached": 10,
+          "invalidated_slots": [],
+          "pending_token": 90700,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length",
+          "sampling_checks": []
+        }
+      ],
+      "cached_tokens": 10,
+      "proposed_draft_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 0,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 6,
+      "target_forward_calls": 6,
+      "target_input_tokens": 10,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 5,
+      "snapshot_bytes_total": 101007360,
+      "peak_snapshot_bytes": 20201472,
+      "free_slots": 10,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64",
+        "top_k": 20,
+        "top_p": 0.9,
+        "filter_order": "temperature,top_k,top_p"
+      }
+    },
+    "sampled": {
+      "output_ids": [
+        11751,
+        11,
+        321,
+        279,
+        6511,
+        314
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            11751,
+            11,
+            321,
+            279
+          ],
+          "draft": [
+            11,
+            321,
+            279
+          ],
+          "target": [
+            13,
+            864,
+            279,
+            6511
+          ],
+          "committed": [
+            11,
+            321,
+            279,
+            6511
+          ],
+          "accepted_draft": 3,
+          "final_role": "bonus",
+          "cached_before": 5,
+          "tentative_cached": 9,
+          "retained_cached": 9,
+          "invalidated_slots": [],
+          "pending_token": 6511,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": [
+            {
+              "token": 11,
+              "p": 0.23104114992941718,
+              "q": 0.3694605557043653,
+              "acceptance_probability": 0.625347270127238,
+              "uniform": 0.5025157552312506,
+              "accepted": true
+            },
+            {
+              "token": 321,
+              "p": 0.37437676338199377,
+              "q": 0.4233378788693947,
+              "acceptance_probability": 0.8843450635266539,
+              "uniform": 0.511822712773071,
+              "accepted": true
+            },
+            {
+              "token": 279,
+              "p": 0.7026525918121015,
+              "q": 0.734243033982187,
+              "acceptance_probability": 0.9569754962484915,
+              "uniform": 0.8600005876492754,
+              "accepted": true
+            }
+          ],
+          "matches_cold_decision": true
+        },
+        {
+          "input_ids": [
+            6511
+          ],
+          "draft": [],
+          "target": [
+            314
+          ],
+          "committed": [
+            314
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 9,
+          "tentative_cached": 10,
+          "retained_cached": 10,
+          "invalidated_slots": [],
+          "pending_token": 314,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length",
+          "sampling_checks": [],
+          "matches_cold_decision": true
+        }
+      ],
+      "cached_tokens": 10,
+      "proposed_draft_tokens": 3,
+      "accepted_draft_tokens": 3,
+      "correction_tokens": 0,
+      "bonus_tokens": 1,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 3,
+      "target_input_tokens": 10,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 2,
+      "snapshot_bytes_total": 40402944,
+      "peak_snapshot_bytes": 20201472,
+      "free_slots": 10,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64",
+        "top_k": 20,
+        "top_p": 0.9,
+        "filter_order": "temperature,top_k,top_p"
+      },
+      "draft_work": {
+        "calls": 2,
+        "proposed_tokens": 3,
+        "recovered_branches": 0,
+        "forward_calls": 3,
+        "input_tokens": 8,
+        "sync_forward_calls": 1,
+        "sync_input_tokens": 6,
+        "proposal_forward_calls": 2,
+        "proposal_input_tokens": 2,
+        "replay_forward_calls": 0,
+        "replayed_input_tokens": 0,
+        "snapshot_count": 1,
+        "snapshot_bytes_total": 20201472,
+        "peak_snapshot_bytes": 20201472,
+        "linear_states_remaining": 0,
+        "snapshot_retained": false,
+        "failed": false,
+        "closed": true,
+        "free_slots": 10
+      },
+      "configured_eos_token_id": null
+    },
+    "cancelled": {
+      "output_ids": [
+        11751,
+        11,
+        321,
+        279,
+        6511
+      ],
+      "finish_reason": "cancelled",
+      "rounds": [
+        {
+          "input_ids": [
+            11751,
+            11,
+            321,
+            279
+          ],
+          "draft": [
+            11,
+            321,
+            279
+          ],
+          "target": [
+            13,
+            864,
+            279,
+            6511
+          ],
+          "committed": [
+            11,
+            321,
+            279,
+            6511
+          ],
+          "accepted_draft": 3,
+          "final_role": "bonus",
+          "cached_before": 5,
+          "tentative_cached": 9,
+          "retained_cached": 9,
+          "invalidated_slots": [],
+          "pending_token": 6511,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "cancelled",
+          "sampling_checks": [
+            {
+              "token": 11,
+              "p": 0.23104114992941718,
+              "q": 0.3694605557043653,
+              "acceptance_probability": 0.625347270127238,
+              "uniform": 0.5025157552312506,
+              "accepted": true
+            },
+            {
+              "token": 321,
+              "p": 0.37437676338199377,
+              "q": 0.4233378788693947,
+              "acceptance_probability": 0.8843450635266539,
+              "uniform": 0.511822712773071,
+              "accepted": true
+            },
+            {
+              "token": 279,
+              "p": 0.7026525918121015,
+              "q": 0.734243033982187,
+              "acceptance_probability": 0.9569754962484915,
+              "uniform": 0.8600005876492754,
+              "accepted": true
+            }
+          ],
+          "matches_cold_decision": true
+        }
+      ],
+      "cached_tokens": 9,
+      "proposed_draft_tokens": 3,
+      "accepted_draft_tokens": 3,
+      "correction_tokens": 0,
+      "bonus_tokens": 1,
+      "direct_target_tokens": 1,
+      "target_forward_calls": 2,
+      "target_input_tokens": 9,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 1,
+      "snapshot_bytes_total": 20201472,
+      "peak_snapshot_bytes": 20201472,
+      "free_slots": 10,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64",
+        "top_k": 20,
+        "top_p": 0.9,
+        "filter_order": "temperature,top_k,top_p"
+      },
+      "draft_work": {
+        "calls": 1,
+        "proposed_tokens": 3,
+        "recovered_branches": 0,
+        "forward_calls": 3,
+        "input_tokens": 8,
+        "sync_forward_calls": 1,
+        "sync_input_tokens": 6,
+        "proposal_forward_calls": 2,
+        "proposal_input_tokens": 2,
+        "replay_forward_calls": 0,
+        "replayed_input_tokens": 0,
+        "snapshot_count": 1,
+        "snapshot_bytes_total": 20201472,
+        "peak_snapshot_bytes": 20201472,
+        "linear_states_remaining": 0,
+        "snapshot_retained": false,
+        "failed": false,
+        "closed": true,
+        "free_slots": 10
+      },
+      "configured_eos_token_id": null
+    },
+    "configured_eos": {
+      "output_ids": [
+        11751
+      ],
+      "finish_reason": "eos",
+      "rounds": [],
+      "cached_tokens": 5,
+      "proposed_draft_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 0,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 1,
+      "target_forward_calls": 1,
+      "target_input_tokens": 5,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 0,
+      "snapshot_bytes_total": 0,
+      "peak_snapshot_bytes": 0,
+      "free_slots": 10,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64",
+        "top_k": 20,
+        "top_p": 0.9,
+        "filter_order": "temperature,top_k,top_p"
+      },
+      "draft_work": {
+        "calls": 0,
+        "proposed_tokens": 0,
+        "recovered_branches": 0,
+        "forward_calls": 0,
+        "input_tokens": 0,
+        "sync_forward_calls": 0,
+        "sync_input_tokens": 0,
+        "proposal_forward_calls": 0,
+        "proposal_input_tokens": 0,
+        "replay_forward_calls": 0,
+        "replayed_input_tokens": 0,
+        "snapshot_count": 0,
+        "snapshot_bytes_total": 0,
+        "peak_snapshot_bytes": 0,
+        "linear_states_remaining": 0,
+        "snapshot_retained": false,
+        "failed": false,
+        "closed": true,
+        "free_slots": 10
+      },
+      "configured_eos_token_id": 11751
+    }
+  },
+  "top_k": 20,
+  "top_p": 0.9,
+  "filter_order": "temperature,top_k,top_p",
+  "ordinary_full_prefix_ids": [
+    11751,
+    13,
+    271,
+    248068,
+    198,
+    90700
+  ],
+  "total_forward_calls": 44,
+  "total_input_tokens": 247
+}

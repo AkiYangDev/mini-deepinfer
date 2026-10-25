@@ -24,6 +24,8 @@ def parse_args(argv=None):
     parser.add_argument("--draft-width", type=int, default=None, help="1..8 candidates per speculative round (default: 1)")
     parser.add_argument("--temperature", type=float, help="positive temperature; speculative FP32 reference (default: greedy)")
     parser.add_argument("--seed", type=int, help="request-local sampling seed (default: 2026); requires --temperature")
+    parser.add_argument("--top-k", type=int, help="keep at most k tokens; 0 disables; requires --temperature")
+    parser.add_argument("--top-p", type=float, help="nucleus threshold in (0,1]; applied after top-k; requires --temperature")
     parser.add_argument("--check-greedy", action="store_true", help="with --speculative, compare against a fresh target-only run")
     parser.add_argument("--output", help="with --speculative, save a generation or cancellation report as JSON")
     parser.add_argument("--stream", action="store_true", help="with --speculative, print committed text during generation")
@@ -59,16 +61,19 @@ def parse_args(argv=None):
         if args.temperature is not None:
             from .sampling import TemperatureSampler
             try:
-                TemperatureSampler(args.temperature, 2026 if args.seed is None else args.seed)
+                TemperatureSampler(args.temperature, 2026 if args.seed is None else args.seed,
+                                   top_k=0 if args.top_k is None else args.top_k,
+                                   top_p=1.0 if args.top_p is None else args.top_p)
             except ValueError as error:
                 parser.error(str(error))
             if (args.device != 'cpu' and not (args.device.startswith('npu:') and args.device[4:].isdigit())
                     or args.check_greedy):
                 parser.error('--temperature requires CPU or NPU and cannot use --check-greedy')
-        elif args.seed is not None:
-            parser.error('--seed requires --temperature')
+        elif args.seed is not None or args.top_k is not None or args.top_p is not None:
+            parser.error('--seed, --top-k and --top-p require --temperature')
     elif (args.draft_model is not None or args.draft_width is not None or args.check_greedy or args.output is not None
-          or args.stream or args.cancel_after_tokens is not None or args.temperature is not None or args.seed is not None):
+          or args.stream or args.cancel_after_tokens is not None or args.temperature is not None or args.seed is not None
+          or args.top_k is not None or args.top_p is not None):
         parser.error('draft, stream, cancellation, greedy-check and report options require --speculative')
     args.max_num_seqs = 4 if args.max_num_seqs is None else args.max_num_seqs
     return args
@@ -152,7 +157,9 @@ def main(argv=None):
                     width=args.draft_width, raw=args.raw, thinking=args.thinking,
                     trace_rounds=args.trace_rounds, check_greedy=args.check_greedy,
                     on_commit=committed, should_cancel=cancel.is_set,
-                    temperature=args.temperature, seed=2026 if args.seed is None else args.seed)
+                    temperature=args.temperature, seed=2026 if args.seed is None else args.seed,
+                    top_k=0 if args.top_k is None else args.top_k,
+                    top_p=1.0 if args.top_p is None else args.top_p)
         finally:
             if streamer is not None:
                 streamer.end()

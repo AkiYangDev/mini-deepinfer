@@ -4,7 +4,7 @@
 def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
                          cache_capacity=512, width=1, raw=False, thinking=False,
                          trace_rounds=False, check_greedy=False, on_commit=None, should_cancel=None,
-                         temperature=None, seed=2026):
+                         temperature=None, seed=2026, top_k=0, top_p=1.0):
     """Own both request caches; reuse loaded models without sharing their state.
 
     The optional greedy check runs afterwards with a fresh target cache. It is
@@ -19,7 +19,11 @@ def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
     from .text_loop import encode_prompt
     from .sampling import TemperatureSampler
 
-    sampler = None if temperature is None else TemperatureSampler(temperature, seed)
+    settings = TemperatureSampler(1.0 if temperature is None else temperature, seed,
+                                  top_k=top_k, top_p=top_p)
+    if temperature is None and (top_k or top_p != 1):
+        raise ValueError('top_k and top_p require a positive temperature')
+    sampler = None if temperature is None else settings
     if sampler is not None and check_greedy:
         raise ValueError('random sampling cannot use a token-by-token greedy check')
 
@@ -46,7 +50,8 @@ def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
         raise ValueError('request exceeds a model position limit')
     # Capacity is a request budget, not a reason to allocate beyond its inputs.
     capacity = needed
-    draft_sampler = None if sampler is None else TemperatureSampler(temperature, (seed+1) % 2**63)
+    draft_sampler = None if sampler is None else TemperatureSampler(temperature, (seed+1) % 2**63,
+                                                                   top_k=top_k, top_p=top_p)
     draft = ModelDraft(small, capacity, sampler=draft_sampler)
     trace = DraftTrace(draft, ids) if trace_rounds else None
     if trace is not None:
