@@ -1,0 +1,365 @@
+{
+  "passed": true,
+  "device": "npu:0",
+  "dtype": "float32",
+  "torch": "2.10.0+cpu",
+  "python": "3.12.13",
+  "cpu_threads": 1,
+  "target_model": "Qwen3.5-2B",
+  "weight_loads": 1,
+  "source_sha256": {
+    "minideepinfer/verify_target_text.py": "7315233e3b2849eabd3081f8c261f010ff55c814ca390df52cdd03a16f61887c",
+    "minideepinfer/target_text.py": "fe75d5368c6b6ded74061c3b234b59fe07cc81c7fc498ae594e5c6b01e9b43de",
+    "minideepinfer/text_loop.py": "cc5d07d283fd42756d0aeaf31954db83b5a06c9fe2cf6b809ca3553cfa798d03",
+    "minideepinfer/speculative.py": "4c0a5f67ebdf5325415faf3e4ed74f7143554f9b21a91fff728c4a735ede3077",
+    "minideepinfer/sampling.py": "90eaf74316608a9fa434220afc51af995f70662668314975016dc4f8ffe726b7",
+    "minideepinfer/model_runner.py": "72eea53b78ceb91700124183efc06b3fd197270726277f814a40b2ee76a00327",
+    "minideepinfer/models/qwen2.py": "770cc9d762acec84275ac9ca8aa49bcacf21ce6b1775aa28ffe8c662f80cb4af",
+    "minideepinfer/models/qwen3_5.py": "91d0bcfce1782387d4ce0563a48e91817f0a74b6929e7cc86cfb5b02b01c9ae8",
+    "minideepinfer/tensor_cache.py": "9d5347bd4f60eaf3ad54d52b2d3c8bc2a2a6d65eaecda86996d860a0f1894272",
+    "minideepinfer/hybrid_cache.py": "54b3263bcc7d02f9b9837212c50e2f61c91ef360bf12ae882a81bcca3af37b32",
+    "minideepinfer/engine.py": "53d9b3d045983136ff433f71ca55be14c0dd718a2cfa80ec92f62927c51d015a",
+    "minideepinfer/kv_cache.py": "69e684c4716882a5760bf560ff4383634d6d00da3833694184f42f16c1e342d5"
+  },
+  "scope": "Single-model API, filtered sampling, cold-prefix comparison and commit callbacks. Configured EOS is artificial. No CLI text-stream, timing or speedup measurement.",
+  "torch_npu": "2.10.0.post6",
+  "npu_name": "Ascend910_9362",
+  "hf32": {
+    "matmul": false,
+    "conv": false
+  },
+  "prompt_ids": [
+    760,
+    6511,
+    314,
+    9338,
+    369
+  ],
+  "temperature": 0.7,
+  "seed": 2026,
+  "top_k": 20,
+  "top_p": 0.9,
+  "max_new_tokens": 6,
+  "cache_capacity": 10,
+  "full_prefix_reference": {
+    "output_ids": [
+      11751,
+      13,
+      271,
+      248068,
+      198,
+      90700
+    ],
+    "forward_calls": 6,
+    "input_tokens": 45
+  },
+  "cases": {
+    "sampled": {
+      "output_ids": [
+        11751,
+        13,
+        271,
+        248068,
+        198,
+        90700
+      ],
+      "finish_reason": "length",
+      "rounds": [
+        {
+          "input_ids": [
+            11751
+          ],
+          "draft": [],
+          "target": [
+            13
+          ],
+          "committed": [
+            13
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 5,
+          "tentative_cached": 6,
+          "retained_cached": 6,
+          "invalidated_slots": [],
+          "pending_token": 13,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            13
+          ],
+          "draft": [],
+          "target": [
+            198
+          ],
+          "committed": [
+            271
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 6,
+          "tentative_cached": 7,
+          "retained_cached": 7,
+          "invalidated_slots": [],
+          "pending_token": 271,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            271
+          ],
+          "draft": [],
+          "target": [
+            248068
+          ],
+          "committed": [
+            248068
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 7,
+          "tentative_cached": 8,
+          "retained_cached": 8,
+          "invalidated_slots": [],
+          "pending_token": 248068,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            248068
+          ],
+          "draft": [],
+          "target": [
+            198
+          ],
+          "committed": [
+            198
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 8,
+          "tentative_cached": 9,
+          "retained_cached": 9,
+          "invalidated_slots": [],
+          "pending_token": 198,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": null,
+          "sampling_checks": []
+        },
+        {
+          "input_ids": [
+            198
+          ],
+          "draft": [],
+          "target": [
+            90700
+          ],
+          "committed": [
+            90700
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 9,
+          "tentative_cached": 10,
+          "retained_cached": 10,
+          "invalidated_slots": [],
+          "pending_token": 90700,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "length",
+          "sampling_checks": []
+        }
+      ],
+      "cached_tokens": 10,
+      "proposed_draft_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 0,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 6,
+      "target_forward_calls": 6,
+      "target_input_tokens": 10,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 0,
+      "snapshot_bytes_total": 0,
+      "peak_snapshot_bytes": 0,
+      "free_slots": 10,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64",
+        "top_k": 20,
+        "top_p": 0.9,
+        "filter_order": "temperature,top_k,top_p"
+      },
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "text": " Paris.\n\n<think>\nThinking",
+      "cache_capacity": 10,
+      "cache_budget": 10,
+      "draft_width": 0,
+      "committed_groups": [
+        [
+          11751
+        ],
+        [
+          13
+        ],
+        [
+          271
+        ],
+        [
+          248068
+        ],
+        [
+          198
+        ],
+        [
+          90700
+        ]
+      ],
+      "configured_eos_token_id": null
+    },
+    "cancelled": {
+      "output_ids": [
+        11751,
+        13
+      ],
+      "finish_reason": "cancelled",
+      "rounds": [
+        {
+          "input_ids": [
+            11751
+          ],
+          "draft": [],
+          "target": [
+            13
+          ],
+          "committed": [
+            13
+          ],
+          "accepted_draft": 0,
+          "final_role": "target",
+          "cached_before": 5,
+          "tentative_cached": 6,
+          "retained_cached": 6,
+          "invalidated_slots": [],
+          "pending_token": 13,
+          "replay_calls": 0,
+          "replay_tokens": 0,
+          "finish_reason": "cancelled",
+          "sampling_checks": []
+        }
+      ],
+      "cached_tokens": 6,
+      "proposed_draft_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 0,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 2,
+      "target_forward_calls": 2,
+      "target_input_tokens": 6,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 0,
+      "snapshot_bytes_total": 0,
+      "peak_snapshot_bytes": 0,
+      "free_slots": 10,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64",
+        "top_k": 20,
+        "top_p": 0.9,
+        "filter_order": "temperature,top_k,top_p"
+      },
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "text": " Paris.",
+      "cache_capacity": 10,
+      "cache_budget": 10,
+      "draft_width": 0,
+      "committed_groups": [
+        [
+          11751
+        ],
+        [
+          13
+        ]
+      ],
+      "configured_eos_token_id": null
+    },
+    "configured_eos": {
+      "output_ids": [
+        11751
+      ],
+      "finish_reason": "eos",
+      "rounds": [],
+      "cached_tokens": 5,
+      "proposed_draft_tokens": 0,
+      "accepted_draft_tokens": 0,
+      "correction_tokens": 0,
+      "bonus_tokens": 0,
+      "direct_target_tokens": 1,
+      "target_forward_calls": 1,
+      "target_input_tokens": 5,
+      "replay_forward_calls": 0,
+      "replayed_input_tokens": 0,
+      "snapshot_count": 0,
+      "snapshot_bytes_total": 0,
+      "peak_snapshot_bytes": 0,
+      "free_slots": 10,
+      "sampling": {
+        "temperature": 0.7,
+        "seed": 2026,
+        "probability_device": "cpu",
+        "probability_dtype": "float64",
+        "top_k": 20,
+        "top_p": 0.9,
+        "filter_order": "temperature,top_k,top_p"
+      },
+      "prompt_ids": [
+        760,
+        6511,
+        314,
+        9338,
+        369
+      ],
+      "text": " Paris",
+      "cache_capacity": 10,
+      "cache_budget": 10,
+      "draft_width": 0,
+      "committed_groups": [
+        [
+          11751
+        ]
+      ],
+      "configured_eos_token_id": 11751
+    }
+  },
+  "total_forward_calls": 15,
+  "total_input_tokens": 66
+}

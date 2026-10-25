@@ -110,6 +110,8 @@ class TargetTextTests(unittest.TestCase):
         self.assertTrue(report['passed'])
         self.assertEqual(report['total_forward_calls'], 15)
         self.assertEqual(report['total_input_tokens'], 39)
+        self.assertTrue(all(case['snapshot_count'] == case['snapshot_bytes_total'] == 0
+                            for case in report['cases'].values()))
 
     def test_cancellation_before_prefill_and_after_one_token(self):
         model = self.model()

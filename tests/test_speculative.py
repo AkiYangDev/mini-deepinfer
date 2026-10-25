@@ -234,6 +234,80 @@ class HybridSpeculativeTests(unittest.TestCase):
         target.forward((9,));compare_cache(target)
         with self.assertRaisesRegex(ValueError,'checkpoint'):target.rollback(4)
 
+    def test_empty_proposals_match_checkpointed_execution_without_state_copies(self):
+        from minideepinfer.sampling import SampledDraft, TemperatureSampler
+        from minideepinfer.spec_demo import compare_cache
+        model = self.model()
+        original = CachedTarget.forward
+        def checkpointed(cache, tokens):
+            if cache.tokens:
+                cache.checkpoint()
+            return original(cache, tokens)
+        for width in (0, 3):
+            for sampled in (False, True):
+                with self.subTest(width=width, sampled=sampled):
+                    def run():
+                        return generate(model, (2, 3, 4), 6,
+                            lambda *_: SampledDraft((), ()) if sampled else (), width=width,
+                            sampler=TemperatureSampler(.7, top_k=20, top_p=.9) if sampled else None,
+                            on_cache=lambda cache: compare_cache(cache))
+                    # Force the old per-decode checkpoint policy without a
+                    # second generation loop or a precomputed output oracle.
+                    with patch.object(CachedTarget, 'forward', checkpointed):
+                        before = run()
+                    with patch.object(CachedTarget, 'checkpoint', side_effect=AssertionError('unexpected snapshot')):
+                        after = run()
+                    self.assertEqual(before['snapshot_count'], 5)
+                    self.assertGreater(before['snapshot_bytes_total'], 0)
+                    for key in ('snapshot_count', 'snapshot_bytes_total', 'peak_snapshot_bytes'):
+                        self.assertEqual(after[key], 0)
+                        before.pop(key)
+                        after.pop(key)
+                    self.assertEqual(before, after)
+
+    def test_snapshot_decision_uses_actual_candidates_and_keeps_rejection_recovery(self):
+        from minideepinfer.spec_demo import compare_cache
+        model, widths = self.model(), []
+        def draft(prefix, limit):
+            widths.append(limit)
+            return () if len(widths) % 2 else (0,)*limit
+        checked = []
+        result = generate(model, (2, 3, 4), 9, draft, width=3,
+                          on_cache=lambda cache: checked.append(compare_cache(cache)))
+        self.assertTrue(any(not row['draft'] for row in result['rounds']))
+        self.assertTrue(any(row['draft'] for row in result['rounds']))
+        self.assertEqual(result['snapshot_count'], sum(bool(row['draft']) for row in result['rounds']))
+        self.assertGreater(result['replay_forward_calls'], 0)
+        self.assertTrue(all(row['passed'] for row in checked))
+        self.assertEqual(result['free_slots'], 11)
+
+    def test_snapshot_free_decode_failure_and_observer_failure_release_all_state(self):
+        from minideepinfer.hybrid_cache import HybridCache
+        from minideepinfer.kv_cache import SlotPool
+        for failure in ('forward', 'observer'):
+            model, released = self.model(), []
+            original_forward = CachedTarget.forward
+            original_pool_release, original_cache_release = SlotPool.release, HybridCache.release
+            def fail_forward(cache, tokens):
+                if cache.tokens:
+                    raise RuntimeError('decode failed')
+                return original_forward(cache, tokens)
+            def pool_release(pool, owner):
+                original_pool_release(pool, owner)
+                released.append(pool.free_count == pool.capacity)
+            def cache_release(cache, owner):
+                original_cache_release(cache, owner)
+                released.append(not cache.linear_states)
+            def observed(cache):
+                raise RuntimeError('observer failed')
+            with patch.object(CachedTarget, 'checkpoint', side_effect=AssertionError('unexpected snapshot')), \
+                    patch.object(CachedTarget, 'forward', fail_forward if failure == 'forward' else original_forward), \
+                    patch.object(SlotPool, 'release', pool_release), patch.object(HybridCache, 'release', cache_release), \
+                    self.assertRaisesRegex(RuntimeError, 'failed'):
+                generate(model, (2, 3, 4), 6, lambda *_: (), width=0,
+                         on_cache=observed if failure == 'observer' else None)
+            self.assertEqual(released, [True, True])
+
     def test_hybrid_eos_length_and_callback_error_cleanup(self):
         from minideepinfer.kv_cache import SlotPool
         model=self.model();prompt=(2,3,4)

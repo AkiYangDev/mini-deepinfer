@@ -1,0 +1,11 @@
+{
+  "version": "0.6.0.dev0",
+  "reports": [
+    {
+      "path": "docs/results/2026-10-25/qwen35-target-no-snapshot.json",
+      "sha256": "4f46581b4926de3c51e62bcc3db307b50e9117f84f331e3aadf98e9ccb65542f",
+      "scope": "Ascend 910C FP32 Qwen3.5-2B after skipping target snapshots for empty candidates; filtered sampled outputs, cancellation, configured EOS and cleanup match the earlier report, with zero snapshots.",
+      "limits": "One raw five-token input, six-output budget, temperature 0.7, top-k 20, top-p 0.9, seed 2026. Artificial EOS; no draft or acceptance metric. Compared with the preserved earlier report; only source hashes and three snapshot counters changed. One checkpoint load, 15 forwards and 66 inputs including references. No timing, distribution certification, profiling or NPU text-streaming CLI run."
+    }
+  ]
+}

@@ -197,7 +197,10 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
                 raise ValueError('draft must return at most the requested number of vocabulary IDs')
             before = len(target.tokens)
             inputs = (output[-1],)+candidates
-            target.checkpoint()
+            # With no candidates, only pending is consumed and nothing can be
+            # rejected. The whole new cache prefix stays valid, even at EOS.
+            if candidates:
+                target.checkpoint()
             logits = target.forward(inputs)
             predictions = tuple(logits.argmax(-1).tolist())
             tentative = len(target.tokens)

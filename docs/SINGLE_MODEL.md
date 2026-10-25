@@ -51,6 +51,16 @@ python -m minideepinfer.generate \
 
 双模型模式仍通过同一个循环提交输出、处理停止和归还缓存。它增加的是候选、验证和回退，不改变“只交付已经决定的 token”这条规则。两条路径的区别因此能直接从代码里读出来。
 
+## 没有候选，还需要保存回退快照吗
+
+Qwen3.5 的线性注意力会修改卷积和递归状态。验证多个候选时，后面的计算可能被拒绝，提前留一份状态副本，才能恢复到正确前缀。这份副本就是回退快照。
+
+单模型每轮只送回上一个已经交付的 token。这个输入一定保留，没有候选需要撤销，因此不用复制状态。即使新抽出的 token 是 EOS，停止时也只是释放缓存，不需要先回退。现在循环按**实际候选是否为空**决定要不要保存快照：候选宽度设为 3，但本轮返回空列表，同样可以省掉复制；一旦有候选，仍保留原来的恢复过程。
+
+CPU 测试用相同权重、输入和随机种子，对照“每轮都留副本”的旧方式。除了快照次数和字节数，输出、缓存进度、模型计算量与逐轮记录一致；有候选和空候选交替出现时，也逐轮核对独立冷缓存。
+
+Ascend 910C 的[新报告](results/2026-10-25/qwen35-target-no-snapshot.json)沿用下文实测的输入与参数。六输出的正常生成从 5 次快照、复制 101,007,360 字节变为零；取消和配置 EOS 的路径也不再复制快照。与[旧报告](results/2026-10-25/qwen35-target-text.json)相比，除源码哈希和三项快照统计外，全部字段相同。这次只检查复制量与正确性，没有计时，不能据此换算提速比例。
+
 ## 怎样核对
 
 CPU 测试使用未训练的小型 Qwen2 和 Qwen3.5，逐 token 与独立完整前缀重算对照，覆盖 greedy、过滤采样、聊天模板、取消、EOS、异常清理和 CLI 单次加载。无需下载权重：
@@ -77,6 +87,8 @@ Ascend 910C 上已用 Qwen3.5-2B 跑过这条 API 路径：[原始报告](result
 python scripts/check_evidence.py --index docs/results/target-text/evidence.json
 ```
 
+上面的首次报告按 `4ad9655` 保存，原文件不改。去除多余快照后的记录使用 `--index docs/results/target-snapshots/evidence.json` 核对；[新运行日志](results/2026-10-25/qwen35-target-no-snapshot.txt)保留设备告警。
+
 这是单请求接口，不接入批次、分块 prefill 或跨轮 pipeline；这些入口保持各自已有的执行方式。本次不增加 HTTP 服务，也不把概率从主机移到设备。
 
 ## English quick start
@@ -88,3 +100,5 @@ The text frontend calls the existing synchronous generation loop with draft widt
 The verifier compares cached generation with independent full-prefix sampling, then checks cancellation and an artificial EOS. It measures correctness for one short input, not performance or arbitrary-model distribution equivalence. The CPU tests also exercise the CLI's single load, text streaming and report saving.
 
 The saved Ascend 910C Qwen3.5-2B run passed all three API cases: six sampled tokens, cancellation after two tokens, and configured EOS after one. All ten slots were returned each time. The checkpoint loaded once; the complete check used 15 forwards and 66 input tokens, including independent references. NPU CLI text streaming was not measured.
+
+A later check removed unnecessary recurrent-state snapshots when no candidates are supplied. Normal six-token generation now makes zero snapshots instead of copying 101,007,360 bytes across five snapshots. All other report fields, except source hashes, match the preserved earlier run. This is a reduction in copied state, not a measured latency improvement.

@@ -5,7 +5,8 @@
       "path": "docs/results/2026-10-25/qwen35-target-text.json",
       "sha256": "e271e7c2d0aa1594740880cfbd8cab1d623311af022d641ed087fa33d22c7479",
       "scope": "Ascend 910C FP32 Qwen3.5-2B single-model text API with CPU FP64 filtered sampling; six cached outputs match independent full-prefix sampling, cancellation after two, configured EOS after one, all slots returned.",
-      "limits": "One raw five-token input, six-output budget, temperature 0.7, top-k 20, top-p 0.9, seed 2026. Artificial EOS; no draft or acceptance metric. One checkpoint load, 15 forwards and 66 inputs including references. No timing, distribution certification, profiling or NPU text-streaming CLI run."
+      "limits": "One raw five-token input, six-output budget, temperature 0.7, top-k 20, top-p 0.9, seed 2026. Artificial EOS; no draft or acceptance metric. One checkpoint load, 15 forwards and 66 inputs including references. No timing, distribution certification, profiling or NPU text-streaming CLI run.",
+      "source_revision": "4ad965535e438cc0d8d42bd97187bfa0a94beca2"
     }
   ]
 }
