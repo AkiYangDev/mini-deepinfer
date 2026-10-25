@@ -1,0 +1,42 @@
+name: 运行问题 / Trouble running an example
+description: 贴出命令和结果，一起定位问题。 / Share the command and what happened.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        用中文或英文都可以。没有 Ascend 910C 也可以反馈 CPU 例子。
+        Chinese and English are welcome, including questions about CPU examples.
+        日志中请去掉密码、访问令牌和私人地址。Remove credentials and private addresses from logs.
+  - type: input
+    id: version
+    attributes:
+      label: 版本 / Version
+      description: 填 tag、commit 或安装的版本；不清楚就写“不知道”。 / A tag, commit, or installed version; “not sure” is fine.
+      placeholder: v0.4.0
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: 运行了什么 / Command or steps
+      description: 贴出命令和运行目录；安装时失败也可以从安装命令开始。 / Include the command and working directory, or the installation steps that failed.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 发生了什么 / What happened
+      description: 说说预期和实际结果。有报错请保留 traceback；生成了 JSON 报告也可以附上。 / Describe expected and actual results. Include the traceback or a saved JSON report, if available.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 运行环境（选填） / Environment (optional)
+      description: 已知多少填多少。 / Share what you know.
+      placeholder: |
+        OS / Python:
+        CPU or Ascend 910C:
+        torch / torch_npu / CANN (if used):
+        Model and dtype (if used):

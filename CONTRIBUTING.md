@@ -4,6 +4,12 @@
 
 欢迎把一个机制讲清楚、把一个实验跑扎实，或让一段代码更容易阅读。
 
+## 反馈一个问题
+
+[新建 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose)时，可以选“运行问题”或“教程疑问”。运行问题请带上版本、执行命令和实际结果；环境信息知道多少填多少。教程疑问只需指出读到哪里、哪一步没想通，不需要先跑完整套测试。其他问题也可以直接新建空白 Issue。
+
+Chinese and English are welcome. [Open an issue](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose) for a command that fails or an explanation that is unclear. For a run problem, include the version, command, and result; add any environment details you know. For a tutorial question, point to the passage and explain where you got stuck. You do not need to run the test suite to ask. Blank issues remain available for other topics.
+
 ## 本地运行
 
 Python 3.10+，在仓库根目录执行，无需安装运行时依赖：

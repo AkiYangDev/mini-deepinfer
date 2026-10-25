@@ -1,0 +1,27 @@
+name: 教程疑问 / A confusing step
+description: 哪句话、哪段代码或哪一步状态变化没讲清？ / Which explanation or state change is unclear?
+body:
+  - type: markdown
+    attributes:
+      value: |
+        只读过教程、还没运行代码，也欢迎提问。用中文或英文都可以。
+        You can ask without running the code. Chinese and English are welcome.
+  - type: textarea
+    id: location
+    attributes:
+      label: 读到哪里 / Where you got stuck
+      description: 贴页面链接、章节名、代码行或一小段原文，方便找到同一处。 / A page link, section, code line, or short quote helps locate the passage.
+    validations:
+      required: true
+  - type: textarea
+    id: question
+    attributes:
+      label: 没想明白的地方 / Your question
+      description: 按自己的理解说就好；如果前后两步接不上，可以指出是哪两步。 / Explain it in your own words. If two steps do not connect, point to both.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: 希望补什么（选填） / What would help (optional)
+      description: 比如一张状态图、一次逐轮输出，或一个更小的例子。 / For example, a state diagram, round-by-round output, or a smaller example.

@@ -121,6 +121,6 @@ python -m minideepinfer.generate \
 
 [mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现和教学组织的参考，Ascend SGLang 提供 NPU 接口与兼容性参考。MLA、MoE、MTP、概率采样、bounded replay、图执行和分布式留在[后续路线](docs/ROADMAP.md)。来源与许可证见[参考记录](docs/REFERENCES.md)。
 
-欢迎带着一个具体问题[提交 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues)：哪一步看不懂，哪条命令没跑通，或哪项缓存行为需要补例子。也欢迎按[贡献指南](CONTRIBUTING.md)改进代码和教程。如果这条学习路线对你有用，欢迎 Star。
+欢迎带着一个具体问题[提交 Issue](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose)：哪一步看不懂，哪条命令没跑通，或哪项缓存行为需要补例子。也欢迎按[贡献指南](CONTRIBUTING.md)改进代码和教程。如果这条学习路线对你有用，欢迎 Star。
 
 本项目为独立社区项目，与 DeepSeek、SGLang 及华为无官方隶属关系。原创代码与文档采用 [Apache-2.0](LICENSE)，模型及第三方代码遵循各自许可证。
