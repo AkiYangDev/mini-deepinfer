@@ -2,9 +2,9 @@
 
 # ![mini-DeepInfer](docs/assets/readme-hero-whale.png)
 
-**Explore DeepInfer's engine design. Run real inference on Ascend 910C.**
+**Build a small inference engine for Ascend 910C.**
 
-From three CPU commands to dual-model speculative decoding with Qwen3.5.
+Study DeepInfer's execution design through runnable Qwen3.5 examples.
 
 [![CPU checks](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml/badge.svg)](https://github.com/AkiYangDev/mini-deepinfer/actions/workflows/cpu.yml) [![Ascend 910C](https://img.shields.io/badge/Ascend%20910C-FP32%20checked-0f766e)](docs/VALIDATION.md) [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-2563eb)](pyproject.toml) [![Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-475569)](LICENSE)
 
@@ -14,24 +14,19 @@ From three CPU commands to dual-model speculative decoding with Qwen3.5.
 
 </div>
 
-mini-DeepInfer is a compact inference engine for **Ascend 910C**, inspired by [DeepInfer](https://github.com/deepseek-ai/DeepInfer)'s execution design. Request scheduling, model execution, output commits and cache management are implemented in Python and PyTorch, with real Qwen3.5 checkpoints running on the NPU.
-
-Follow a request through the engine, change a scheduling decision, or cancel generation and inspect how execution continues.
-
-## What you can build on
-
 <img align="right" src="docs/assets/deepseek-girl-full.png" width="126" alt="Blue-haired, whale-themed DeepSeek girl illustration" />
 
-- **Real models on Ascend 910C.** Run Qwen3.5-2B text generation, dynamic batching and cross-round execution. [Commands and saved output](docs/VALIDATION.md) accompany the NPU checks.
-- **Scheduling you can follow.** Trace chunked prompts, new arrivals and the next round starting before the CPU reads the previous token. Watch [requests A, B and C](docs/WALKTHROUGH.en.md) take ownership of cache slots and reuse them.
-- **Dual-model speculation, including recovery.** Qwen3.5-0.8B proposes; 2B verifies. Follow rejection, recurrent-state recovery, probability sampling, streamed groups and cancellation. [Start with a wrong proposal](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough).
-- **A runnable path into engine internals.** Start the CPU scheduling demo in three commands, with no dependencies or checkpoints. [Fourteen lessons](docs/LEARNING_PATH.md) introduce batching, chunked prefill and cross-round execution; the [DeepInfer source map](docs/SOURCE_MAP.md) connects the implementation to its design references.
+mini-DeepInfer is a small inference engine for **Ascend 910C**, built for learning and inspired by [DeepInfer](https://github.com/deepseek-ai/DeepInfer). Qwen3.5 forward passes, request scheduling, output commits and cache management are implemented here in Python and PyTorch, so you can follow a request through the code.
+
+If you can already deploy a model and want to understand the engine behind it, start here. Follow how requests join a batch, how the next token is computed, and when memory can be reused by another request. The [fourteen lessons](docs/LEARNING_PATH.md) build up from a minimal loop to batching, chunked prefill and cross-round execution, with examples you can run and change.
+
+Start on CPU with scheduling examples and random tiny models. On Ascend 910C, load real Qwen3.5 weights for single-model generation, or let 0.8B propose tokens for 2B to verify. The [round walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) follows a wrong proposal through rollback and recovery of KV, convolution and recurrent state.
 
 <br clear="both" />
 
 ## Quick start
 
-Run the engine first. This scheduling demo needs only the Python 3.10+ standard library, with no dependencies or checkpoints to install:
+Run this scheduling example with Python 3.10+ and its standard library. No dependencies or checkpoints are needed:
 
 ```bash
 git clone https://github.com/AkiYangDev/mini-deepinfer.git
@@ -41,11 +36,11 @@ python -m minideepinfer.step_demo
 
 A is cancelled while the device still needs its cache. B changes batch rows but must retain its previous result. Manual completion events separate issued computation, committed output and cache release. Terminal explanations are in Chinese.
 
-Use **[v0.5.0](docs/RELEASE_v0.5.md#english-release-notes)** as the fixed learning version. It includes custom speculative text, streaming cancellation, temperature and top-k / top-p sampling. The [setup guide](docs/START_HERE.en.md) uses the same tag; older releases and reports remain available.
+For a fixed learning version, use [v0.5.0](docs/RELEASE_v0.5.md#english-release-notes), which the [setup guide](docs/START_HERE.en.md) also follows. It includes dual-model text generation, streaming, cancellation, temperature and top-k/top-p sampling.
 
-**Start with one checkpoint.** On main, [`generate --single`](docs/SINGLE_MODEL.md#english-quick-start) adds temperature and top-k/top-p sampling, streaming and cancellation with one Qwen3.5 model. Follow the same generation loop to see what dual-model speculation adds.
+On main, [`generate --single`](docs/SINGLE_MODEL.md#english-quick-start) also supports sampling, streaming and cancellation with just one Qwen3.5 checkpoint. This entry point belongs to v0.6 development; use main to try it.
 
-**Ready for real forward passes?** With PyTorch installed, run a random tiny Qwen3.5 model without downloading weights:
+With PyTorch installed, run a randomly initialized tiny Qwen3.5 to see model execution join the scheduling loop:
 
 ```bash
 python -m minideepinfer.pipeline_demo
@@ -53,9 +48,9 @@ python -m minideepinfer.pipeline_demo
 
 ![Actual CPU output: B finishes and C reuses its cache slots](docs/assets/cache-reuse.svg)
 
-B released its slots, yet none are free because C already took them. A's long prompt is still being processed in chunks. [Follow A, B and C through the code](docs/WALKTHROUGH.en.md), or read the [full terminal output](docs/assets/pipeline-demo.txt). Random models illustrate execution state; their text does not demonstrate language quality.
+B has just finished and C already holds its cache slots, so the free count is still zero. Meanwhile, A's long prompt is being processed in chunks. [Follow A, B and C through the code](docs/WALKTHROUGH.en.md) to connect each scheduling decision with a cache change, or read the [full terminal output](docs/assets/pipeline-demo.txt). The model is untrained; the example is about execution.
 
-## Pick a starting point
+## Where to go next
 
 | What you want to try | Start here |
 | --- | --- |
@@ -63,7 +58,7 @@ B released its slots, yet none are free because C already took them. A's long pr
 | Run your own prompt on Ascend 910C | [Environment and weights](docs/START_HERE.en.md) → [Text generation](#generate-text-on-ascend-910c) |
 | Understand recovery after a wrong proposal | [Round walkthrough](docs/MODEL_DRAFT_WALKTHROUGH.md#english-walkthrough) → [Probability sampling](docs/SAMPLING.md#english-usage) |
 
-Each route has runnable examples. The [lesson index](docs/LEARNING_PATH.md) provides commands and code locations in Chinese; English setup and the A/B/C walkthrough are available.
+The [lesson index](docs/LEARNING_PATH.md) lists the full sequence, commands and code locations in Chinese. English setup and the A/B/C walkthrough are also available.
 
 <details>
 <summary>Follow a rejected proposal and cache recovery on CPU</summary>
@@ -103,7 +98,7 @@ The [complete bilingual output](docs/results/2026-10-24/qwen35-2b-generation-npu
 
 Let Qwen3.5-0.8B propose and 2B verify. Accept a group and deliver several tokens together; reject it, discard temporary results, restore both caches and continue from the valid prefix. KV, convolution windows and recurrent state must all agree before the next forward pass.
 
-Use your own prompts, watch committed groups stream out, or cancel after a commit. The [text guide](docs/SPECULATIVE_TEXT.md#english-usage) has complete commands. Positive-temperature sampling uses the same loop, including probabilistic acceptance and correction sampling after rejection. The [sampling guide](docs/SAMPLING.md#english-usage) takes you from small-vocabulary experiments to probability and state-recovery checks on Ascend 910C. Model execution uses NPU FP32 while probabilities stay in CPU FP64.
+Try your own prompt, watch the output stream, or request cancellation during generation. Complete commands are in the [text guide](docs/SPECULATIVE_TEXT.md#english-usage). To understand acceptance under random sampling, start with the [small-vocabulary experiment](docs/SAMPLING.md#english-usage), then examine probability and state-recovery checks on Ascend 910C. This reference path computes the model in NPU FP32 and probabilities in CPU FP64.
 
 <details>
 <summary>Stream output and cancel at a commit boundary</summary>
@@ -148,14 +143,14 @@ The [fourteen-lesson index](docs/LEARNING_PATH.md) provides the full sequence. T
 | [Speculative sampling](docs/SAMPLING.md#english-usage) | 28 probability and six cold-state comparisons pass, including actual draft recovery after rejection |
 | [Streamed cancellation](docs/SPECULATIVE_TEXT.md#english-usage) | Four delivered tokens match an independent greedy prefix; both pools release all slots |
 
-Every result includes inputs, configuration, raw records and source hashes for [verification at an immutable commit](docs/EVIDENCE.md). To explore performance, start with [sync versus pipeline](docs/PIPELINE_BENCHMARK.md#english-summary), [first commit](docs/FIRST_RESULT.md#english-summary) and [dual-model costs](docs/MODEL_DRAFT.md#english-summary). These include short workloads that got slower, so you can study when an optimization pays off. Assess acceptance and forward-call counts alongside measured runtime.
+The records preserve inputs, configuration, raw output and source hashes for [verification at the corresponding commit](docs/EVIDENCE.md). Performance experiments cover [sync versus pipeline](docs/PIPELINE_BENCHMARK.md#english-summary), [first commit](docs/FIRST_RESULT.md#english-summary) and [dual-model costs](docs/MODEL_DRAFT.md#english-summary), including short workloads that got slower. Accepting more tokens or making fewer forward calls does not always shorten a request; recovery, copies and waits also take time.
 
 ## Scope and sources
 
-The project stays within single-device, FP32, eager execution on short contexts. Greedy and positive-temperature speculative sampling are implemented. See [BF16 notes](docs/BF16_REFERENCE.md) for reference checks and chunk-path differences. The earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in regression checks. DeepSeek-V4.1 architecture, MLA/MoE, MTP, bounded replay, graphs and distributed execution remain on the [roadmap](docs/ROADMAP.md).
+The main learning path uses one device, FP32, eager execution and short contexts. Greedy, temperature and top-k/top-p sampling, streaming and cancellation are implemented. See [BF16 notes](docs/BF16_REFERENCE.md) for reference checks and chunk-path differences. The earlier DeepSeek-R1-Distill-Qwen-1.5B example remains in regression checks. DeepSeek-V4.1 architecture, MLA/MoE, MTP, bounded replay, graphs and distributed execution are not yet implemented; see the [roadmap](docs/ROADMAP.md).
 
 Engine design primarily follows [DeepInfer](https://github.com/deepseek-ai/DeepInfer). [mini-sglang](https://github.com/sgl-project/mini-sglang) informs the compact teaching format; Ascend SGLang informs NPU API work. [References and licenses](docs/REFERENCES.md) record the sources.
 
-**Start with three commands and explore inference engines on Ascend 910C.** Star the repository to keep it in your reading list. Bring a failing command or a mechanism you want explained to [Issues](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose), or help implement a mechanism and improve a lesson through the [contribution guide](CONTRIBUTING.md).
+If the project helps you learn, please give it a Star. If a command fails or an explanation leaves you stuck, [open an issue](https://github.com/AkiYangDev/mini-deepinfer/issues/new/choose). To add an example or improve a lesson, start with the [contribution guide](CONTRIBUTING.md).
 
 This independent community project has no official affiliation with DeepSeek, SGLang or Huawei. Original code and documentation use [Apache-2.0](LICENSE); models and third-party code retain their licenses. Character artwork is covered separately in the [artwork notes](docs/assets/ARTWORK.md).
