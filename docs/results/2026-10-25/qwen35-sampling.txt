@@ -1,0 +1,3 @@
+can not use command: npu-smi info
+[W1025 02:36:44.928546465 NPUCachingAllocator.cpp:202] Warning: The current CANN and HDK(driver) versions require processing for 32 padding size, with memory allocation. (function operator())
+{"passed": true, "cases": {"ordinary": "length", "sampled": "length", "cancelled": "cancelled", "configured_eos": "eos"}, "probability_checks": 28, "cache_checks": 6, "forward_calls": 54}

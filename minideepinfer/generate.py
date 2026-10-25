@@ -22,7 +22,7 @@ def parse_args(argv=None):
     modes.add_argument("--speculative", action="store_true", help="use a separate greedy draft model (one prompt, FP32)")
     parser.add_argument("--draft-model", help="local draft checkpoint; requires --speculative")
     parser.add_argument("--draft-width", type=int, default=None, help="1..8 candidates per speculative round (default: 1)")
-    parser.add_argument("--temperature", type=float, help="positive temperature; speculative CPU reference only (default: greedy)")
+    parser.add_argument("--temperature", type=float, help="positive temperature; speculative FP32 reference (default: greedy)")
     parser.add_argument("--seed", type=int, help="request-local sampling seed (default: 2026); requires --temperature")
     parser.add_argument("--check-greedy", action="store_true", help="with --speculative, compare against a fresh target-only run")
     parser.add_argument("--output", help="with --speculative, save a generation or cancellation report as JSON")
@@ -62,8 +62,9 @@ def parse_args(argv=None):
                 TemperatureSampler(args.temperature, 2026 if args.seed is None else args.seed)
             except ValueError as error:
                 parser.error(str(error))
-            if args.device != 'cpu' or args.check_greedy:
-                parser.error('--temperature requires --device cpu and cannot use --check-greedy')
+            if (args.device != 'cpu' and not (args.device.startswith('npu:') and args.device[4:].isdigit())
+                    or args.check_greedy):
+                parser.error('--temperature requires CPU or NPU and cannot use --check-greedy')
         elif args.seed is not None:
             parser.error('--seed requires --temperature')
     elif (args.draft_model is not None or args.draft_width is not None or args.check_greedy or args.output is not None
@@ -162,7 +163,7 @@ def main(argv=None):
                       python=platform.python_version(), torch=torch.__version__, cpu_threads=torch.get_num_threads(),
                       scope='single-request eager greedy; independent draft cache; no timing or speedup claim')
         if args.temperature is not None:
-            result['scope'] = 'single-request CPU temperature sampling; independent draft cache; no distribution certification or speedup claim'
+            result['scope'] = 'single-request FP32 temperature sampling with CPU FP64 probabilities; independent draft cache; no distribution certification or speedup claim'
         if args.device.startswith('npu'):
             import torch_npu
             result.update(torch_npu=torch_npu.__version__,

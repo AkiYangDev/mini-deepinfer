@@ -68,7 +68,33 @@ python -m minideepinfer.generate \
 
 固定版本 DeepInfer 的 [`Sampler._verification()`](https://github.com/deepseek-ai/DeepInfer/blob/8b16149741a4935e1dec8cea27853f273b374c5b/deepinfer/model_executor/layers/sampler.py#L411) 把采样、候选验证和有效输出整理放在同一条执行路径中。本项目保留这个职责划分：概率规则决定提交几个 token，原来的循环负责回退与资源归属。这里使用独立小模型和经典的顺序拒绝采样，不声称复现上游 MTP、置信度机制或融合 kernel。
 
-本轮只验证 CPU：小词表概率、两种缓存、候选条件前缀、普通采样对照、EOS、取消和失败清理。正温度路径暂时拒绝 NPU 设备；原有 Ascend 910C greedy 路径照常使用。概率留在主机并保留完整词表，优先让规则可读，没有吞吐或延迟收益结论。后续再单独做 Ascend 910C 数值和状态验收。
+CPU 检查覆盖小词表概率、两种缓存、候选条件前缀、普通采样、EOS、取消和失败清理。正温度路径也已通过下面的 Ascend 910C 检查。概率仍留在主机并保留完整词表，没有融合采样 kernel 或吞吐、延迟收益结论。
+
+## Ascend 910C：验证概率和回退
+
+使用已有本地权重执行：
+
+```bash
+python -m minideepinfer.verify_sampling \
+  --model weights/Qwen3.5-2B --draft-model weights/Qwen3.5-0.8B \
+  --device npu:0 --output outputs/qwen35-sampling.json
+```
+
+这条命令会执行冷缓存重算，比普通生成多做计算。已有模型各加载一次，之后各项检查复用只读权重，每个请求使用独立缓存。它不下载权重，也不计时。
+
+[实机报告](results/2026-10-25/qwen35-sampling.json)使用 PyTorch 2.10.0、torch_npu 2.10.0.post6、CANN 9.1.0，FP32、HF32 关闭、CPU 线程 1。raw 输入 `The capital of France is` 共五个 token，温度 0.7，target/draft seed 为 2026/2027，宽度 3、输出上限 6、各有 10 个槽位。
+
+先独立重算整段前缀，验证普通温度采样。然后对 draft 实际保存的每一行 `q`、target 验证用的每一行 `p`，分别用同一前缀的冷模型计算作对照；复用本轮原始随机数，还原接受、改正或 bonus 的决定。28 组概率比较通过，最大绝对差约 `3.38e-6`。门槛为 `atol=1e-6, rtol=2e-4`，绝对差不单独决定是否通过。
+
+投机请求接受 3/5 个候选，生成六个 token 后按长度停止。拒绝后 target 重算两个输入，draft 恢复状态后重算一个输入；六组有效缓存与线性状态的冷对照通过，使用 `atol=1e-4, rtol=2e-4`。这次实机确实走过了 draft 分支恢复，未把 CPU 反例当成实机覆盖。
+
+另一个请求在完整提交组三个 token 后取消，没有启动下一轮；指定第一个抽中 ID 为 EOS 的请求只交付一个 token，draft 不计算。后一项验证的是配置停止条件，不代表自然语言回答遇到了模型自己的 EOS。所有请求结束后各池都归还 10 个槽位。
+
+完整检查共 54 次 forward、294 个输入 token，包含普通生成、两种停止检查、条件概率参考和冷缓存检查，不只统计投机主循环。没有计时、profiling 或提速结论。短输入也不能证明所有模型输入的分布等价；数学规则、小词表实验和这次实机数值检查各自回答不同的问题。
+
+文本入口现在允许 `--speculative --device npu:0 --temperature 0.7`，概率仍在主机计算。这里保存的实机记录来自数值验收入口；新温度参数下的 NPU 文本流式 CLI 没有另跑一遍，CPU 的文本、流式与取消测试继续维护。
+
+张量转换采用先 `logits.detach().cpu()`、再在 CPU 转 FP64 的顺序，并以三个数做过当前环境的实测，避免让 NPU 承担 FP64 转换。[官方版本对应表](https://github.com/Ascend/pytorch/blob/master/COMPATIBILITY.md)用于核对版本组合；接口文档页面未返回可用的方法表，实际搬运行为以这次固定环境的小输入实测为准。[原始运行日志](results/2026-10-25/qwen35-sampling.txt)保留了环境告警，没有隐藏 warning。
 
 ## English usage
 
@@ -78,4 +104,8 @@ The CPU reference reuses the existing speculative loop and rollback. The draft s
 
 For local CPU text generation, add `--temperature 0.7 --seed 2026` to the existing `generate --speculative` command and use `--device cpu`. Matching tokenizer files remain mandatory. Streaming, whole-group cancellation and round traces remain available. The draft uses seed 2027 by default. These request-local generators do not change PyTorch's global RNG. Ordinary and speculative sampling consume random numbers differently, so identical seeds need not give identical tokens.
 
-Omit temperature to retain greedy behavior. `--check-greedy` is incompatible with random sampling. This initial implementation keeps dense probabilities in CPU FP64; NPU sampling is disabled pending validation. Existing Ascend 910C greedy checks do not certify this new path. There is no sampling speedup claim or new formal release.
+Omit temperature to retain greedy behavior. `--check-greedy` is incompatible with random sampling. Dense probabilities stay in CPU FP64: FP32 logits transfer to the host before conversion.
+
+Ascend 910C sampling has a separate [saved validation](results/2026-10-25/qwen35-sampling.json). Run `python -m minideepinfer.verify_sampling --model weights/Qwen3.5-2B --draft-model weights/Qwen3.5-0.8B --device npu:0 --output outputs/qwen35-sampling.json`. Each existing checkpoint loads once. The environment uses PyTorch 2.10.0 / torch_npu 2.10.0.post6 / CANN 9.1.0, FP32 with HF32 disabled and one CPU thread. The check uses one raw five-token prompt, temperature 0.7, seeds 2026/2027, width 3 and six output tokens.
+
+All 28 conditional probability comparisons and six cold-state checks pass. Cold probabilities reproduce verification decisions using the original random draws. The sampled case accepts 3/5 proposals; both models replay retained inputs after rejection. Cancellation delivers one whole three-token commit prefix. A separate configured-EOS case stops on its first sampled ID; it does not test natural model EOS. All pools return 10 slots. The complete check costs 54 forwards and 294 input tokens, including references. There is no timing, profiling, speedup claim, general distribution proof, or additional NPU streaming-CLI run. CPU text/stream/cancellation tests remain in place.

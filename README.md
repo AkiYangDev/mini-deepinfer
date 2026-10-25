@@ -133,7 +133,7 @@ Ascend 910C 上的记录在完整交付下一组后停在 4 个 token，两边�
 | 跨轮文本生成 | 同步、跨轮与逐条到达输出一致；EOS 轨迹的 43 组完整 logits 对照通过，最大差约 `4.94e-5`；见[文本检查](docs/PIPELINE_TEXT.md) |
 | 双模型状态接续 | 实机宽度 1/3 的输出与独立 greedy 一致；CPU 自然拒绝例子展示 draft 截短与恢复；见[实现与实验](docs/MODEL_DRAFT.md) |
 | 流式取消 | 实机已交付的 4 个 token 与独立 greedy 前缀一致，target / draft 各归还 14 个槽位；见[取消记录](docs/SPECULATIVE_TEXT.md#ascend-910c-检查) |
-| 概率采样（CPU） | 小词表分布实验、双模型接受/补采样与冷缓存对照；无需权重，见[随机采样](docs/SAMPLING.md) |
+| 概率采样 | CPU 小词表实验；Ascend 910C 上 28 组概率、6 组冷缓存对照通过，见[随机采样](docs/SAMPLING.md) |
 
 每份报告保存输入、配置、原始结果和源码 SHA；历史结果按固定 commit 核对，见[证据说明](docs/EVIDENCE.md)。性能实验也保留了短负载更慢的情况：[同步与跨轮](docs/PIPELINE_BENCHMARK.md)、[首轮提交](docs/FIRST_RESULT.md)、[双模型成本](docs/MODEL_DRAFT.md)。接受率和减少的 forward 次数不能直接写成吞吐收益。
 
@@ -141,7 +141,7 @@ Ascend 910C 上的记录在完整交付下一组后停在 4 个 token，两边�
 
 当前主例采用 Qwen3.5、FP32、eager 和 greedy，面向短上下文教学。BF16 的参考检查和分块差异见[说明](docs/BF16_REFERENCE.md)；原有 DeepSeek-R1-Distill-Qwen-1.5B 示例继续用于回归。DeepSeek-V4.1 模型架构、MLA/MoE、MTP、bounded replay、图执行和分布式仍在[后续路线](docs/ROADMAP.md)中。
 
-CPU 另有正温度的[投机采样参考](docs/SAMPLING.md)，复用已有缓存回退；这一新路径尚未在 Ascend 910C 验证。
+另有正温度的[投机采样参考](docs/SAMPLING.md)，复用已有缓存回退；模型可在 Ascend 910C 执行，概率保留在 CPU FP64。
 
 执行设计主要参考 [DeepInfer](https://github.com/deepseek-ai/DeepInfer)。[mini-sglang](https://github.com/sgl-project/mini-sglang)提供精简实现与教学组织参考，Ascend SGLang 提供 NPU 接口与兼容性参考；具体来源和许可证见[参考记录](docs/REFERENCES.md)。
 

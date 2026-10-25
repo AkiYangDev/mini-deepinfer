@@ -30,8 +30,6 @@ def run_speculative_text(target, small, tokenizer, prompt, *, max_new_tokens=32,
     if should_cancel is not None and not callable(should_cancel):
         raise ValueError('should_cancel must be a callable or None')
     weights = [next(model.parameters()) for model in (target, small)]
-    if sampler is not None and any(weight.device.type != 'cpu' for weight in weights):
-        raise ValueError('temperature sampling is currently a CPU reference; NPU validation is pending')
     if (any(weight.dtype != torch.float32 for weight in weights)
             or weights[0].device != weights[1].device
             or weights[0].device.type not in ('cpu', 'npu')):

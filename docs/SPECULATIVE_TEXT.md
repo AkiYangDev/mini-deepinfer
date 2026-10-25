@@ -2,7 +2,7 @@
 
 [返回首页](../README.md) · [双模型实现](MODEL_DRAFT.md) · [逐轮讲解](MODEL_DRAFT_WALKTHROUGH.md)
 
-本文命令默认 greedy。main 另有正温度的 [CPU 投机采样](SAMPLING.md)，复用同一循环；新采样路径尚未在 Ascend 910C 验证。
+本文命令默认 greedy。main 另有正温度的[投机采样](SAMPLING.md)，复用同一循环；Ascend 910C 数值与回退检查已通过，概率在 CPU FP64 上计算。
 
 固定输入适合看缓存怎样恢复，但也应该能换成自己的问题。`generate --speculative` 将文本编码后，直接交给已有的 `ModelDraft` 和 `speculative.generate()`：小模型提候选，target 验证，最后只解码实际提交的 token。
 

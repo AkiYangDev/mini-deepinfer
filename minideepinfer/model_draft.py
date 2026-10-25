@@ -37,8 +37,8 @@ class ModelDraft:
         from .kv_cache import SlotPool
         from .sampling import TemperatureSampler
         if sampler is not None and (not isinstance(sampler, TemperatureSampler)
-                                    or next(model.parameters()).device.type != 'cpu'):
-            raise ValueError('sampled draft requires a CPU model and TemperatureSampler')
+                                    or next(model.parameters()).device.type not in ('cpu','npu')):
+            raise ValueError('sampled draft requires a CPU or NPU model and TemperatureSampler')
         if type(capacity) is not int or capacity < 1 or capacity > model.config.max_position_embeddings:
             raise ValueError('draft capacity exceeds its position limit')
         self.model = model

@@ -155,8 +155,8 @@ def generate(model, prompt_ids, max_new_tokens, draft, *, width=3, eos_token_id=
     if should_cancel is not None and not callable(should_cancel):
         raise ValueError('should_cancel must be a callable or None')
     if sampler is not None and (not isinstance(sampler, TemperatureSampler)
-                                or next(model.parameters()).device.type != 'cpu'):
-        raise ValueError('sampled generation requires a CPU model and TemperatureSampler')
+                                or next(model.parameters()).device.type not in ('cpu','npu')):
+        raise ValueError('sampled generation requires a CPU or NPU model and TemperatureSampler')
     capacity = len(prompt)+max_new_tokens-1 if cache_capacity is None else cache_capacity
     pool = SlotPool(capacity)
     prompt = validate_request(prompt,max_new_tokens,eos_token_id,capacity)

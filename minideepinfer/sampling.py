@@ -52,7 +52,8 @@ class TemperatureSampler:
 
     def probabilities(self, logits):
         import torch
-        logits = logits.detach().to(device='cpu', dtype=torch.float64)
+        # Transfer FP32 first; the device never needs to represent FP64 tensors.
+        logits = logits.detach().cpu().to(dtype=torch.float64)
         if logits.ndim != 1 or not bool(torch.isfinite(logits).all()):
             raise ValueError('sampling requires finite one-dimensional logits')
         # Subtract first: a tiny positive temperature must not produce inf-inf.

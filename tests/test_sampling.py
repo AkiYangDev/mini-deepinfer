@@ -21,11 +21,14 @@ class SamplingArgumentTests(unittest.TestCase):
         import io
         base = ['--model', 'target', '--speculative', '--draft-model', 'draft']
         for extra in (['--temperature', '0'], ['--temperature', 'nan'], ['--seed', '3'],
-                      ['--temperature', '1'], ['--device', 'cpu', '--temperature', '1', '--check-greedy']):
+                      ['--device', 'cuda:0', '--temperature', '1'],
+                      ['--device', 'cpu', '--temperature', '1', '--check-greedy']):
             with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 parse_args(base+extra)
         args = parse_args(base+['--device', 'cpu', '--temperature', '.7', '--seed', '8'])
         self.assertEqual((args.temperature, args.seed), (.7, 8))
+        args = parse_args(base+['--device', 'npu:0', '--temperature', '.7'])
+        self.assertEqual(args.device, 'npu:0')
 
 
 class ScriptedRandom:
@@ -252,3 +255,18 @@ class SampledModelTests(unittest.TestCase):
             generate(target,(2,3),4,lambda *_: (),sampler=TemperatureSampler())
         with self.assertRaisesRegex(ValueError, 'sampler'):
             generate(target,(2,3),4,lambda *_: SampledDraft((),()))
+
+    def test_cold_probability_verifier_covers_stops_and_counts_all_work(self):
+        from minideepinfer.verify_sampling import check_pair
+        target, small = self.models(True)
+        report = check_pair(target,small,(2,3,4),{})
+        self.assertTrue(report['passed'])
+        self.assertEqual({k:v['finish_reason'] for k,v in report['cases'].items()},
+                         dict(ordinary='length',sampled='length',cancelled='cancelled',configured_eos='eos'))
+        self.assertGreater(len(report['probability_checks']), 6)
+        self.assertTrue(all(row['passed'] for row in report['cache_checks']))
+        self.assertTrue(all(row['matches_cold_decision'] for name in ('sampled','cancelled')
+                            for row in report['cases'][name]['rounds']))
+        self.assertEqual(report['total_forward_calls'],sum(row['forward_calls'] for row in report['cold_work'])+
+                         sum(case['target_forward_calls']+case.get('draft_work',{}).get('forward_calls',0)
+                             for case in report['cases'].values()))
